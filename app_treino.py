@@ -4,8 +4,7 @@ import os
 from streamlit_gsheets import GSheetsConnection
 from datetime import date
 
-# Arquivo de persistência de dados
-DATA_FILE = "registros_treino.csv"
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 # Estrutura de Treinos e Exercícios baseada no documento
 TREINOS = {
@@ -34,7 +33,7 @@ TREINOS = {
 def load_data():
     try:
         # Lê a aba chamada "Historico" da sua planilha
-        df = conn.read(worksheet="Historico")
+        df = conn.read(worksheet="Historico", ttl=0)
         # Remove linhas completamente vazias que o Sheets pode retornar
         df = df.dropna(how="all")
         return df
