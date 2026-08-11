@@ -1,6 +1,8 @@
 import streamlit as st
 import auth
 
+
+from views.tab_treino_dinamico import render_tab_treino_dinamico
 from views.tab_registro import render_tab_registro
 from views.tab_analise import render_tab_analise
 from views.tab_peso import render_tab_peso
@@ -18,10 +20,13 @@ if user_id is None:
 st.sidebar.button("Sair / Logout", on_click=auth.logout)
 st.title("Sistema de Telemetria de Treino")
 
-tab_reg, tab_ana, tab_pes, tab_cfg = st.tabs([
-    "📝 Registro", "📈 Evolução", "⚖️ Peso", "⚙️ Configurações"
+tab_din, tab_reg, tab_ana, tab_pes, tab_cfg = st.tabs([
+    "🏋️‍♂️ Treino Ativo","📝 Registro", "📈 Evolução", "⚖️ Peso", "⚙️ Configurações"
 ])
 
+with tab_din:
+    render_tab_treino_dinamico(user_id)
+    
 with tab_reg:
     render_tab_registro(user_id)
 
