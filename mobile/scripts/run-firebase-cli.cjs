@@ -37,8 +37,7 @@ if (process.platform === 'win32') {
   if (jdkDirectory) {
     const javaBin = path.join(microsoftRuntimeRoot, jdkDirectory.name, 'bin');
     const pathEnvironmentKey =
-      Object.keys(process.env).find((key) => key.toLowerCase() === 'path') ??
-      'PATH';
+      Object.keys(process.env).find((key) => key.toLowerCase() === 'path') ?? 'PATH';
     firebaseEnvironment[pathEnvironmentKey] =
       `${javaBin}${path.delimiter}${process.env[pathEnvironmentKey] ?? ''}`;
   }

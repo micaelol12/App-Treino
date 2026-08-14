@@ -18,6 +18,4 @@ export const workoutHistoryDocumentSchema = z
   })
   .strict();
 
-export type WorkoutHistoryDocument = z.infer<
-  typeof workoutHistoryDocumentSchema
->;
+export type WorkoutHistoryDocument = z.infer<typeof workoutHistoryDocumentSchema>;

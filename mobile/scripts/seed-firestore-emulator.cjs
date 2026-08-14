@@ -28,9 +28,7 @@ async function seedFirestoreEmulator() {
       const batch = writeBatch(database);
 
       for (const user of fixture.users) {
-        for (const [collectionName, documents] of Object.entries(
-          user.collections,
-        )) {
+        for (const [collectionName, documents] of Object.entries(user.collections)) {
           for (const document of documents) {
             batch.set(
               doc(

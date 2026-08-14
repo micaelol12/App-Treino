@@ -12,6 +12,4 @@ export const workoutConfigDocumentSchema = z
   })
   .strict();
 
-export type WorkoutConfigDocument = z.infer<
-  typeof workoutConfigDocumentSchema
->;
+export type WorkoutConfigDocument = z.infer<typeof workoutConfigDocumentSchema>;

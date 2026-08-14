@@ -245,6 +245,10 @@ Critério de saída: um usuário autenticado acessa somente seus dados e documen
 
 ### Fase 2 — Fundação React Native
 
+Status em 14/08/2026: fundação e pipeline concluídos localmente. Os perfis de
+Development Build estão prontos; a geração dos binários depende apenas de vincular
+o repositório a uma conta/projeto EAS.
+
 Entregas:
 
 - projeto Expo TypeScript e Expo Router;

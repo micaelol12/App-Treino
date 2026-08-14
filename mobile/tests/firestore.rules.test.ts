@@ -69,9 +69,7 @@ afterAll(async () => {
 
 describe('Firestore ownership rules', () => {
   it('allows the owner to create, read, update and delete a valid document', async () => {
-    const database = testEnvironment
-      .authenticatedContext(PRIMARY_USER_ID)
-      .firestore();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
     const reference = doc(
       database,
       `usuarios/${PRIMARY_USER_ID}/config_treinos/config-1`,
@@ -118,48 +116,37 @@ describe('Firestore ownership rules', () => {
   });
 
   it('denies undeclared collections and the user parent document', async () => {
-    const database = testEnvironment
-      .authenticatedContext(PRIMARY_USER_ID)
-      .firestore();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
 
     await assertFails(
       setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}`), { admin: true }),
     );
     await assertFails(
-      setDoc(
-        doc(database, `usuarios/${PRIMARY_USER_ID}/segredos/secret-1`),
-        { value: 'denied' },
-      ),
+      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/segredos/secret-1`), {
+        value: 'denied',
+      }),
     );
   });
 });
 
 describe('config_treinos validation', () => {
   it('accepts legacy and versioned config documents', async () => {
-    const database = testEnvironment
-      .authenticatedContext(PRIMARY_USER_ID)
-      .firestore();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
 
     await assertSucceeds(
-      setDoc(
-        doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/legacy`),
-        {
-          Divisao: 'Push',
-          Exercicio: 'Tríceps Corda',
-          Series_Padrao: 3,
-        },
-      ),
+      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/legacy`), {
+        Divisao: 'Push',
+        Exercicio: 'Tríceps Corda',
+        Series_Padrao: 3,
+      }),
     );
     await assertSucceeds(
-      setDoc(
-        doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/versioned`),
-        {
-          ...validConfig,
-          schemaVersion: 1,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        },
-      ),
+      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/versioned`), {
+        ...validConfig,
+        schemaVersion: 1,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      }),
     );
   });
 
@@ -169,9 +156,7 @@ describe('config_treinos validation', () => {
     { ...validConfig, fieldNotAllowed: true },
     { ...validConfig, schemaVersion: 2 },
   ])('rejects an invalid config document', async (invalidConfig) => {
-    const database = testEnvironment
-      .authenticatedContext(PRIMARY_USER_ID)
-      .firestore();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
 
     await assertFails(
       setDoc(
@@ -184,9 +169,7 @@ describe('config_treinos validation', () => {
 
 describe('historico_treinos validation', () => {
   it('accepts a legacy record and a versioned record', async () => {
-    const database = testEnvironment
-      .authenticatedContext(PRIMARY_USER_ID)
-      .firestore();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
 
     await assertSucceeds(
       setDoc(
@@ -195,16 +178,13 @@ describe('historico_treinos validation', () => {
       ),
     );
     await assertSucceeds(
-      setDoc(
-        doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/versioned`),
-        {
-          ...validHistory,
-          sessionId: 'session-2026-07-01',
-          schemaVersion: 1,
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        },
-      ),
+      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/versioned`), {
+        ...validHistory,
+        sessionId: 'session-2026-07-01',
+        schemaVersion: 1,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      }),
     );
   });
 
@@ -215,9 +195,7 @@ describe('historico_treinos validation', () => {
     { ...validHistory, Data: '01/07/2026' },
     { ...validHistory, extra: true },
   ])('rejects an invalid history record', async (invalidHistory) => {
-    const database = testEnvironment
-      .authenticatedContext(PRIMARY_USER_ID)
-      .firestore();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
 
     await assertFails(
       setDoc(
@@ -228,9 +206,7 @@ describe('historico_treinos validation', () => {
   });
 
   it('rejects the entire batch when one record is invalid', async () => {
-    const database = testEnvironment
-      .authenticatedContext(PRIMARY_USER_ID)
-      .firestore();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
     const firstReference = doc(
       database,
       `usuarios/${PRIMARY_USER_ID}/historico_treinos/batch-valid`,
@@ -247,9 +223,9 @@ describe('historico_treinos validation', () => {
     await assertFails(batch.commit());
 
     await testEnvironment.withSecurityRulesDisabled(async (context) => {
-      expect(
-        (await getDoc(doc(context.firestore(), firstReference.path))).exists(),
-      ).toBe(false);
+      expect((await getDoc(doc(context.firestore(), firstReference.path))).exists()).toBe(
+        false,
+      );
       expect(
         (await getDoc(doc(context.firestore(), secondReference.path))).exists(),
       ).toBe(false);
@@ -259,9 +235,7 @@ describe('historico_treinos validation', () => {
 
 describe('historico_pesos validation', () => {
   it('allows an owner to upsert a valid weight by date', async () => {
-    const database = testEnvironment
-      .authenticatedContext(PRIMARY_USER_ID)
-      .firestore();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
     const reference = doc(
       database,
       `usuarios/${PRIMARY_USER_ID}/historico_pesos/2026-07-01`,
@@ -277,9 +251,7 @@ describe('historico_pesos validation', () => {
     { ...validWeight, Data: '2026-7-1' },
     { ...validWeight, extra: true },
   ])('rejects an invalid weight entry', async (invalidWeight) => {
-    const database = testEnvironment
-      .authenticatedContext(PRIMARY_USER_ID)
-      .firestore();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
 
     await assertFails(
       setDoc(

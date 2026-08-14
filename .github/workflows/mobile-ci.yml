@@ -1,0 +1,57 @@
+name: Mobile CI
+
+on:
+  pull_request:
+    paths:
+      - 'mobile/**'
+      - 'firebase.json'
+      - 'firebase.test.json'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - '.github/workflows/mobile-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - 'firebase.json'
+      - 'firebase.test.json'
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Configure Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Expo dependencies
+        run: npm run doctor
+
+      - name: Reject critical production vulnerabilities
+        run: npm audit --omit=dev --audit-level=critical
+
+      - name: Verify code and Firestore rules
+        run: npm run test:all

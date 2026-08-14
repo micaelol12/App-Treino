@@ -1,0 +1,8 @@
+.expo/
+.firebase-runtime/
+coverage/
+dist/
+node_modules/
+android/
+ios/
+package-lock.json
