@@ -2,3 +2,10 @@
 .streamlit/secrets.toml
 projeto-treino-505118-firebase-adminsdk-fbsvc-78d026eccb.json
 __pycache__/
+node_modules/
+coverage/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase/
+.firebase-runtime/

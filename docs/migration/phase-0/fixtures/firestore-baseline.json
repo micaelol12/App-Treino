@@ -1,0 +1,139 @@
+{
+  "fixtureVersion": 1,
+  "description": "Massa anônima para validar paridade, cálculos, legado e isolamento entre usuários.",
+  "users": [
+    {
+      "fixtureUserId": "qa_primary_user",
+      "collections": {
+        "config_treinos": [
+          {
+            "id": "push_supino_reto",
+            "data": {
+              "Divisao": "Push",
+              "Exercicio": "Supino Reto",
+              "Series_Padrao": 3,
+              "Ordem": 1
+            }
+          },
+          {
+            "id": "push_desenvolvimento",
+            "data": {
+              "Divisao": "Push",
+              "Exercicio": "Desenvolvimento com Halteres",
+              "Series_Padrao": 3,
+              "Ordem": 2
+            }
+          },
+          {
+            "id": "pull_a_rosca_direta",
+            "data": {
+              "Divisao": "Pull A",
+              "Exercicio": "Rosca Direta",
+              "Series_Padrao": 3,
+              "Ordem": 2
+            }
+          },
+          {
+            "id": "pull_b_rosca_direta",
+            "data": {
+              "Divisao": "Pull B",
+              "Exercicio": "Rosca Direta",
+              "Series_Padrao": 4,
+              "Ordem": 1
+            }
+          },
+          {
+            "id": "push_legacy_sem_ordem",
+            "data": {
+              "Divisao": "Push",
+              "Exercicio": "Tríceps Corda",
+              "Series_Padrao": 3
+            }
+          }
+        ],
+        "historico_treinos": [
+          {
+            "id": "legacy_2026_07_01_supino_1",
+            "data": {
+              "Data": "2026-07-01",
+              "Treino": "Push",
+              "Exercício": "Supino Reto",
+              "Série": 1,
+              "Carga": 60.0,
+              "Reps": 10,
+              "RPE": 8,
+              "Obs": ""
+            }
+          },
+          {
+            "id": "legacy_2026_07_01_supino_2",
+            "data": {
+              "Data": "2026-07-01",
+              "Treino": "Push",
+              "Exercício": "Supino Reto",
+              "Série": 2,
+              "Carga": 60.0,
+              "Reps": 8,
+              "RPE": 9,
+              "Obs": "Técnica controlada"
+            }
+          },
+          {
+            "id": "legacy_2026_07_08_supino_1",
+            "data": {
+              "Data": "2026-07-08",
+              "Treino": "Push",
+              "Exercício": "Supino Reto",
+              "Série": 1,
+              "Carga": 62.5,
+              "Reps": 10,
+              "RPE": 9,
+              "Obs": ""
+            }
+          },
+          {
+            "id": "legacy_2026_07_08_supino_2",
+            "data": {
+              "Data": "2026-07-08",
+              "Treino": "Push",
+              "Exercício": "Supino Reto",
+              "Série": 2,
+              "Carga": 62.5,
+              "Reps": 9,
+              "RPE": 9,
+              "Obs": ""
+            }
+          }
+        ],
+        "historico_pesos": [
+          { "id": "weight_01", "data": { "Data": "2026-07-01", "Peso": 80.0 } },
+          { "id": "weight_02", "data": { "Data": "2026-07-02", "Peso": 79.8 } },
+          { "id": "weight_03", "data": { "Data": "2026-07-03", "Peso": 79.7 } },
+          { "id": "weight_04", "data": { "Data": "2026-07-04", "Peso": 79.6 } },
+          { "id": "weight_05", "data": { "Data": "2026-07-05", "Peso": 79.5 } },
+          { "id": "weight_06", "data": { "Data": "2026-07-06", "Peso": 79.4 } },
+          { "id": "weight_07", "data": { "Data": "2026-07-07", "Peso": 79.3 } },
+          { "id": "legacy_duplicate_07_old", "data": { "Data": "2026-07-07", "Peso": 79.2 } }
+        ]
+      }
+    },
+    {
+      "fixtureUserId": "qa_secondary_user",
+      "collections": {
+        "config_treinos": [
+          {
+            "id": "secondary_private_exercise",
+            "data": {
+              "Divisao": "Privado",
+              "Exercicio": "Exercício do Segundo Usuário",
+              "Series_Padrao": 1,
+              "Ordem": 1
+            }
+          }
+        ],
+        "historico_treinos": [],
+        "historico_pesos": []
+      }
+    }
+  ]
+}
