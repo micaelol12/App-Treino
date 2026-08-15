@@ -22,14 +22,14 @@ Legenda de prioridade:
 
 ## Configuração
 
-- [ ] **P0 PLAN-01** Listar divisões e exercícios na ordem configurada.
-- [ ] **P0 PLAN-01** Ler documento legado sem `Ordem` e colocá-lo ao final.
-- [ ] **P0 PLAN-02** Adicionar exercício com divisão, nome, 1–10 séries e ordem positiva.
-- [ ] **P1 PLAN-04** Editar exercício existente.
-- [ ] **P1 PLAN-04** Reordenar exercícios de uma divisão.
-- [ ] **P0 PLAN-03** Excluir somente o documento selecionado por ID.
-- [ ] **P0 PLAN-03** Confirmar exclusão e apresentar falha/sucesso.
-- [ ] **P0** Mostrar estados carregando, vazio, erro e conteúdo.
+- [x] **P0 PLAN-01** Listar divisões e exercícios na ordem configurada.
+- [x] **P0 PLAN-01** Ler documento legado sem `Ordem` e colocá-lo ao final.
+- [x] **P0 PLAN-02** Adicionar exercício com divisão, nome, 1–10 séries e ordem positiva.
+- [x] **P1 PLAN-04** Editar exercício existente.
+- [x] **P1 PLAN-04** Reordenar exercícios de uma divisão.
+- [x] **P0 PLAN-03** Excluir somente o documento selecionado por ID.
+- [x] **P0 PLAN-03** Confirmar exclusão e apresentar falha/sucesso.
+- [x] **P0** Mostrar estados carregando, vazio, erro e conteúdo.
 
 ## Treino ativo
 

@@ -14,9 +14,12 @@ import {
   setLogLevel,
   setDoc,
   Timestamp,
+  type Firestore,
   updateDoc,
   writeBatch,
 } from 'firebase/firestore';
+
+import { FirebaseWorkoutPlanRepository } from '../src/features/workout-plans/infrastructure/firestore/firebase-workout-plan.repository';
 
 const PROJECT_ID = 'demo-app-treino';
 const PRIMARY_USER_ID = 'qa_primary_user';
@@ -164,6 +167,100 @@ describe('config_treinos validation', () => {
         invalidConfig,
       ),
     );
+  });
+});
+
+describe('workout plan repository integration', () => {
+  it('reads legacy data and completes CRUD using the document ID', async () => {
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const repository = new FirebaseWorkoutPlanRepository(
+      database as unknown as Firestore,
+    );
+
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      await setDoc(
+        doc(
+          context.firestore(),
+          `usuarios/${PRIMARY_USER_ID}/config_treinos/legacy-without-order`,
+        ),
+        {
+          Divisao: 'Push',
+          Exercicio: 'Tríceps Corda',
+          Series_Padrao: 3,
+        },
+      );
+    });
+
+    await expect(repository.list(PRIMARY_USER_ID)).resolves.toEqual([
+      expect.objectContaining({ id: 'legacy-without-order', order: 99 }),
+    ]);
+
+    const createdId = await repository.create(PRIMARY_USER_ID, {
+      division: 'Pull',
+      name: 'Rosca Direta',
+      defaultSets: 4,
+      order: 1,
+    });
+    await repository.update(PRIMARY_USER_ID, createdId, {
+      division: 'Pull B',
+      name: 'Rosca Direta',
+      defaultSets: 3,
+      order: 2,
+    });
+
+    expect(
+      (
+        await getDoc(
+          doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/${createdId}`),
+        )
+      ).data(),
+    ).toMatchObject({
+      Divisao: 'Pull B',
+      Exercicio: 'Rosca Direta',
+      Series_Padrao: 3,
+      Ordem: 2,
+      schemaVersion: 1,
+      createdAt: expect.any(Timestamp),
+      updatedAt: expect.any(Timestamp),
+    });
+
+    await repository.delete(PRIMARY_USER_ID, createdId);
+    expect(
+      (
+        await getDoc(
+          doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/${createdId}`),
+        )
+      ).exists(),
+    ).toBe(false);
+    expect(
+      (
+        await getDoc(
+          doc(
+            database,
+            `usuarios/${PRIMARY_USER_ID}/config_treinos/legacy-without-order`,
+          ),
+        )
+      ).exists(),
+    ).toBe(true);
+  });
+
+  it('reorders multiple exercises atomically', async () => {
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const repository = new FirebaseWorkoutPlanRepository(
+      database as unknown as Firestore,
+    );
+    const first = doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/first`);
+    const second = doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/second`);
+    await setDoc(first, validConfig);
+    await setDoc(second, { ...validConfig, Exercicio: 'Crucifixo', Ordem: 2 });
+
+    await repository.updateOrder(PRIMARY_USER_ID, [
+      { id: 'first', order: 2 },
+      { id: 'second', order: 1 },
+    ]);
+
+    expect((await getDoc(first)).data()?.Ordem).toBe(2);
+    expect((await getDoc(second)).data()?.Ordem).toBe(1);
   });
 });
 

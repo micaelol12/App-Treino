@@ -5,6 +5,7 @@ import { parsePublicEnvironment } from '@/shared/config/environment';
 export type FirebaseClient = {
   readonly app: FirebaseApp;
   readonly authEmulatorUrl: string | undefined;
+  readonly firestoreEmulatorUrl: string | undefined;
 };
 
 export function getFirebaseClient(): FirebaseClient {
@@ -20,5 +21,9 @@ export function getFirebaseClient(): FirebaseClient {
         appId: environment.firebaseAppId,
       });
 
-  return { app, authEmulatorUrl: environment.firebaseAuthEmulatorUrl };
+  return {
+    app,
+    authEmulatorUrl: environment.firebaseAuthEmulatorUrl,
+    firestoreEmulatorUrl: environment.firebaseFirestoreEmulatorUrl,
+  };
 }

@@ -13,6 +13,7 @@ const publicEnvironmentSchema = z.object({
   firebaseMessagingSenderId: z.string().min(1),
   firebaseAppId: z.string().min(1),
   firebaseAuthEmulatorUrl: optionalUrl,
+  firebaseFirestoreEmulatorUrl: optionalUrl,
 });
 
 export type PublicEnvironment = z.infer<typeof publicEnvironmentSchema>;
@@ -29,6 +30,7 @@ const bundledEnvironment = {
   firebaseMessagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   firebaseAppId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
   firebaseAuthEmulatorUrl: process.env.EXPO_PUBLIC_FIREBASE_AUTH_EMULATOR_URL,
+  firebaseFirestoreEmulatorUrl: process.env.EXPO_PUBLIC_FIREBASE_FIRESTORE_EMULATOR_URL,
 };
 
 export function parsePublicEnvironment(

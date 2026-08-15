@@ -1,0 +1,66 @@
+appId: com.micael.apptreino.development
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'auth-sign-up-link'
+- tapOn:
+    id: 'auth-email-input'
+- inputText: 'e2e-plan@app-treino.local'
+- tapOn:
+    id: 'auth-password-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-password-confirmation-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-sign-up-button'
+- assertVisible: 'Seu treino'
+- tapOn: 'Ajustes'
+- assertVisible: 'Seu plano está vazio'
+- tapOn:
+    id: 'workout-plan-add'
+- tapOn:
+    id: 'workout-division-input'
+- inputText: 'Push'
+- tapOn:
+    id: 'workout-name-input'
+- inputText: 'Supino Reto'
+- tapOn:
+    id: 'workout-save-button'
+- assertVisible: 'Supino Reto'
+- tapOn:
+    id: 'workout-plan-add'
+- tapOn:
+    id: 'workout-division-input'
+- inputText: 'Push'
+- tapOn:
+    id: 'workout-name-input'
+- inputText: 'Desenvolvimento'
+- tapOn:
+    id: 'workout-order-input'
+- eraseText
+- inputText: '2'
+- tapOn:
+    id: 'workout-save-button'
+- assertVisible: 'Desenvolvimento'
+- tapOn:
+    text: 'Descer'
+    index: 0
+- assertVisible: 'Ordem atualizada.'
+- tapOn:
+    text: 'Editar'
+    index: 0
+- tapOn:
+    id: 'workout-sets-input'
+- eraseText
+- inputText: '4'
+- tapOn:
+    id: 'workout-save-button'
+- assertVisible: '4 séries · ordem 1'
+- tapOn:
+    text: 'Excluir'
+    index: 0
+- assertVisible: 'Excluir exercício?'
+- tapOn: 'Excluir'
+- assertVisible: 'Exercício excluído.'

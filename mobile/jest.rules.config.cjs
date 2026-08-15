@@ -4,4 +4,7 @@ module.exports = {
   roots: ['<rootDir>/tests'],
   testMatch: ['**/*.rules.test.ts'],
   testTimeout: 20000,
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
 };

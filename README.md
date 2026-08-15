@@ -5,9 +5,10 @@ React Native 0.86, TypeScript e Expo Router.
 
 ## Estado atual
 
-O projeto já pode ser executado por meio de um Development Build. A autenticação por
-e-mail e senha, a restauração segura da sessão, a proteção das rotas e o logout estão
-integrados ao Firebase Auth. As demais telas de negócio ainda são incrementais.
+O projeto já pode ser executado por meio de um Development Build. A autenticação e a
+configuração completa do plano de treino estão integradas ao Firebase. É possível
+listar, adicionar, editar, reordenar e excluir exercícios por ID, preservando os
+documentos legados. As demais telas de negócio ainda são incrementais.
 
 O antigo aplicativo Streamlit foi retirado. A documentação histórica e os contratos
 Firestore foram preservados para garantir compatibilidade com os dados existentes.
@@ -297,4 +298,5 @@ npx expo install --check
 - [Plano de migração](PLANO_MIGRACAO_REACT_NATIVE.md)
 - [Fundação React Native — fase 2](docs/migration/phase-2/README.md)
 - [Autenticação — fase 3](docs/migration/phase-3/README.md)
+- [Configuração de treinos — fase 4](docs/migration/phase-4/README.md)
 - [Configuração local do Firebase](firebase/README.md)

@@ -279,6 +279,12 @@ Critério de saída: reiniciar o app mantém uma sessão válida, logout remove 
 
 ### Fase 4 — Configuração de treinos
 
+Status em 15/08/2026: implementação concluída com CRUD autenticado, reordenação
+atômica, validação de duplicidade e limites, compatibilidade legada e testes do
+repositório contra o Firestore Emulator. As regras e os índices também foram
+publicados no projeto `projeto-treino-505118`. Artefatos em
+`docs/migration/phase-4/`.
+
 Entregas:
 
 - listar planos e exercícios em ordem;
@@ -416,4 +422,6 @@ Uma funcionalidade só está concluída quando:
 
 ## 12. Próximo marco recomendado
 
-Executar a Fase 4 como próximo corte vertical: provar a leitura autenticada de um plano legado no Firestore Emulator, implementar listagem com estados de carregamento, vazio e erro e então avançar para criação, edição, reordenação e exclusão por ID.
+Executar a Fase 5 como próximo corte vertical: consumir o plano ordenado da Fase 4,
+persistir localmente o rascunho da sessão ativa e concluir o treino de forma
+idempotente em um batch do Firestore.

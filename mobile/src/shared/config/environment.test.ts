@@ -29,6 +29,15 @@ describe('parsePublicEnvironment', () => {
     ).toBe('http://10.0.2.2:9099');
   });
 
+  it('aceita a URL opcional do Firestore Emulator', () => {
+    expect(
+      parsePublicEnvironment({
+        ...validEnvironment,
+        firebaseFirestoreEmulatorUrl: 'http://10.0.2.2:8080',
+      }).firebaseFirestoreEmulatorUrl,
+    ).toBe('http://10.0.2.2:8080');
+  });
+
   it('trata a URL vazia do Auth Emulator como não configurada', () => {
     expect(
       parsePublicEnvironment({

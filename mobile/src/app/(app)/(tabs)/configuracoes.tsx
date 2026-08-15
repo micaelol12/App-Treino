@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { useAuth } from '@/features/auth/presentation/auth-context';
 import { getAuthErrorMessage } from '@/features/auth/presentation/auth-error-message';
 import { AuthFeedback } from '@/features/auth/presentation/components/auth-feedback';
+import { WorkoutPlansSection } from '@/features/workout-plans/presentation/components/workout-plans-section';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
 import { PrimaryButton } from '@/shared/components/primary-button';
@@ -41,6 +42,7 @@ export default function SettingsRoute() {
 
   return (
     <Screen title="Configurações" description="Personalize sua experiência.">
+      <WorkoutPlansSection />
       <Card>
         <AppText variant="heading">Conta</AppText>
         <AppText>{session?.email}</AppText>

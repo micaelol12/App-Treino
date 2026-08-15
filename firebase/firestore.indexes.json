@@ -12,7 +12,7 @@
       "collectionGroup": "historico_treinos",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "Exercício", "order": "ASCENDING" },
+        { "fieldPath": "`Exercício`", "order": "ASCENDING" },
         { "fieldPath": "Data", "order": "DESCENDING" }
       ]
     },
