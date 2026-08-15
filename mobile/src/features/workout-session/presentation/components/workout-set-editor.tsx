@@ -14,11 +14,13 @@ type WorkoutSetEditorProps = {
   readonly exerciseName: string;
   readonly workoutSet: WorkoutSetDraft;
   readonly onChange: (patch: WorkoutSetPatch) => void;
+  readonly testIDPrefix?: string;
 };
 
 export function WorkoutSetEditor({
   exerciseName,
   onChange,
+  testIDPrefix = 'set',
   workoutSet,
 }: WorkoutSetEditorProps) {
   const theme = useAppTheme();
@@ -44,7 +46,7 @@ export function WorkoutSetEditor({
             onChangeText={(loadKg) => onChange({ loadKg })}
             selectTextOnFocus
             style={inputStyle}
-            testID={`set-${workoutSet.setNumber}-load`}
+            testID={`${testIDPrefix}-${workoutSet.setNumber}-load`}
             value={workoutSet.loadKg}
           />
         </View>
@@ -56,7 +58,7 @@ export function WorkoutSetEditor({
             onChangeText={(repetitions) => onChange({ repetitions })}
             selectTextOnFocus
             style={inputStyle}
-            testID={`set-${workoutSet.setNumber}-repetitions`}
+            testID={`${testIDPrefix}-${workoutSet.setNumber}-repetitions`}
             value={workoutSet.repetitions}
           />
         </View>
@@ -68,7 +70,7 @@ export function WorkoutSetEditor({
             onChangeText={(rpe) => onChange({ rpe })}
             selectTextOnFocus
             style={inputStyle}
-            testID={`set-${workoutSet.setNumber}-rpe`}
+            testID={`${testIDPrefix}-${workoutSet.setNumber}-rpe`}
             value={workoutSet.rpe}
           />
         </View>
@@ -83,7 +85,7 @@ export function WorkoutSetEditor({
           placeholder="Opcional"
           placeholderTextColor={theme.colors.textMuted}
           style={[...inputStyle, styles.noteInput]}
-          testID={`set-${workoutSet.setNumber}-note`}
+          testID={`${testIDPrefix}-${workoutSet.setNumber}-note`}
           value={workoutSet.note}
         />
       </View>

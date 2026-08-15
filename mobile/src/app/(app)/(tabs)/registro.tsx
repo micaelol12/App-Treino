@@ -1,11 +1,5 @@
-import { FeaturePlaceholder } from '@/shared/components/feature-placeholder';
+import { ManualWorkoutScreen } from '@/features/workout-session/presentation/screens/manual-workout-screen';
 
 export default function RecordRoute() {
-  return (
-    <FeaturePlaceholder
-      title="Registro"
-      description="Registre séries, carga e repetições."
-      nextStep="O formulário usará React Hook Form, Zod e os contratos definidos na fase 1."
-    />
-  );
+  return <ManualWorkoutScreen />;
 }

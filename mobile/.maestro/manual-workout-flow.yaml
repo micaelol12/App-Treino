@@ -1,0 +1,64 @@
+appId: com.micael.apptreino.development
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'auth-sign-up-link'
+- tapOn:
+    id: 'auth-email-input'
+- inputText: 'e2e-manual@app-treino.local'
+- tapOn:
+    id: 'auth-password-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-password-confirmation-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-sign-up-button'
+- tapOn: 'Ajustes'
+- tapOn:
+    id: 'workout-plan-add'
+- tapOn:
+    id: 'workout-division-input'
+- inputText: 'Push'
+- tapOn:
+    id: 'workout-name-input'
+- inputText: 'Supino Reto'
+- tapOn:
+    id: 'workout-save-button'
+- tapOn:
+    id: 'workout-plan-add'
+- tapOn:
+    id: 'workout-division-input'
+- inputText: 'Push'
+- tapOn:
+    id: 'workout-name-input'
+- inputText: 'Desenvolvimento'
+- tapOn:
+    id: 'workout-order-input'
+- eraseText
+- inputText: '2'
+- tapOn:
+    id: 'workout-save-button'
+- tapOn: 'Registro'
+- assertVisible: 'Preencha todas as séries de uma divisão em um único formulário.'
+- tapOn:
+    id: 'manual-workout-prepare'
+- assertVisible: 'Supino Reto'
+- assertVisible: 'Desenvolvimento'
+- tapOn: 'Supino Reto, série 1, carga em quilogramas'
+- eraseText
+- inputText: '60'
+- tapOn: 'Supino Reto, série 1, repetições'
+- eraseText
+- inputText: '10'
+- scrollUntilVisible:
+    element:
+      id: 'manual-workout-submit'
+    direction: DOWN
+- tapOn:
+    id: 'manual-workout-submit'
+- assertVisible: 'Registro salvo'
+- assertVisible: '1 série foi salva.'
+- tapOn: 'OK'
+- assertVisible: 'Preencher registro'

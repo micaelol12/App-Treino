@@ -317,6 +317,11 @@ Critério de saída: todos os dados digitados sobrevivem à navegação e ao rei
 
 ### Fase 6 — Registro manual
 
+Status em 15/08/2026: implementação concluída localmente com formulário completo
+por divisão, reutilização do editor de séries e do caso de uso da Fase 5, validação
+de domínio, batch idempotente e trava contra toques repetidos. O histórico mantém o
+mesmo contrato usado pelo treino ativo. Artefatos em `docs/migration/phase-6/`.
+
 Entregas:
 
 - formulário completo por divisão;
@@ -428,6 +433,6 @@ Uma funcionalidade só está concluída quando:
 
 ## 12. Próximo marco recomendado
 
-Executar a Fase 6 como próximo corte vertical: reutilizar as regras, o componente de
-série e o caso de uso idempotente da Fase 5 para entregar o registro manual completo
-por divisão.
+Executar a Fase 7 como próximo corte vertical: entregar o registro de peso e validar
+em um spike curto a biblioteca de gráficos antes de implementar os indicadores de
+evolução sobre os históricos das Fases 5 e 6.
