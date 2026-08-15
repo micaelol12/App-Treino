@@ -18,13 +18,15 @@ export function PrimaryButton({ disabled, label, style, ...props }: PrimaryButto
       accessibilityRole="button"
       disabled={disabled}
       {...props}
-      style={({ pressed }) => [
+      style={(state) => [
         styles.button,
         {
-          backgroundColor: pressed ? theme.colors.primaryPressed : theme.colors.primary,
+          backgroundColor: state.pressed
+            ? theme.colors.primaryPressed
+            : theme.colors.primary,
           opacity: disabled ? 0.5 : 1,
         },
-        typeof style === 'function' ? style({ pressed }) : style,
+        typeof style === 'function' ? style(state) : style,
       ]}
     >
       <AppText style={{ color: theme.colors.onPrimary, fontWeight: '700' }}>

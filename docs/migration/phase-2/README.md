@@ -50,12 +50,19 @@ Para gerar builds instaláveis, configure o projeto EAS e execute
 - 29 testes unitários aprovados, com 100% de linhas e 82,14% de branches;
 - 21 testes das regras do Firestore aprovados no Emulator Suite.
 
-Os testes usam `firebase.test.json` na porta 8081, permitindo manter o emulador de
-desenvolvimento da porta 8080 aberto durante a verificação local.
+Os testes usam `firebase.test.json` na porta 8082, permitindo manter o emulador de
+desenvolvimento da porta 8080 e o Metro da porta 8081 abertos durante a verificação.
 
 Os binários de Development Build não foram enviados ao EAS porque isso exige vínculo
 com uma conta e um projeto Expo. Os perfis, identificadores e o `expo-dev-client`
 estão configurados para gerar esses binários sem mudança de código.
+
+Durante a transição do SDK 57, o Expo Go disponível nas lojas não possui runtime
+compatível para aparelhos físicos. O fluxo suportado deste projeto é o Development
+Build local ou via EAS; não é necessário rebaixar o SDK.
+
+Após a validação da fundação, o código Streamlit foi retirado conforme o ADR 0004. O
+baseline e as fixtures continuam versionados como referência de paridade.
 
 ## Auditoria de dependências
 

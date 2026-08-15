@@ -2,9 +2,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { AppErrorBoundary } from '@/shared/components/app-error-boundary';
+import { AppProviders } from '@/shared/providers/app-providers';
 import { useAppTheme } from '@/shared/theme/theme-provider';
-
-import { AppProviders } from './providers';
 
 function RootNavigator() {
   const theme = useAppTheme();

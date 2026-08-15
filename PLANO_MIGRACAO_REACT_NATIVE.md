@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Reescrever o aplicativo atual em React Native, preservando as funcionalidades e os dados do Firebase, com uma base sustentável para Android e iOS. A primeira versão móvel deve atingir paridade funcional antes que o app Streamlit seja desativado.
+Reescrever o aplicativo em React Native, preservando as funcionalidades e os dados do Firebase, com uma base sustentável para Android e iOS. Por decisão registrada no ADR 0004, o código Streamlit foi retirado após a fundação móvel; a paridade passa a ser verificada pelas fixtures, pelos testes de contrato e pelo baseline histórico da fase 0.
 
 O plano privilegia Clean Code de forma pragmática: regras de negócio independentes da interface e do Firebase, módulos organizados por funcionalidade, tipos explícitos, testes nas áreas de maior risco e abstrações apenas quando houver uma responsabilidade real a separar.
 
@@ -282,7 +282,7 @@ Entregas:
 - estados vazio, erro e carregamento;
 - compatibilidade com documentos sem `Ordem`.
 
-Critério de saída: as mudanças aparecem corretamente no Streamlit e no app móvel durante o período de convivência.
+Critério de saída: as mudanças preservam o contrato legado validado pelas fixtures e aparecem corretamente no app móvel e no Firestore Emulator.
 
 ### Fase 5 — Treino ativo
 
@@ -332,7 +332,7 @@ Entregas:
 - telemetria de erros sem dados sensíveis;
 - política de privacidade, exclusão de conta e requisitos das lojas;
 - distribuição interna, beta controlado e checklist de rollback;
-- monitoramento do período de convivência com o Streamlit.
+- monitoramento de erros ao ler documentos legados e checklist de rollback.
 
 Critério de saída: zero defeito bloqueador, regras auditadas, recuperação validada e aprovação do checklist de paridade.
 
@@ -405,10 +405,10 @@ Uma funcionalidade só está concluída quando:
 | Histórico crescendo sem limite | Consultas por intervalo, ordenação, índices e paginação por cursor |
 | Perda do treino em andamento | Rascunho persistido a cada alteração e restauração testada |
 | Duplicidade por reenvio | ID de sessão gerado antes do commit e operação idempotente |
-| Divergência entre Streamlit e mobile | Período curto de convivência e testes de contrato sobre o mesmo ambiente de homologação |
+| Regressão na leitura dos dados legados após a retirada do Streamlit | Fixtures versionadas, mapeadores tolerantes e testes de contrato no Emulator |
 | Biblioteca de gráficos inadequada | Spike na Fase 7 antes de acoplar componentes de produção |
 | Arquitetura excessiva para o tamanho do app | Interfaces somente nas fronteiras e módulos criados conforme as features forem entregues |
 
 ## 12. Próximo marco recomendado
 
-Executar as Fases 0 e 1 antes de gerar telas definitivas. O primeiro incremento técnico deve provar três coisas: login real com persistência, leitura segura de um plano legado e gravação atômica de uma sessão de teste no Emulator. Esse corte vertical valida os maiores riscos sem antecipar toda a interface.
+Executar a Fase 3 como próximo corte vertical: login real com persistência, proteção das rotas e restauração segura da sessão. Depois, provar a leitura de um plano legado no Emulator antes de avançar para a edição completa dos treinos.

@@ -7,6 +7,7 @@ Esta configuração usa `demo-app-treino` como projeto padrão. IDs com prefixo 
 - `firestore.rules`: autorização por proprietário e validação das três coleções;
 - `firestore.indexes.json`: índices previstos para ordenação e filtros paginados;
 - `../firebase.json`: portas e associação dos arquivos;
+- `../firebase.test.json`: configuração isolada dos testes na porta 8082;
 - `../.firebaserc`: projeto demo local.
 
 ## Executar os testes
@@ -17,7 +18,7 @@ Na pasta `mobile`:
 npm run test:rules
 ```
 
-O comando inicia o Firestore Emulator, executa apenas a suíte de regras e encerra o processo. São necessários Node.js, Java JDK 11+ e as dependências instaladas.
+O comando inicia o Firestore Emulator na porta 8082, executa apenas a suíte de regras e encerra o processo. São necessários Node.js, Java JDK 21 e as dependências instaladas.
 
 Para QA manual, mantenha o emulador aberto em um terminal e carregue a fixture em outro. O seed usa IDs determinísticos e pode ser repetido:
 
