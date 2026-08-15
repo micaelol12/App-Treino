@@ -12,6 +12,7 @@ mobile/expo-env.d.ts
 mobile/.env
 mobile/.env.*
 !mobile/.env.example
+!mobile/.env.emulator.example
 mobile/*.tsbuildinfo
 mobile/android/
 mobile/ios/

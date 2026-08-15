@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useAuth } from '@/features/auth/presentation/auth-context';
+import { getAuthErrorMessage } from '@/features/auth/presentation/auth-error-message';
+import { AuthFeedback } from '@/features/auth/presentation/components/auth-feedback';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
 import { PrimaryButton } from '@/shared/components/primary-button';
@@ -17,11 +21,37 @@ const choices: { label: string; value: ThemePreference }[] = [
 ];
 
 export default function SettingsRoute() {
+  const { session, signOut } = useAuth();
   const preference = usePreferencesStore((state) => state.themePreference);
   const setPreference = usePreferencesStore((state) => state.setThemePreference);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    setSignOutError(null);
+
+    try {
+      await signOut();
+    } catch (error) {
+      setSignOutError(getAuthErrorMessage(error));
+      setIsSigningOut(false);
+    }
+  };
 
   return (
     <Screen title="Configurações" description="Personalize sua experiência.">
+      <Card>
+        <AppText variant="heading">Conta</AppText>
+        <AppText>{session?.email}</AppText>
+        {signOutError ? <AuthFeedback message={signOutError} /> : null}
+        <PrimaryButton
+          disabled={isSigningOut}
+          label={isSigningOut ? 'Saindo…' : 'Sair da conta'}
+          onPress={handleSignOut}
+          testID="auth-sign-out-button"
+        />
+      </Card>
       <Card>
         <AppText variant="heading">Aparência</AppText>
         <View style={styles.options}>

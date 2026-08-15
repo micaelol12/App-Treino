@@ -20,6 +20,33 @@ describe('parsePublicEnvironment', () => {
     ).toThrow();
   });
 
+  it('aceita a URL opcional do Auth Emulator', () => {
+    expect(
+      parsePublicEnvironment({
+        ...validEnvironment,
+        firebaseAuthEmulatorUrl: 'http://10.0.2.2:9099',
+      }).firebaseAuthEmulatorUrl,
+    ).toBe('http://10.0.2.2:9099');
+  });
+
+  it('trata a URL vazia do Auth Emulator como não configurada', () => {
+    expect(
+      parsePublicEnvironment({
+        ...validEnvironment,
+        firebaseAuthEmulatorUrl: '',
+      }).firebaseAuthEmulatorUrl,
+    ).toBeUndefined();
+  });
+
+  it('rejeita uma URL inválida do Auth Emulator', () => {
+    expect(() =>
+      parsePublicEnvironment({
+        ...validEnvironment,
+        firebaseAuthEmulatorUrl: 'not-an-url',
+      }),
+    ).toThrow();
+  });
+
   it('valida as variáveis incorporadas quando nenhum valor é informado', () => {
     expect(() => parsePublicEnvironment()).toThrow();
   });

@@ -5,9 +5,9 @@ React Native 0.86, TypeScript e Expo Router.
 
 ## Estado atual
 
-O projeto já pode ser executado por meio de um Development Build para visualizar o
-shell, navegar pelas cinco abas e testar os temas claro e escuro. As telas de negócio ainda são incrementais:
-autenticação e integração do Firebase começam na fase 3 da migração.
+O projeto já pode ser executado por meio de um Development Build. A autenticação por
+e-mail e senha, a restauração segura da sessão, a proteção das rotas e o logout estão
+integrados ao Firebase Auth. As demais telas de negócio ainda são incrementais.
 
 O antigo aplicativo Streamlit foi retirado. A documentação histórica e os contratos
 Firestore foram preservados para garantir compatibilidade com os dados existentes.
@@ -38,15 +38,21 @@ cd mobile
 npm install
 ```
 
-Opcionalmente, prepare as variáveis públicas do Firebase:
+Para usar um projeto Firebase real, prepare as variáveis públicas:
 
 ```powershell
 Copy-Item .env.example .env.local
 ```
 
+Para testar a autenticação apenas no emulador local:
+
+```powershell
+Copy-Item .env.emulator.example .env.local
+```
+
 As variáveis `EXPO_PUBLIC_*` são incluídas no aplicativo e não podem conter segredos,
-tokens administrativos ou arquivos de service account. O shell atual abre sem essas
-variáveis; elas serão necessárias quando a integração Firebase for ativada.
+tokens administrativos ou arquivos de service account. Sem a configuração, o app
+abre a tela de login em modo seguro e informa que o Firebase ainda não foi preparado.
 
 ## Compatibilidade com Expo Go
 
@@ -159,19 +165,19 @@ O EAS solicita a conta Expo e a vinculação do projeto na primeira execução.
 
 Todos os comandos abaixo devem ser executados dentro de `mobile`.
 
-| Comando | Finalidade |
-| --- | --- |
-| `npm test` | Executa os testes unitários e de componentes. |
-| `npm run test:unit` | Equivalente explícito da suíte unitária. |
-| `npm run test:unit:coverage` | Executa testes unitários com relatório de cobertura. |
-| `npm run test:rules` | Inicia o Firestore Emulator na porta 8082, testa as regras e encerra. |
-| `npm run verify` | Executa TypeScript, ESLint, Prettier e testes unitários com cobertura. |
-| `npm run test:all` | Executa todo o pipeline, incluindo as regras Firestore. |
-| `npm run typecheck` | Valida os tipos sem gerar arquivos. |
-| `npm run lint` | Valida padrões de código e limites arquiteturais. |
-| `npm run format:check` | Verifica a formatação sem alterar arquivos. |
-| `npm run format` | Formata os arquivos com Prettier. |
-| `npm run doctor` | Verifica a compatibilidade das dependências com o Expo. |
+| Comando                      | Finalidade                                                             |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| `npm test`                   | Executa os testes unitários e de componentes.                          |
+| `npm run test:unit`          | Equivalente explícito da suíte unitária.                               |
+| `npm run test:unit:coverage` | Executa testes unitários com relatório de cobertura.                   |
+| `npm run test:rules`         | Inicia o Firestore Emulator na porta 8082, testa as regras e encerra.  |
+| `npm run verify`             | Executa TypeScript, ESLint, Prettier e testes unitários com cobertura. |
+| `npm run test:all`           | Executa todo o pipeline, incluindo as regras Firestore.                |
+| `npm run typecheck`          | Valida os tipos sem gerar arquivos.                                    |
+| `npm run lint`               | Valida padrões de código e limites arquiteturais.                      |
+| `npm run format:check`       | Verifica a formatação sem alterar arquivos.                            |
+| `npm run format`             | Formata os arquivos com Prettier.                                      |
+| `npm run doctor`             | Verifica a compatibilidade das dependências com o Expo.                |
 
 Para a validação completa antes de um commit:
 
@@ -184,7 +190,7 @@ npm run test:all
 O teste de regras baixa/inicia o Firestore Emulator e requer Java. Ele usa o projeto
 local `demo-app-treino`, sem acessar recursos Firebase de produção.
 
-## Firestore Emulator para desenvolvimento
+## Firebase Emulator para desenvolvimento
 
 Para manter o emulador aberto, use dois terminais dentro de `mobile`.
 
@@ -200,8 +206,10 @@ Terminal 2, para carregar a fixture local:
 npm run emulator:seed
 ```
 
-O emulador de desenvolvimento usa a porta 8080, o Metro usa 8081 por padrão e a suíte
-automatizada usa 8082 para que os três possam funcionar ao mesmo tempo.
+O Auth Emulator usa a porta 9099, o Firestore de desenvolvimento usa 8080, o Metro
+usa 8081 e a suíte automatizada de regras usa 8082. Para autenticação local no
+Android Emulator, copie `.env.emulator.example` para `.env.local` antes de iniciar o
+Metro.
 
 ## Estrutura principal
 
@@ -288,4 +296,5 @@ npx expo install --check
 
 - [Plano de migração](PLANO_MIGRACAO_REACT_NATIVE.md)
 - [Fundação React Native — fase 2](docs/migration/phase-2/README.md)
+- [Autenticação — fase 3](docs/migration/phase-3/README.md)
 - [Configuração local do Firebase](firebase/README.md)

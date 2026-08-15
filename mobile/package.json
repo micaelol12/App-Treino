@@ -1,6 +1,6 @@
 {
   "name": "app-treino-mobile",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "main": "expo-router/entry",
   "engines": {
@@ -19,7 +19,7 @@
     "test:unit": "jest --config jest.config.cjs --runInBand",
     "test:unit:coverage": "npm run test:unit -- --coverage",
     "firebase:cli": "node scripts/run-firebase-cli.cjs",
-    "emulator:start": "npm run firebase:cli -- emulators:start --config ../firebase.json --project demo-app-treino --only firestore",
+    "emulator:start": "npm run firebase:cli -- emulators:start --config ../firebase.json --project demo-app-treino --only auth,firestore",
     "emulator:seed": "node scripts/seed-firestore-emulator.cjs",
     "test:rules": "npm run firebase:cli -- emulators:exec --config ../firebase.test.json --project demo-app-treino --only firestore \"npm run test:rules:inside\"",
     "test:rules:inside": "jest --config jest.rules.config.cjs --runInBand",

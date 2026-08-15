@@ -33,7 +33,7 @@ const variant = variants[appVariant];
 const config: ExpoConfig = {
   name: variant.name,
   slug: 'app-treino',
-  version: '0.2.0',
+  version: '0.3.0',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   scheme: variant.scheme,

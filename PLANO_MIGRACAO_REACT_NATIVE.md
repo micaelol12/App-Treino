@@ -263,6 +263,11 @@ Critério de saída: shell do app navega, alterna tema se previsto e passa pelo 
 
 ### Fase 3 — Autenticação
 
+Status em 15/08/2026: implementação concluída localmente com Firebase Auth,
+persistência em AsyncStorage, proteção de rotas, mensagens seguras e fluxo E2E
+versionado. A validação contra o projeto real depende da confirmação das
+configurações públicas e da habilitação do provedor E-mail/senha no Firebase.
+
 Entregas:
 
 - login, cadastro, logout e restauração segura da sessão;
@@ -398,17 +403,17 @@ Uma funcionalidade só está concluída quando:
 
 ## 11. Riscos principais e mitigação
 
-| Risco | Mitigação |
-| --- | --- |
-| Security Rules ausentes ou permissivas | Implementar e testar no Emulator antes de usar dados reais |
-| Campos legados inconsistentes | Validadores e mapeadores tolerantes, com telemetria de documentos rejeitados |
-| Histórico crescendo sem limite | Consultas por intervalo, ordenação, índices e paginação por cursor |
-| Perda do treino em andamento | Rascunho persistido a cada alteração e restauração testada |
-| Duplicidade por reenvio | ID de sessão gerado antes do commit e operação idempotente |
-| Regressão na leitura dos dados legados após a retirada do Streamlit | Fixtures versionadas, mapeadores tolerantes e testes de contrato no Emulator |
-| Biblioteca de gráficos inadequada | Spike na Fase 7 antes de acoplar componentes de produção |
-| Arquitetura excessiva para o tamanho do app | Interfaces somente nas fronteiras e módulos criados conforme as features forem entregues |
+| Risco                                                               | Mitigação                                                                                |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Security Rules ausentes ou permissivas                              | Implementar e testar no Emulator antes de usar dados reais                               |
+| Campos legados inconsistentes                                       | Validadores e mapeadores tolerantes, com telemetria de documentos rejeitados             |
+| Histórico crescendo sem limite                                      | Consultas por intervalo, ordenação, índices e paginação por cursor                       |
+| Perda do treino em andamento                                        | Rascunho persistido a cada alteração e restauração testada                               |
+| Duplicidade por reenvio                                             | ID de sessão gerado antes do commit e operação idempotente                               |
+| Regressão na leitura dos dados legados após a retirada do Streamlit | Fixtures versionadas, mapeadores tolerantes e testes de contrato no Emulator             |
+| Biblioteca de gráficos inadequada                                   | Spike na Fase 7 antes de acoplar componentes de produção                                 |
+| Arquitetura excessiva para o tamanho do app                         | Interfaces somente nas fronteiras e módulos criados conforme as features forem entregues |
 
 ## 12. Próximo marco recomendado
 
-Executar a Fase 3 como próximo corte vertical: login real com persistência, proteção das rotas e restauração segura da sessão. Depois, provar a leitura de um plano legado no Emulator antes de avançar para a edição completa dos treinos.
+Executar a Fase 4 como próximo corte vertical: provar a leitura autenticada de um plano legado no Firestore Emulator, implementar listagem com estados de carregamento, vazio e erro e então avançar para criação, edição, reordenação e exclusão por ID.

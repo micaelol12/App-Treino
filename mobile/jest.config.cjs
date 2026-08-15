@@ -10,6 +10,10 @@ module.exports = {
   collectCoverageFrom: [
     'src/shared/validation/**/*.ts',
     'src/shared/config/environment.ts',
+    'src/features/auth/application/**/*.ts',
+    'src/features/auth/infrastructure/firebase/firebase-auth-error.ts',
+    'src/features/auth/presentation/auth-error-message.ts',
+    'src/features/auth/presentation/auth-form.schema.ts',
     'src/features/**/domain/**/*.ts',
     'src/features/**/infrastructure/firestore/**/*.ts',
     '!src/**/index.ts',
