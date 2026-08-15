@@ -33,18 +33,18 @@ Legenda de prioridade:
 
 ## Treino ativo
 
-- [ ] **P0 ACTIVE-01** Orientar cadastro quando não houver plano.
-- [ ] **P0 ACTIVE-01** Selecionar data e divisão e iniciar com exercícios ordenados.
-- [ ] **P0 ACTIVE-02** Criar séries com carga 0, repetições 0, RPE 8 e observação vazia.
-- [ ] **P0 ACTIVE-02** Validar carga/repetições não negativas e RPE entre 1 e 10.
-- [ ] **P0 ACTIVE-02** Navegar anterior/próximo sem perder valores.
-- [ ] **P0 ACTIVE-02** Persistir e restaurar o rascunho após reinício do app.
-- [ ] **P0 ACTIVE-03** Ignorar séries com zero repetição.
-- [ ] **P0 ACTIVE-03** Não encerrar silenciosamente quando nenhuma série for válida.
-- [ ] **P0 ACTIVE-03** Concluir em batch e criar uma única sessão lógica.
-- [ ] **P0 ACTIVE-03** Impedir duplicação por toque repetido ou nova tentativa.
-- [ ] **P0 ACTIVE-04** Confirmar antes de abortar e apagar o rascunho após confirmação.
-- [ ] **P0** Manter dados locais quando a gravação remota falhar.
+- [x] **P0 ACTIVE-01** Orientar cadastro quando não houver plano.
+- [x] **P0 ACTIVE-01** Selecionar data e divisão e iniciar com exercícios ordenados.
+- [x] **P0 ACTIVE-02** Criar séries com carga 0, repetições 0, RPE 8 e observação vazia.
+- [x] **P0 ACTIVE-02** Validar carga/repetições não negativas e RPE entre 1 e 10.
+- [x] **P0 ACTIVE-02** Navegar anterior/próximo sem perder valores.
+- [x] **P0 ACTIVE-02** Persistir e restaurar o rascunho após reinício do app.
+- [x] **P0 ACTIVE-03** Ignorar séries com zero repetição.
+- [x] **P0 ACTIVE-03** Não encerrar silenciosamente quando nenhuma série for válida.
+- [x] **P0 ACTIVE-03** Concluir em batch e criar uma única sessão lógica.
+- [x] **P0 ACTIVE-03** Impedir duplicação por toque repetido ou nova tentativa.
+- [x] **P0 ACTIVE-04** Confirmar antes de abortar e apagar o rascunho após confirmação.
+- [x] **P0** Manter dados locais quando a gravação remota falhar.
 
 ## Registro manual
 

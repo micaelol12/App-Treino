@@ -1,11 +1,5 @@
-import { FeaturePlaceholder } from '@/shared/components/feature-placeholder';
+import { ActiveWorkoutScreen } from '@/features/workout-session/presentation/screens/active-workout-screen';
 
 export default function ActiveWorkoutRoute() {
-  return (
-    <FeaturePlaceholder
-      title="Treino em andamento"
-      description="Sessão ativa."
-      nextStep="Cronômetro, séries e salvamento resiliente entram na fase da sessão de treino."
-    />
-  );
+  return <ActiveWorkoutScreen />;
 }

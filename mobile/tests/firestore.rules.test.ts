@@ -9,8 +9,10 @@ import {
 } from '@firebase/rules-unit-testing';
 import {
   deleteDoc,
+  collection,
   doc,
   getDoc,
+  getDocs,
   setLogLevel,
   setDoc,
   Timestamp,
@@ -20,6 +22,7 @@ import {
 } from 'firebase/firestore';
 
 import { FirebaseWorkoutPlanRepository } from '../src/features/workout-plans/infrastructure/firestore/firebase-workout-plan.repository';
+import { FirebaseWorkoutSessionRepository } from '../src/features/workout-session/infrastructure/firestore/firebase-workout-session.repository';
 
 const PROJECT_ID = 'demo-app-treino';
 const PRIMARY_USER_ID = 'qa_primary_user';
@@ -265,6 +268,50 @@ describe('workout plan repository integration', () => {
 });
 
 describe('historico_treinos validation', () => {
+  it('completes a session in batch without duplicating records on retry', async () => {
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const repository = new FirebaseWorkoutSessionRepository(
+      database as unknown as Firestore,
+    );
+    const session = {
+      sessionId: 'session-idempotent',
+      performedOn: '2026-08-15',
+      division: 'Push',
+      sets: [
+        {
+          planExerciseId: 'bench',
+          exerciseName: 'Supino Reto',
+          setNumber: 1,
+          loadKg: 60,
+          repetitions: 10,
+          rpe: 8,
+          note: '',
+        },
+        {
+          planExerciseId: 'bench',
+          exerciseName: 'Supino Reto',
+          setNumber: 2,
+          loadKg: 60,
+          repetitions: 8,
+          rpe: 9,
+          note: '',
+        },
+      ],
+    };
+
+    await repository.complete(PRIMARY_USER_ID, session);
+    await repository.complete(PRIMARY_USER_ID, session);
+
+    const snapshot = await getDocs(
+      collection(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos`),
+    );
+    expect(snapshot.docs).toHaveLength(2);
+    expect(snapshot.docs.map((item) => item.data().sessionId)).toEqual([
+      'session-idempotent',
+      'session-idempotent',
+    ]);
+  });
+
   it('accepts a legacy record and a versioned record', async () => {
     const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
 

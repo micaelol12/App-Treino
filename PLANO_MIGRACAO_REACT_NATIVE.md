@@ -297,6 +297,12 @@ Critério de saída: as mudanças preservam o contrato legado validado pelas fix
 
 ### Fase 5 — Treino ativo
 
+Status em 15/08/2026: implementação concluída localmente com seleção de data e
+divisão, edição/navegação das séries, rascunho restaurável em AsyncStorage,
+confirmação de descarte e conclusão idempotente em batch. O contrato foi validado
+por testes unitários e pelo Firestore Emulator. Artefatos em
+`docs/migration/phase-5/`.
+
 Entregas:
 
 - seleção de data e divisão;
@@ -422,6 +428,6 @@ Uma funcionalidade só está concluída quando:
 
 ## 12. Próximo marco recomendado
 
-Executar a Fase 5 como próximo corte vertical: consumir o plano ordenado da Fase 4,
-persistir localmente o rascunho da sessão ativa e concluir o treino de forma
-idempotente em um batch do Firestore.
+Executar a Fase 6 como próximo corte vertical: reutilizar as regras, o componente de
+série e o caso de uso idempotente da Fase 5 para entregar o registro manual completo
+por divisão.

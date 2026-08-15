@@ -1,0 +1,77 @@
+appId: com.micael.apptreino.development
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'auth-sign-up-link'
+- tapOn:
+    id: 'auth-email-input'
+- inputText: 'e2e-active@app-treino.local'
+- tapOn:
+    id: 'auth-password-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-password-confirmation-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-sign-up-button'
+- tapOn: 'Ajustes'
+- tapOn:
+    id: 'workout-plan-add'
+- tapOn:
+    id: 'workout-division-input'
+- inputText: 'Push'
+- tapOn:
+    id: 'workout-name-input'
+- inputText: 'Supino Reto'
+- tapOn:
+    id: 'workout-save-button'
+- tapOn:
+    id: 'workout-plan-add'
+- tapOn:
+    id: 'workout-division-input'
+- inputText: 'Push'
+- tapOn:
+    id: 'workout-name-input'
+- inputText: 'Desenvolvimento'
+- tapOn:
+    id: 'workout-order-input'
+- eraseText
+- inputText: '2'
+- tapOn:
+    id: 'workout-save-button'
+- tapOn: 'Treino'
+- assertVisible: 'Escolha a data e a divisão para começar.'
+- tapOn: 'Iniciar treino'
+- assertVisible: 'Supino Reto'
+- tapOn:
+    id: 'set-1-load'
+- eraseText
+- inputText: '60'
+- tapOn:
+    id: 'set-1-repetitions'
+- eraseText
+- inputText: '10'
+- tapOn: 'Próximo'
+- assertVisible: 'Desenvolvimento'
+- tapOn:
+    id: 'set-1-load'
+- eraseText
+- inputText: '30'
+- tapOn:
+    id: 'set-1-repetitions'
+- eraseText
+- inputText: '8'
+- stopApp
+- launchApp
+- assertVisible: 'Desenvolvimento'
+- tapOn: 'Anterior'
+- assertVisible: 'Supino Reto'
+- assertVisible:
+    id: 'set-1-repetitions'
+- tapOn: 'Próximo'
+- tapOn:
+    id: 'complete-workout'
+- assertVisible: 'Treino concluído'
+- tapOn: 'OK'
+- assertVisible: 'Escolha a data e a divisão para começar.'

@@ -1,0 +1,108 @@
+import { StyleSheet, TextInput, View } from 'react-native';
+
+import type { WorkoutSetDraft } from '../../domain/workout-session-draft';
+import { AppText } from '@/shared/components/app-text';
+import { Card } from '@/shared/components/card';
+import { useAppTheme } from '@/shared/theme/theme-provider';
+import { radius, spacing } from '@/shared/theme/tokens';
+
+type WorkoutSetPatch = Partial<
+  Pick<WorkoutSetDraft, 'loadKg' | 'repetitions' | 'rpe' | 'note'>
+>;
+
+type WorkoutSetEditorProps = {
+  readonly exerciseName: string;
+  readonly workoutSet: WorkoutSetDraft;
+  readonly onChange: (patch: WorkoutSetPatch) => void;
+};
+
+export function WorkoutSetEditor({
+  exerciseName,
+  onChange,
+  workoutSet,
+}: WorkoutSetEditorProps) {
+  const theme = useAppTheme();
+  const inputStyle = [
+    styles.input,
+    {
+      backgroundColor: theme.colors.background,
+      borderColor: theme.colors.border,
+      color: theme.colors.text,
+    },
+  ];
+  const prefix = `${exerciseName}, série ${workoutSet.setNumber}`;
+
+  return (
+    <Card>
+      <AppText style={styles.setTitle}>Série {workoutSet.setNumber}</AppText>
+      <View style={styles.numericFields}>
+        <View style={styles.field}>
+          <AppText variant="caption">Carga (kg)</AppText>
+          <TextInput
+            accessibilityLabel={`${prefix}, carga em quilogramas`}
+            keyboardType="decimal-pad"
+            onChangeText={(loadKg) => onChange({ loadKg })}
+            selectTextOnFocus
+            style={inputStyle}
+            testID={`set-${workoutSet.setNumber}-load`}
+            value={workoutSet.loadKg}
+          />
+        </View>
+        <View style={styles.field}>
+          <AppText variant="caption">Repetições</AppText>
+          <TextInput
+            accessibilityLabel={`${prefix}, repetições`}
+            keyboardType="number-pad"
+            onChangeText={(repetitions) => onChange({ repetitions })}
+            selectTextOnFocus
+            style={inputStyle}
+            testID={`set-${workoutSet.setNumber}-repetitions`}
+            value={workoutSet.repetitions}
+          />
+        </View>
+        <View style={styles.field}>
+          <AppText variant="caption">RPE</AppText>
+          <TextInput
+            accessibilityLabel={`${prefix}, RPE de 1 a 10`}
+            keyboardType="number-pad"
+            onChangeText={(rpe) => onChange({ rpe })}
+            selectTextOnFocus
+            style={inputStyle}
+            testID={`set-${workoutSet.setNumber}-rpe`}
+            value={workoutSet.rpe}
+          />
+        </View>
+      </View>
+      <View style={styles.noteField}>
+        <AppText variant="caption">Observação</AppText>
+        <TextInput
+          accessibilityLabel={`${prefix}, observação`}
+          maxLength={500}
+          multiline
+          onChangeText={(note) => onChange({ note })}
+          placeholder="Opcional"
+          placeholderTextColor={theme.colors.textMuted}
+          style={[...inputStyle, styles.noteInput]}
+          testID={`set-${workoutSet.setNumber}-note`}
+          value={workoutSet.note}
+        />
+      </View>
+    </Card>
+  );
+}
+
+const styles = StyleSheet.create({
+  setTitle: { fontWeight: '700' },
+  numericFields: { flexDirection: 'row', gap: spacing.xs },
+  field: { flex: 1, gap: spacing.xxs },
+  noteField: { gap: spacing.xxs },
+  input: {
+    minHeight: 48,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderWidth: 1,
+    borderRadius: radius.sm,
+    fontSize: 16,
+  },
+  noteInput: { minHeight: 72, textAlignVertical: 'top' },
+});

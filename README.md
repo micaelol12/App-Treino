@@ -5,10 +5,12 @@ React Native 0.86, TypeScript e Expo Router.
 
 ## Estado atual
 
-O projeto já pode ser executado por meio de um Development Build. A autenticação e a
-configuração completa do plano de treino estão integradas ao Firebase. É possível
-listar, adicionar, editar, reordenar e excluir exercícios por ID, preservando os
-documentos legados. As demais telas de negócio ainda são incrementais.
+O projeto já pode ser executado por meio de um Development Build. A autenticação, a
+configuração do plano e o treino ativo estão integrados ao Firebase. É possível
+selecionar uma divisão, preencher séries com rascunho local restaurável e concluir a
+sessão em batch idempotente, além de listar, adicionar, editar, reordenar e excluir
+exercícios por ID preservando os documentos legados. As demais telas de negócio
+ainda são incrementais.
 
 O antigo aplicativo Streamlit foi retirado. A documentação histórica e os contratos
 Firestore foram preservados para garantir compatibilidade com os dados existentes.
