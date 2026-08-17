@@ -2,11 +2,9 @@ import { FirebaseError } from 'firebase/app';
 import {
   addDoc,
   collection,
-  connectFirestoreEmulator,
   deleteDoc,
   doc,
   getDocs,
-  getFirestore,
   serverTimestamp,
   updateDoc,
   writeBatch,
@@ -20,24 +18,13 @@ import type {
   WorkoutExerciseDraft,
 } from '../../domain/workout-plan-rules';
 import { InvalidFirestoreDocumentError } from '../../../../shared/infrastructure/firestore/invalid-firestore-document.error';
-import { getFirebaseClient } from '../../../../shared/infrastructure/firebase/firebase-app';
+import { getFirebaseFirestore } from '../../../../shared/infrastructure/firebase/firebase-firestore';
 
 import { mapWorkoutConfigDocument } from './workout-config.mapper';
 
-const connectedEmulatorDatabases = new WeakSet<Firestore>();
-
 function initializeFirestore(): Firestore {
   try {
-    const { app, firestoreEmulatorUrl } = getFirebaseClient();
-    const database = getFirestore(app);
-
-    if (firestoreEmulatorUrl && !connectedEmulatorDatabases.has(database)) {
-      const url = new URL(firestoreEmulatorUrl);
-      connectFirestoreEmulator(database, url.hostname, Number(url.port));
-      connectedEmulatorDatabases.add(database);
-    }
-
-    return database;
+    return getFirebaseFirestore();
   } catch (error) {
     throw new WorkoutPlanFailure('configuration', {
       cause: error instanceof Error ? error : undefined,

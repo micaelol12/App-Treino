@@ -12,6 +12,8 @@ type SecondaryButtonProps = Omit<ComponentProps<typeof Pressable>, 'children'> &
 };
 
 export function SecondaryButton({
+  accessibilityLabel,
+  accessibilityState,
   disabled,
   label,
   style,
@@ -23,9 +25,11 @@ export function SecondaryButton({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      disabled={disabled}
       {...props}
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityRole="button"
+      accessibilityState={{ ...accessibilityState, disabled: Boolean(disabled) }}
+      disabled={disabled}
       style={(state) => [
         styles.button,
         {

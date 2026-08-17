@@ -16,6 +16,7 @@ jest.mock('expo-router', () => ({
 }));
 
 class PasswordResetGateway implements AuthGateway {
+  readonly deleteAccount = jest.fn<Promise<void>, [string]>(() => Promise.resolve());
   readonly sendPasswordReset = jest.fn<Promise<void>, [string]>(() => Promise.resolve());
 
   subscribe(listener: AuthStateListener) {

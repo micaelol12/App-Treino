@@ -6,6 +6,7 @@ firestore-debug.log
 ui-debug.log
 .firebase/
 .firebase-runtime/
+.firecrawl/
 mobile/.expo/
 mobile/dist/
 mobile/expo-env.d.ts

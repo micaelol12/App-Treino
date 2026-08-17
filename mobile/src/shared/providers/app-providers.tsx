@@ -14,7 +14,9 @@ import { ProgressProvider } from '@/features/progress/presentation/progress-cont
 import { createFirebaseWeightRepository } from '@/features/weight/infrastructure/firestore/firebase-weight.repository';
 import { WeightProvider } from '@/features/weight/presentation/weight-context';
 import { createQueryClient } from '@/shared/lib/query-client';
+import { NetworkLifecycle } from '@/shared/network/network-lifecycle';
 import { AppThemeProvider } from '@/shared/theme/theme-provider';
+import { TelemetryLifecycle } from '@/shared/telemetry/telemetry-lifecycle';
 
 function ActiveWorkoutLifecycle() {
   const { isLoading, session } = useAuth();
@@ -39,6 +41,8 @@ export function AppProviders({ children }: PropsWithChildren) {
         <AppThemeProvider>
           <AuthProvider gatewayFactory={createFirebaseAuthGateway}>
             <ActiveWorkoutLifecycle />
+            <NetworkLifecycle />
+            <TelemetryLifecycle />
             <WorkoutSessionProvider
               repositoryFactory={createFirebaseWorkoutSessionRepository}
             >

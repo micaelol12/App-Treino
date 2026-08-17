@@ -4,9 +4,11 @@ import { StyleSheet, View } from 'react-native';
 import { useAuth } from '@/features/auth/presentation/auth-context';
 import { getAuthErrorMessage } from '@/features/auth/presentation/auth-error-message';
 import { AuthFeedback } from '@/features/auth/presentation/components/auth-feedback';
+import { AccountDeletionSection } from '@/features/auth/presentation/components/account-deletion-section';
 import { WorkoutPlansSection } from '@/features/workout-plans/presentation/components/workout-plans-section';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
+import { ExternalLink } from '@/shared/components/external-link';
 import { PrimaryButton } from '@/shared/components/primary-button';
 import { Screen } from '@/shared/components/screen';
 import {
@@ -22,7 +24,7 @@ const choices: { label: string; value: ThemePreference }[] = [
 ];
 
 export default function SettingsRoute() {
-  const { session, signOut } = useAuth();
+  const { deleteAccount, session, signOut } = useAuth();
   const preference = usePreferencesStore((state) => state.themePreference);
   const setPreference = usePreferencesStore((state) => state.setThemePreference);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -52,6 +54,17 @@ export default function SettingsRoute() {
           label={isSigningOut ? 'Saindo…' : 'Sair da conta'}
           onPress={handleSignOut}
           testID="auth-sign-out-button"
+        />
+      </Card>
+      <AccountDeletionSection deleteAccount={deleteAccount} />
+      <Card>
+        <AppText variant="heading">Privacidade</AppText>
+        <AppText>
+          Consulte quais dados são usados, por que são necessários e como são excluídos.
+        </AppText>
+        <ExternalLink
+          label="Abrir política de privacidade"
+          url="https://github.com/micaelol12/App-Treino/blob/main/docs/legal/PRIVACY_POLICY.md"
         />
       </Card>
       <Card>

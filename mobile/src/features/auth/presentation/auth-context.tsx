@@ -20,6 +20,7 @@ type AuthContextValue = {
   signUp(credentials: AuthCredentials): Promise<void>;
   sendPasswordReset(email: string): Promise<void>;
   signOut(): Promise<void>;
+  deleteAccount(password: string): Promise<void>;
 };
 
 type AuthProviderProps = PropsWithChildren<{
@@ -84,6 +85,7 @@ export function AuthProvider({ children, gatewayFactory }: AuthProviderProps) {
       signUp: (credentials) => gatewayOrThrow().signUp(credentials),
       sendPasswordReset: (email) => gatewayOrThrow().sendPasswordReset(email),
       signOut: () => gatewayOrThrow().signOut(),
+      deleteAccount: (password) => gatewayOrThrow().deleteAccount(password),
     }),
     [gatewayOrThrow, isLoading, session, startupError],
   );

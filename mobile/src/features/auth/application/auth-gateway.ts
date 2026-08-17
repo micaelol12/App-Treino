@@ -18,4 +18,5 @@ export interface AuthGateway {
   signUp(credentials: AuthCredentials): Promise<void>;
   sendPasswordReset(email: string): Promise<void>;
   signOut(): Promise<void>;
+  deleteAccount(password: string): Promise<void>;
 }

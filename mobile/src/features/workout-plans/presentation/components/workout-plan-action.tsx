@@ -11,6 +11,8 @@ type WorkoutPlanActionProps = Omit<ComponentProps<typeof Pressable>, 'children'>
 };
 
 export function WorkoutPlanAction({
+  accessibilityLabel,
+  accessibilityState,
   disabled,
   label,
   style,
@@ -21,9 +23,11 @@ export function WorkoutPlanAction({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      disabled={disabled}
       {...props}
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityRole="button"
+      accessibilityState={{ ...accessibilityState, disabled: Boolean(disabled) }}
+      disabled={disabled}
       style={(state) => [
         styles.action,
         {
@@ -50,7 +54,7 @@ export function WorkoutPlanAction({
 
 const styles = StyleSheet.create({
   action: {
-    minHeight: 44,
+    minHeight: 48,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.sm,

@@ -73,6 +73,7 @@ export function ProgressScreen() {
               const selected = exerciseName === effectiveExercise;
               return (
                 <Pressable
+                  accessibilityLabel={exerciseName}
                   accessibilityRole="radio"
                   accessibilityState={{ checked: selected }}
                   key={exerciseName}
@@ -187,7 +188,7 @@ export function ProgressScreen() {
 const styles = StyleSheet.create({
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   filter: {
-    minHeight: 44,
+    minHeight: 48,
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
     borderRadius: radius.pill,

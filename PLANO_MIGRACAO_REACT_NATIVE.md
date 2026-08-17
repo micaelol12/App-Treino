@@ -352,6 +352,12 @@ Critério de saída: cálculos batem com fixtures conhecidas e gráficos continu
 
 ### Fase 8 — Hardening, beta e corte
 
+Status em 17/08/2026: hardening implementado localmente com resiliência de rede,
+telemetria sanitizada, exclusão de conta/dados, reforço de acessibilidade e seis
+fluxos E2E. A aprovação final permanece pendente de validação em Android/iOS,
+configuração externa de telemetria/URLs legais, beta e aceite de produto. Artefatos
+em `docs/migration/phase-8/`.
+
 Entregas:
 
 - testes E2E dos caminhos críticos em Android e iOS;

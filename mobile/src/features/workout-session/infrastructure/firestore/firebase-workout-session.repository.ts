@@ -1,32 +1,14 @@
 import { FirebaseError } from 'firebase/app';
-import {
-  connectFirestoreEmulator,
-  doc,
-  getFirestore,
-  serverTimestamp,
-  writeBatch,
-  type Firestore,
-} from 'firebase/firestore';
+import { doc, serverTimestamp, writeBatch, type Firestore } from 'firebase/firestore';
 
 import { WorkoutSessionFailure } from '../../application/workout-session-failure';
 import type { WorkoutSessionRepository } from '../../application/workout-session-repository';
 import type { CompletedWorkoutSession } from '../../domain/workout-session-draft';
-import { getFirebaseClient } from '../../../../shared/infrastructure/firebase/firebase-app';
-
-const connectedEmulatorDatabases = new WeakSet<Firestore>();
+import { getFirebaseFirestore } from '../../../../shared/infrastructure/firebase/firebase-firestore';
 
 function initializeFirestore(): Firestore {
   try {
-    const { app, firestoreEmulatorUrl } = getFirebaseClient();
-    const database = getFirestore(app);
-
-    if (firestoreEmulatorUrl && !connectedEmulatorDatabases.has(database)) {
-      const url = new URL(firestoreEmulatorUrl);
-      connectFirestoreEmulator(database, url.hostname, Number(url.port));
-      connectedEmulatorDatabases.add(database);
-    }
-
-    return database;
+    return getFirebaseFirestore();
   } catch (error) {
     throw new WorkoutSessionFailure('configuration', {
       cause: error instanceof Error ? error : undefined,

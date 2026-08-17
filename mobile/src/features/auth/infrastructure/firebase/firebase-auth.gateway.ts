@@ -2,10 +2,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   connectAuthEmulator,
   createUserWithEmailAndPassword,
+  deleteUser,
+  EmailAuthProvider,
   getAuth,
   getReactNativePersistence,
   initializeAuth,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
@@ -17,8 +20,10 @@ import { type AuthCredentials, type AuthGateway } from '../../application/auth-g
 import { AuthFailure } from '../../application/auth-failure';
 import { type AuthSession } from '../../domain/auth-session';
 import { getFirebaseClient } from '@/shared/infrastructure/firebase/firebase-app';
+import { reportError } from '@/shared/telemetry/error-reporter';
 
 import { mapFirebaseAuthError } from './firebase-auth-error';
+import { deleteAccountDocuments } from './firebase-account-deletion.gateway';
 
 function initializeFirebaseAuth(): Auth {
   try {
@@ -99,6 +104,31 @@ export class FirebaseAuthGateway implements AuthGateway {
       await firebaseSignOut(this.auth);
     } catch (error) {
       throw mapFirebaseAuthError(error);
+    }
+  }
+
+  async deleteAccount(password: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user?.email) throw new AuthFailure('not-authenticated');
+
+    try {
+      const credential = EmailAuthProvider.credential(user.email, password);
+      await reauthenticateWithCredential(user, credential);
+      await deleteAccountDocuments(user.uid);
+    } catch (error) {
+      const failure = mapFirebaseAuthError(error);
+      reportError('account_deletion_failed', failure, { failureCode: failure.code });
+      throw failure;
+    }
+
+    try {
+      await deleteUser(user);
+    } catch (error) {
+      const failure = new AuthFailure('account-deletion-partial', {
+        cause: error instanceof Error ? error : undefined,
+      });
+      reportError('account_deletion_failed', failure, { failureCode: failure.code });
+      throw failure;
     }
   }
 }

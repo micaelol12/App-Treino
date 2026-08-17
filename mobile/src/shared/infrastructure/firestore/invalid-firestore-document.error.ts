@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { reportError } from '@/shared/telemetry/error-reporter';
+
 interface InvalidFirestoreDocumentContext {
   readonly collection: string;
   readonly documentId: string;
@@ -29,11 +31,19 @@ export function parseFirestoreDocument<T>(
   const result = schema.safeParse(data);
 
   if (!result.success) {
-    throw new InvalidFirestoreDocumentError({
+    const error = new InvalidFirestoreDocumentError({
       collection,
       documentId,
       issues: result.error.issues,
     });
+    reportError('legacy_document_rejected', error, {
+      collection,
+      issueCodes: result.error.issues.map((issue) => issue.code),
+      issuePaths: result.error.issues.flatMap((issue) =>
+        issue.path.length ? [issue.path.join('.')] : [],
+      ),
+    });
+    throw error;
   }
 
   return result.data;

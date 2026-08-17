@@ -169,6 +169,7 @@ export function WorkoutHomeScreen() {
                 const selected = division === effectiveDivision;
                 return (
                   <Pressable
+                    accessibilityLabel={division}
                     accessibilityRole="radio"
                     accessibilityState={{ checked: selected }}
                     key={division}
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
   },
   divisions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   division: {
-    minHeight: 44,
+    minHeight: 48,
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
     borderRadius: radius.pill,

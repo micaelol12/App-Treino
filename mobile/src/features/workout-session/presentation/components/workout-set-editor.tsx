@@ -95,8 +95,8 @@ export function WorkoutSetEditor({
 
 const styles = StyleSheet.create({
   setTitle: { fontWeight: '700' },
-  numericFields: { flexDirection: 'row', gap: spacing.xs },
-  field: { flex: 1, gap: spacing.xxs },
+  numericFields: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  field: { flex: 1, minWidth: 96, gap: spacing.xxs },
   noteField: { gap: spacing.xxs },
   input: {
     minHeight: 48,

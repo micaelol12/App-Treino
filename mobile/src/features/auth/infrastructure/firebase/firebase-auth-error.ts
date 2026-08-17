@@ -5,6 +5,7 @@ const failureByFirebaseCode: Readonly<Record<string, AuthFailureCode>> = {
   'auth/invalid-credential': 'invalid-credentials',
   'auth/invalid-email': 'invalid-email',
   'auth/network-request-failed': 'network',
+  'auth/requires-recent-login': 'account-deletion-partial',
   'auth/too-many-requests': 'too-many-requests',
   'auth/user-disabled': 'user-disabled',
   'auth/user-not-found': 'invalid-credentials',

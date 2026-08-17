@@ -6,8 +6,8 @@ on:
       - 'mobile/**'
       - 'firebase.json'
       - 'firebase.test.json'
-      - 'firestore.rules'
-      - 'firestore.indexes.json'
+      - 'firebase/firestore.rules'
+      - 'firebase/firestore.indexes.json'
       - '.github/workflows/mobile-ci.yml'
   push:
     branches: [main]
@@ -15,8 +15,8 @@ on:
       - 'mobile/**'
       - 'firebase.json'
       - 'firebase.test.json'
-      - 'firestore.rules'
-      - 'firestore.indexes.json'
+      - 'firebase/firestore.rules'
+      - 'firebase/firestore.indexes.json'
 
 permissions:
   contents: read

@@ -1,11 +1,9 @@
 import { FirebaseError } from 'firebase/app';
 import {
   collection,
-  connectFirestoreEmulator,
   doc,
   documentId,
   getDocs,
-  getFirestore,
   limit as queryLimit,
   orderBy,
   query,
@@ -24,22 +22,13 @@ import type {
 } from '../../application/weight-repository';
 import type { WeightEntryDraft } from '../../domain/weight-rules';
 import { InvalidFirestoreDocumentError } from '@/shared/infrastructure/firestore/invalid-firestore-document.error';
-import { getFirebaseClient } from '@/shared/infrastructure/firebase/firebase-app';
+import { getFirebaseFirestore } from '@/shared/infrastructure/firebase/firebase-firestore';
 
 import { mapWeightEntryDocument } from './weight-entry.mapper';
 
-const connectedEmulatorDatabases = new WeakSet<Firestore>();
-
 function initializeFirestore(): Firestore {
   try {
-    const { app, firestoreEmulatorUrl } = getFirebaseClient();
-    const database = getFirestore(app);
-    if (firestoreEmulatorUrl && !connectedEmulatorDatabases.has(database)) {
-      const url = new URL(firestoreEmulatorUrl);
-      connectFirestoreEmulator(database, url.hostname, Number(url.port));
-      connectedEmulatorDatabases.add(database);
-    }
-    return database;
+    return getFirebaseFirestore();
   } catch (error) {
     throw new WeightFailure('configuration', {
       cause: error instanceof Error ? error : undefined,

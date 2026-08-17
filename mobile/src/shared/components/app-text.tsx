@@ -1,4 +1,4 @@
-import { type ComponentProps } from 'react';
+import { type ComponentProps, forwardRef } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 import { useAppTheme } from '@/shared/theme/theme-provider';
@@ -7,16 +7,20 @@ type AppTextProps = ComponentProps<typeof Text> & {
   variant?: 'body' | 'title' | 'heading' | 'caption';
 };
 
-export function AppText({ style, variant = 'body', ...props }: AppTextProps) {
+export const AppText = forwardRef<Text, AppTextProps>(function AppText(
+  { style, variant = 'body', ...props },
+  ref,
+) {
   const theme = useAppTheme();
 
   return (
     <Text
       {...props}
+      ref={ref}
       style={[styles.base, styles[variant], { color: theme.colors.text }, style]}
     />
   );
-}
+});
 
 const styles = StyleSheet.create({
   base: { fontSize: 16, lineHeight: 24 },

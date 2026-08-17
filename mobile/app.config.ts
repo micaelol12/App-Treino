@@ -33,7 +33,7 @@ const variant = variants[appVariant];
 const config: ExpoConfig = {
   name: variant.name,
   slug: 'app-treino',
-  version: '0.4.0',
+  version: '0.8.0',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   scheme: variant.scheme,
@@ -43,7 +43,7 @@ const config: ExpoConfig = {
     bundleIdentifier: `com.micael.apptreino${variant.bundleSuffix}`,
   },
   android: { package: `com.micael.apptreino${variant.bundleSuffix}` },
-  plugins: ['expo-router', 'expo-dev-client'],
+  plugins: ['expo-router', 'expo-dev-client', 'expo-splash-screen'],
   experiments: { typedRoutes: true, reactCompiler: true },
   extra: { appVariant },
 };

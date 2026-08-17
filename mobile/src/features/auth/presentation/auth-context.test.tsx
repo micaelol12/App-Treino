@@ -20,6 +20,7 @@ class FakeAuthGateway implements AuthGateway {
   readonly signUp = jest.fn<Promise<void>, [AuthCredentials]>(() => Promise.resolve());
   readonly sendPasswordReset = jest.fn<Promise<void>, [string]>(() => Promise.resolve());
   readonly signOut = jest.fn<Promise<void>, []>(() => Promise.resolve());
+  readonly deleteAccount = jest.fn<Promise<void>, [string]>(() => Promise.resolve());
   readonly unsubscribe = jest.fn();
 
   subscribe(listener: AuthStateListener, onError?: AuthErrorListener) {

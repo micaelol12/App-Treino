@@ -174,6 +174,7 @@ Todos os comandos abaixo devem ser executados dentro de `mobile`.
 | `npm test`                   | Executa os testes unitários e de componentes.                          |
 | `npm run test:unit`          | Equivalente explícito da suíte unitária.                               |
 | `npm run test:unit:coverage` | Executa testes unitários com relatório de cobertura.                   |
+| `npm run test:e2e`           | Executa as seis jornadas críticas no dispositivo aberto via Maestro.  |
 | `npm run test:rules`         | Inicia o Firestore Emulator na porta 8082, testa as regras e encerra.  |
 | `npm run verify`             | Executa TypeScript, ESLint, Prettier e testes unitários com cobertura. |
 | `npm run test:all`           | Executa todo o pipeline, incluindo as regras Firestore.                |
@@ -193,6 +194,10 @@ npm run test:all
 
 O teste de regras baixa/inicia o Firestore Emulator e requer Java. Ele usa o projeto
 local `demo-app-treino`, sem acessar recursos Firebase de produção.
+
+Os fluxos E2E usam contas fixas no Auth Emulator; limpe os dados do Emulator antes
+de cada suíte. Execute `npm run test:e2e` separadamente com um Android e um iOS
+abertos e registre as evidências na matriz da Fase 8.
 
 ## Firebase Emulator para desenvolvimento
 
@@ -305,4 +310,6 @@ npx expo install --check
 - [Treino ativo — fase 5](docs/migration/phase-5/README.md)
 - [Registro manual — fase 6](docs/migration/phase-6/README.md)
 - [Peso e evolução — fase 7](docs/migration/phase-7/README.md)
+- [Hardening, beta e corte — fase 8](docs/migration/phase-8/README.md)
+- [Política de privacidade](docs/legal/PRIVACY_POLICY.md)
 - [Configuração local do Firebase](firebase/README.md)
