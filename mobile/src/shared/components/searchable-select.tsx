@@ -66,6 +66,7 @@ export function SearchableSelect({
         <Ionicons color={theme.colors.textMuted} name="chevron-down" size={22} />
       </Pressable>
       <InfoModal
+        expanded
         onClose={close}
         title={`Selecionar ${label.toLocaleLowerCase()}`}
         visible={open}

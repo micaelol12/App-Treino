@@ -9,12 +9,19 @@ import { radius, spacing } from '@/shared/theme/tokens';
 import { AppText } from './app-text';
 
 type InfoModalProps = PropsWithChildren<{
+  readonly expanded?: boolean;
   readonly visible: boolean;
   readonly title: string;
   readonly onClose: () => void;
 }>;
 
-export function InfoModal({ children, onClose, title, visible }: InfoModalProps) {
+export function InfoModal({
+  children,
+  expanded = false,
+  onClose,
+  title,
+  visible,
+}: InfoModalProps) {
   const theme = useAppTheme();
 
   return (
@@ -22,7 +29,11 @@ export function InfoModal({ children, onClose, title, visible }: InfoModalProps)
       <View style={styles.backdrop}>
         <SafeAreaView
           edges={['top', 'bottom', 'left', 'right']}
-          style={[styles.sheet, { backgroundColor: theme.colors.surface }]}
+          style={[
+            styles.sheet,
+            expanded && styles.expandedSheet,
+            { backgroundColor: theme.colors.surface },
+          ]}
         >
           <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
             <AppText accessibilityRole="header" variant="heading">
@@ -53,6 +64,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
   },
+  expandedSheet: { height: '88%' },
   header: {
     minHeight: 60,
     flexDirection: 'row',
