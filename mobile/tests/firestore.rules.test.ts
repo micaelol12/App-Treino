@@ -23,6 +23,8 @@ import {
 
 import { FirebaseWorkoutPlanRepository } from '../src/features/workout-plans/infrastructure/firestore/firebase-workout-plan.repository';
 import { FirebaseWorkoutSessionRepository } from '../src/features/workout-session/infrastructure/firestore/firebase-workout-session.repository';
+import { FirebaseWeightRepository } from '../src/features/weight/infrastructure/firestore/firebase-weight.repository';
+import { FirebaseProgressRepository } from '../src/features/progress/infrastructure/firestore/firebase-progress.repository';
 
 const PROJECT_ID = 'demo-app-treino';
 const PRIMARY_USER_ID = 'qa_primary_user';
@@ -403,5 +405,88 @@ describe('historico_pesos validation', () => {
         invalidWeight,
       ),
     );
+  });
+
+  it('upserts with a deterministic ID and paginates legacy entries', async () => {
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const repository = new FirebaseWeightRepository(database as unknown as Firestore);
+
+    await setDoc(
+      doc(database, `usuarios/${PRIMARY_USER_ID}/historico_pesos/legacy-random-id`),
+      { Data: '2026-07-01', Peso: 80 },
+    );
+    await repository.upsert(PRIMARY_USER_ID, {
+      recordedOn: '2026-07-02',
+      weightKg: 79.8,
+    });
+    await repository.upsert(PRIMARY_USER_ID, {
+      recordedOn: '2026-07-02',
+      weightKg: 79.7,
+    });
+
+    const firstPage = await repository.listPage(PRIMARY_USER_ID, 1);
+    const secondPage = await repository.listPage(
+      PRIMARY_USER_ID,
+      1,
+      firstPage.nextCursor ?? undefined,
+    );
+
+    expect(firstPage.entries).toEqual([
+      expect.objectContaining({ id: '2026-07-02', weightKg: 79.7 }),
+    ]);
+    expect(secondPage.entries).toEqual([
+      expect.objectContaining({ id: 'legacy-random-id', weightKg: 80 }),
+    ]);
+    expect(
+      (
+        await getDoc(
+          doc(database, `usuarios/${PRIMARY_USER_ID}/historico_pesos/2026-07-02`),
+        )
+      ).data(),
+    ).toMatchObject({
+      Data: '2026-07-02',
+      Peso: 79.7,
+      schemaVersion: 1,
+      createdAt: expect.any(Timestamp),
+      updatedAt: expect.any(Timestamp),
+    });
+  });
+});
+
+describe('progress repository integration', () => {
+  it('filters one exercise and paginates newest records first', async () => {
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const repository = new FirebaseProgressRepository(database as unknown as Firestore);
+    await setDoc(
+      doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/supino-old`),
+      validHistory,
+    );
+    await setDoc(
+      doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/supino-new`),
+      { ...validHistory, Data: '2026-07-08', Carga: 62.5 },
+    );
+    await setDoc(
+      doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/other-exercise`),
+      { ...validHistory, Exercício: 'Crucifixo' },
+    );
+
+    const firstPage = await repository.listExercisePage(
+      PRIMARY_USER_ID,
+      'Supino Reto',
+      1,
+    );
+    const secondPage = await repository.listExercisePage(
+      PRIMARY_USER_ID,
+      'Supino Reto',
+      1,
+      firstPage.nextCursor ?? undefined,
+    );
+
+    expect(firstPage.records).toEqual([
+      expect.objectContaining({ id: 'supino-new', performedOn: '2026-07-08' }),
+    ]);
+    expect(secondPage.records).toEqual([
+      expect.objectContaining({ id: 'supino-old', performedOn: '2026-07-01' }),
+    ]);
   });
 });

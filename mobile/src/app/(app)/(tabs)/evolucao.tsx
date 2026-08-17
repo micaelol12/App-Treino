@@ -1,11 +1,5 @@
-import { FeaturePlaceholder } from '@/shared/components/feature-placeholder';
+import { ProgressScreen } from '@/features/progress/presentation/screens/progress-screen';
 
 export default function ProgressRoute() {
-  return (
-    <FeaturePlaceholder
-      title="Evolução"
-      description="Acompanhe consistência e progressão."
-      nextStep="Os gráficos serão alimentados pelo histórico validado do Firestore."
-    />
-  );
+  return <ProgressScreen />;
 }

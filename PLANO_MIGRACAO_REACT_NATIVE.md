@@ -333,6 +333,12 @@ Critério de saída: o histórico gerado é equivalente ao do fluxo atual e apar
 
 ### Fase 7 — Peso e evolução
 
+Status em 15/08/2026: implementação concluída localmente com upsert e histórico
+paginado de peso, normalização determinística do legado, tendência de sete
+registros, filtro paginado por exercício e gráficos acessíveis de carga máxima,
+1RM estimada e volume. O spike adotou `react-native-svg` como camada compatível com
+Expo. Artefatos em `docs/migration/phase-7/`.
+
 Entregas:
 
 - registro/upsert de peso por data;
@@ -433,6 +439,6 @@ Uma funcionalidade só está concluída quando:
 
 ## 12. Próximo marco recomendado
 
-Executar a Fase 7 como próximo corte vertical: entregar o registro de peso e validar
-em um spike curto a biblioteca de gráficos antes de implementar os indicadores de
-evolução sobre os históricos das Fases 5 e 6.
+Executar a Fase 8: validar os caminhos críticos e a acessibilidade em dispositivos
+Android/iOS, exercitar rede lenta e retomada, adicionar telemetria sem dados
+sensíveis e preparar beta, privacidade, rollback e publicação.

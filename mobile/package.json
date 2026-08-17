@@ -1,6 +1,6 @@
 {
   "name": "app-treino-mobile",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "main": "expo-router/entry",
   "engines": {
@@ -50,6 +50,7 @@
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
+    "react-native-svg": "15.15.4",
     "react-native-worklets": "0.10.1",
     "zod": "^4.4.3",
     "zustand": "^5.0.11"

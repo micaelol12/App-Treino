@@ -6,11 +6,12 @@ React Native 0.86, TypeScript e Expo Router.
 ## Estado atual
 
 O projeto já pode ser executado por meio de um Development Build. A autenticação, a
-configuração do plano, o treino ativo e o registro manual estão integrados ao
-Firebase. É possível preencher uma divisão inteira pela aba Registro ou navegar por
-cada exercício em uma sessão com rascunho local restaurável. Os dois fluxos usam a
-mesma validação e conclusão atômica idempotente, além de preservar os documentos
-legados. As telas de peso e evolução ainda são incrementais.
+configuração do plano, o treino ativo, o registro manual, o peso e a evolução estão
+integrados ao Firebase. É possível preencher uma divisão inteira pela aba Registro
+ou navegar por cada exercício em uma sessão com rascunho local restaurável. Os dois
+fluxos usam a mesma validação e conclusão atômica idempotente. Peso e evolução usam
+consultas paginadas, preservam documentos legados e exibem gráficos responsivos e
+acessíveis.
 
 O antigo aplicativo Streamlit foi retirado. A documentação histórica e os contratos
 Firestore foram preservados para garantir compatibilidade com os dados existentes.
@@ -303,4 +304,5 @@ npx expo install --check
 - [Configuração de treinos — fase 4](docs/migration/phase-4/README.md)
 - [Treino ativo — fase 5](docs/migration/phase-5/README.md)
 - [Registro manual — fase 6](docs/migration/phase-6/README.md)
+- [Peso e evolução — fase 7](docs/migration/phase-7/README.md)
 - [Configuração local do Firebase](firebase/README.md)

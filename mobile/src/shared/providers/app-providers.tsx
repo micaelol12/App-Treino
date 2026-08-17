@@ -9,6 +9,10 @@ import { WorkoutPlanProvider } from '@/features/workout-plans/presentation/worko
 import { createFirebaseWorkoutSessionRepository } from '@/features/workout-session/infrastructure/firestore/firebase-workout-session.repository';
 import { useActiveWorkoutStore } from '@/features/workout-session/presentation/active-workout.store';
 import { WorkoutSessionProvider } from '@/features/workout-session/presentation/workout-session-context';
+import { createFirebaseProgressRepository } from '@/features/progress/infrastructure/firestore/firebase-progress.repository';
+import { ProgressProvider } from '@/features/progress/presentation/progress-context';
+import { createFirebaseWeightRepository } from '@/features/weight/infrastructure/firestore/firebase-weight.repository';
+import { WeightProvider } from '@/features/weight/presentation/weight-context';
 import { createQueryClient } from '@/shared/lib/query-client';
 import { AppThemeProvider } from '@/shared/theme/theme-provider';
 
@@ -41,7 +45,11 @@ export function AppProviders({ children }: PropsWithChildren) {
               <WorkoutPlanProvider
                 repositoryFactory={createFirebaseWorkoutPlanRepository}
               >
-                {children}
+                <WeightProvider repositoryFactory={createFirebaseWeightRepository}>
+                  <ProgressProvider repositoryFactory={createFirebaseProgressRepository}>
+                    {children}
+                  </ProgressProvider>
+                </WeightProvider>
               </WorkoutPlanProvider>
             </WorkoutSessionProvider>
           </AuthProvider>
