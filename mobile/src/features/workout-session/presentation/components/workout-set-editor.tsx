@@ -40,6 +40,7 @@ export function WorkoutSetEditor({
 
   return (
     <Card>
+      <AppText style={styles.setTitle}>{exerciseName}</AppText>
       <AppText style={styles.setTitle}>Série {workoutSet.setNumber}</AppText>
       <View style={styles.numericFields}>
         <View style={styles.field}>
