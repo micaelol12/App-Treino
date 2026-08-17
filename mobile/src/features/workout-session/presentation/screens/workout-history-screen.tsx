@@ -100,6 +100,8 @@ export function WorkoutHistoryScreen() {
         <SecondaryButton label="Novo registro" onPress={() => router.push('/registro')} />
       }
       description="Consulte, corrija ou exclua seus treinos concluídos."
+      onRefresh={() => history.refetch()}
+      refreshing={history.isRefetching}
       title="Histórico"
     >
       {history.isLoading ? (

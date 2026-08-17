@@ -107,7 +107,12 @@ export function WorkoutHomeScreen() {
   }
 
   return (
-    <Screen title="Seu treino" description="Escolha a data e a divisão para começar.">
+    <Screen
+      title="Seu treino"
+      description="Escolha a data e a divisão para começar."
+      onRefresh={() => plans.refetch()}
+      refreshing={plans.isRefetching}
+    >
       {plans.isLoading ? (
         <Card>
           <AppText accessibilityLiveRegion="polite">Carregando plano…</AppText>

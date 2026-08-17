@@ -14,6 +14,11 @@ import { getWorkoutPlanErrorMessage } from '../workout-plan-error-message';
 import { useWorkoutPlanActions, useWorkoutPlanExercises } from '../workout-plan-hooks';
 import { WorkoutPlanAction } from './workout-plan-action';
 
+type WorkoutPlansSectionProps = {
+  plans: ReturnType<typeof useWorkoutPlanExercises>;
+  showHeading?: boolean;
+};
+
 function groupByDivision(exercises: readonly WorkoutPlanExercise[]) {
   const groups: { division: string; exercises: WorkoutPlanExercise[] }[] = [];
   for (const exercise of exercises) {
@@ -27,10 +32,12 @@ function groupByDivision(exercises: readonly WorkoutPlanExercise[]) {
   return groups;
 }
 
-export function WorkoutPlansSection({ showHeading = true }: { showHeading?: boolean }) {
+export function WorkoutPlansSection({
+  plans,
+  showHeading = true,
+}: WorkoutPlansSectionProps) {
   const router = useRouter();
   const theme = useAppTheme();
-  const plans = useWorkoutPlanExercises();
   const { move, remove } = useWorkoutPlanActions();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);

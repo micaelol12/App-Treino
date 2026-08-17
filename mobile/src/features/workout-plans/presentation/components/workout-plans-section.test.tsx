@@ -33,7 +33,8 @@ function queryState(overrides: Record<string, unknown> = {}) {
 }
 
 function arrange(overrides: Record<string, unknown> = {}) {
-  mockUseExercises.mockReturnValue(queryState(overrides));
+  const plans = queryState(overrides);
+  mockUseExercises.mockReturnValue(plans);
   mockUseActions.mockReturnValue({
     create: {} as ReturnType<typeof useWorkoutPlanActions>['create'],
     update: {} as ReturnType<typeof useWorkoutPlanActions>['update'],
@@ -49,7 +50,7 @@ function arrange(overrides: Record<string, unknown> = {}) {
 
   return render(
     <AppThemeProvider>
-      <WorkoutPlansSection />
+      <WorkoutPlansSection plans={plans} />
     </AppThemeProvider>,
   );
 }

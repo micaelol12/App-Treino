@@ -173,6 +173,8 @@ export function ManualWorkoutScreen() {
     <Screen
       title="Registro manual"
       description="Preencha todas as séries de uma divisão em um único formulário."
+      onRefresh={() => plans.refetch()}
+      refreshing={plans.isRefetching}
     >
       {plans.isLoading ? (
         <Card>

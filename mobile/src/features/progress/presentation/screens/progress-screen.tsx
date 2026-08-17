@@ -50,6 +50,10 @@ export function ProgressScreen() {
     <Screen
       title="Evolução"
       description="Compare carga máxima, 1RM estimada e volume por sessão."
+      onRefresh={() =>
+        Promise.all([plans.refetch(), ...(effectiveExercise ? [history.refetch()] : [])])
+      }
+      refreshing={plans.isRefetching || history.isRefetching}
       action={
         <Pressable
           accessibilityHint="Explica como interpretar os gráficos"

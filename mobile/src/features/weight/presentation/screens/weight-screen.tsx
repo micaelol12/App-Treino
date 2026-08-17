@@ -87,6 +87,8 @@ export function WeightScreen() {
     <Screen
       title="Peso"
       description="Registre uma pesagem por data e acompanhe a tendência de sete registros."
+      onRefresh={() => history.refetch()}
+      refreshing={history.isRefetching}
       scrollToTopSignal={editing?.id ?? null}
     >
       <Card>

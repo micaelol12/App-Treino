@@ -2,6 +2,7 @@ import { type PropsWithChildren, type ReactNode, useEffect, useRef } from 'react
 import {
   AccessibilityInfo,
   findNodeHandle,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,6 +20,8 @@ type ScreenProps = PropsWithChildren<{
   description?: string;
   action?: ReactNode;
   footer?: ReactNode;
+  onRefresh?: () => void | Promise<unknown>;
+  refreshing?: boolean;
   scrollToTopSignal?: string | number | null;
 }>;
 
@@ -27,6 +30,8 @@ export function Screen({
   children,
   description,
   footer,
+  onRefresh,
+  refreshing = false,
   scrollToTopSignal,
   title,
 }: ScreenProps) {
@@ -54,10 +59,24 @@ export function Screen({
       style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
     >
       <ScrollView
+        alwaysBounceVertical={Boolean(onRefresh)}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         ref={scrollRef}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              accessibilityLabel="Atualizar conteúdo"
+              colors={[theme.colors.primary]}
+              onRefresh={() => void onRefresh()}
+              progressBackgroundColor={theme.colors.surface}
+              refreshing={refreshing}
+              tintColor={theme.colors.primary}
+            />
+          ) : undefined
+        }
         style={styles.scroll}
+        testID="screen-scroll-view"
       >
         <View style={styles.header}>
           <View style={styles.headerCopy}>
