@@ -18,11 +18,21 @@ type ScreenProps = PropsWithChildren<{
   title: string;
   description?: string;
   action?: ReactNode;
+  footer?: ReactNode;
+  scrollToTopSignal?: string | number | null;
 }>;
 
-export function Screen({ action, children, description, title }: ScreenProps) {
+export function Screen({
+  action,
+  children,
+  description,
+  footer,
+  scrollToTopSignal,
+  title,
+}: ScreenProps) {
   const theme = useAppTheme();
   const titleRef = useRef<Text>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -32,6 +42,12 @@ export function Screen({ action, children, description, title }: ScreenProps) {
     return () => clearTimeout(timeout);
   }, [title]);
 
+  useEffect(() => {
+    if (scrollToTopSignal !== undefined && scrollToTopSignal !== null) {
+      scrollRef.current?.scrollTo({ animated: true, y: 0 });
+    }
+  }, [scrollToTopSignal]);
+
   return (
     <SafeAreaView
       edges={['top', 'left', 'right']}
@@ -40,6 +56,8 @@ export function Screen({ action, children, description, title }: ScreenProps) {
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        ref={scrollRef}
+        style={styles.scroll}
       >
         <View style={styles.header}>
           <View style={styles.headerCopy}>
@@ -54,13 +72,29 @@ export function Screen({ action, children, description, title }: ScreenProps) {
         </View>
         {children}
       </ScrollView>
+      {footer ? (
+        <SafeAreaView
+          edges={['bottom', 'left', 'right']}
+          style={[
+            styles.footer,
+            {
+              backgroundColor: theme.colors.surface,
+              borderTopColor: theme.colors.border,
+            },
+          ]}
+        >
+          {footer}
+        </SafeAreaView>
+      ) : null}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
+  scroll: { flex: 1 },
   content: { flexGrow: 1, gap: spacing.lg, padding: spacing.md },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
   headerCopy: { flex: 1, gap: spacing.xs },
+  footer: { padding: spacing.md, borderTopWidth: 1 },
 });

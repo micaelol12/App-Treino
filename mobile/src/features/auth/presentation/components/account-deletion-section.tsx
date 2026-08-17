@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { Alert } from 'react-native';
 
 import { getAuthErrorMessage } from '../auth-error-message';
 import { AuthFeedback } from './auth-feedback';
@@ -7,7 +7,7 @@ import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
 import { SecondaryButton } from '@/shared/components/secondary-button';
 import { useAppTheme } from '@/shared/theme/theme-provider';
-import { radius, spacing } from '@/shared/theme/tokens';
+import { AuthFormField } from './auth-form-field';
 
 type AccountDeletionSectionProps = {
   readonly deleteAccount: (password: string) => Promise<void>;
@@ -53,26 +53,18 @@ export function AccountDeletionSection({ deleteAccount }: AccountDeletionSection
         A exclusão apaga permanentemente o plano, os treinos e as pesagens vinculadas à
         sua conta.
       </AppText>
-      <View style={styles.field}>
-        <AppText style={styles.label}>Senha atual</AppText>
-        <TextInput
-          accessibilityLabel="Senha atual para excluir a conta"
-          autoCapitalize="none"
-          autoComplete="current-password"
-          editable={!isDeleting}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={[
-            styles.input,
-            {
-              borderColor: theme.colors.border,
-              color: theme.colors.text,
-            },
-          ]}
-          testID="account-deletion-password"
-          value={password}
-        />
-      </View>
+      <AuthFormField
+        autoCapitalize="none"
+        autoComplete="current-password"
+        editable={!isDeleting}
+        label="Senha atual"
+        onChangeText={setPassword}
+        onSubmitEditing={confirmDeletion}
+        returnKeyType="done"
+        secureTextEntry
+        testID="account-deletion-password"
+        value={password}
+      />
       {error ? <AuthFeedback message={error} /> : null}
       <SecondaryButton
         disabled={isDeleting}
@@ -84,15 +76,3 @@ export function AccountDeletionSection({ deleteAccount }: AccountDeletionSection
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  field: { gap: spacing.xs },
-  label: { fontWeight: '700' },
-  input: {
-    minHeight: 48,
-    paddingHorizontal: spacing.sm,
-    borderWidth: 1,
-    borderRadius: radius.sm,
-    fontSize: 16,
-  },
-});

@@ -18,4 +18,10 @@ export interface WeightRepository {
     cursor?: WeightPageCursor,
   ): Promise<WeightPage>;
   upsert(userId: string, draft: WeightEntryDraft): Promise<void>;
+  replace(
+    userId: string,
+    originalDocumentId: string,
+    draft: WeightEntryDraft,
+  ): Promise<void>;
+  delete(userId: string, documentId: string): Promise<void>;
 }

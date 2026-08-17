@@ -21,6 +21,7 @@ export function getWorkoutSessionErrorMessage(error: unknown): string {
   if (error instanceof WorkoutSessionFailure) {
     const messages = {
       configuration: 'O Firebase ainda não está configurado neste aplicativo.',
+      'invalid-data': 'O histórico contém um registro incompatível com o aplicativo.',
       'permission-denied': 'Sua sessão não permite concluir este treino.',
       network: 'Não foi possível salvar. O rascunho continua neste aparelho.',
       'too-many-sets': 'O treino excede o limite de séries por conclusão.',

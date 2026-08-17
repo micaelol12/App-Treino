@@ -39,12 +39,13 @@ export default function TabsLayout() {
         options={{ title: 'Treino', tabBarIcon: tabIcon('barbell', 'barbell-outline') }}
       />
       <Tabs.Screen
-        name="registro"
+        name="historico"
         options={{
-          title: 'Registro',
-          tabBarIcon: tabIcon('add-circle', 'add-circle-outline'),
+          title: 'Histórico',
+          tabBarIcon: tabIcon('time', 'time-outline'),
         }}
       />
+      <Tabs.Screen name="registro" options={{ href: null }} />
       <Tabs.Screen
         name="evolucao"
         options={{

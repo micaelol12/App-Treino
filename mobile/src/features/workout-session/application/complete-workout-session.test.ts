@@ -23,7 +23,13 @@ const draft: WorkoutSessionDraft = {
 describe('CompleteWorkoutSession', () => {
   it('prepares and persists only executed sets', async () => {
     const complete = jest.fn().mockResolvedValue(undefined);
-    const repository: WorkoutSessionRepository = { complete };
+    const repository: WorkoutSessionRepository = {
+      complete,
+      listHistoryPage: jest.fn(),
+      listExerciseHistory: jest.fn(),
+      updateHistory: jest.fn(),
+      deleteHistory: jest.fn(),
+    };
 
     await expect(
       new CompleteWorkoutSession(repository).execute('user-1', draft),
@@ -48,7 +54,13 @@ describe('CompleteWorkoutSession', () => {
 
   it('does not persist a draft owned by another user', async () => {
     const complete = jest.fn();
-    const useCase = new CompleteWorkoutSession({ complete });
+    const useCase = new CompleteWorkoutSession({
+      complete,
+      listHistoryPage: jest.fn(),
+      listExerciseHistory: jest.fn(),
+      updateHistory: jest.fn(),
+      deleteHistory: jest.fn(),
+    });
 
     await expect(useCase.execute('user-2', draft)).rejects.toThrow(
       'Workout draft does not belong to the authenticated user',

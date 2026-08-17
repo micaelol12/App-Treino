@@ -47,3 +47,35 @@ export function useWeightUpsert() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKey(userId) }),
   });
 }
+
+export function useWeightActions() {
+  const { session } = useAuth();
+  const repository = useWeightRepository();
+  const service = useMemo(() => new WeightService(repository), [repository]);
+  const queryClient = useQueryClient();
+  const userId = session?.uid;
+
+  const replace = useMutation({
+    mutationFn: ({
+      draft,
+      originalDocumentId,
+    }: {
+      readonly originalDocumentId: string;
+      readonly draft: WeightEntryDraft;
+    }) => {
+      if (!userId) throw new Error('Authenticated user required');
+      return service.replace(userId, originalDocumentId, draft);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKey(userId) }),
+  });
+
+  const remove = useMutation({
+    mutationFn: (documentId: string) => {
+      if (!userId) throw new Error('Authenticated user required');
+      return service.delete(userId, documentId);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKey(userId) }),
+  });
+
+  return { remove, replace };
+}

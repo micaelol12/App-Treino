@@ -63,7 +63,9 @@ export function PasswordResetScreen() {
                 label="E-mail"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
+                onSubmitEditing={() => void submit()}
                 placeholder="voce@exemplo.com"
+                returnKeyType="done"
                 testID="auth-email-input"
                 textContentType="username"
                 value={field.value}

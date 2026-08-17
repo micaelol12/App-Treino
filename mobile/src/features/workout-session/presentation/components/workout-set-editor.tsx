@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import type { WorkoutSetDraft } from '../../domain/workout-session-draft';
@@ -24,6 +25,9 @@ export function WorkoutSetEditor({
   workoutSet,
 }: WorkoutSetEditorProps) {
   const theme = useAppTheme();
+  const repetitionsRef = useRef<TextInput>(null);
+  const rpeRef = useRef<TextInput>(null);
+  const noteRef = useRef<TextInput>(null);
   const inputStyle = [
     styles.input,
     {
@@ -44,6 +48,8 @@ export function WorkoutSetEditor({
             accessibilityLabel={`${prefix}, carga em quilogramas`}
             keyboardType="decimal-pad"
             onChangeText={(loadKg) => onChange({ loadKg })}
+            onSubmitEditing={() => repetitionsRef.current?.focus()}
+            returnKeyType="next"
             selectTextOnFocus
             style={inputStyle}
             testID={`${testIDPrefix}-${workoutSet.setNumber}-load`}
@@ -56,6 +62,9 @@ export function WorkoutSetEditor({
             accessibilityLabel={`${prefix}, repetições`}
             keyboardType="number-pad"
             onChangeText={(repetitions) => onChange({ repetitions })}
+            onSubmitEditing={() => rpeRef.current?.focus()}
+            ref={repetitionsRef}
+            returnKeyType="next"
             selectTextOnFocus
             style={inputStyle}
             testID={`${testIDPrefix}-${workoutSet.setNumber}-repetitions`}
@@ -68,6 +77,9 @@ export function WorkoutSetEditor({
             accessibilityLabel={`${prefix}, RPE de 1 a 10`}
             keyboardType="number-pad"
             onChangeText={(rpe) => onChange({ rpe })}
+            onSubmitEditing={() => noteRef.current?.focus()}
+            ref={rpeRef}
+            returnKeyType="next"
             selectTextOnFocus
             style={inputStyle}
             testID={`${testIDPrefix}-${workoutSet.setNumber}-rpe`}
@@ -84,6 +96,7 @@ export function WorkoutSetEditor({
           onChangeText={(note) => onChange({ note })}
           placeholder="Opcional"
           placeholderTextColor={theme.colors.textMuted}
+          ref={noteRef}
           style={[...inputStyle, styles.noteInput]}
           testID={`${testIDPrefix}-${workoutSet.setNumber}-note`}
           value={workoutSet.note}

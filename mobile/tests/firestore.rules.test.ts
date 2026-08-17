@@ -314,6 +314,66 @@ describe('historico_treinos validation', () => {
     ]);
   });
 
+  it('lists, updates and deletes an owned workout session', async () => {
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const repository = new FirebaseWorkoutSessionRepository(
+      database as unknown as Firestore,
+    );
+    await repository.complete(PRIMARY_USER_ID, {
+      sessionId: 'session-crud',
+      performedOn: '2026-08-15',
+      division: 'Push',
+      sets: [
+        {
+          planExerciseId: 'bench',
+          exerciseName: 'Supino Reto',
+          setNumber: 1,
+          loadKg: 60,
+          repetitions: 10,
+          rpe: 8,
+          note: '',
+        },
+      ],
+    });
+
+    const page = await repository.listHistoryPage(PRIMARY_USER_ID, 10);
+    await expect(
+      repository.listExerciseHistory(PRIMARY_USER_ID, 'Supino Reto', 10),
+    ).resolves.toHaveLength(1);
+    await repository.updateHistory(PRIMARY_USER_ID, {
+      sessionId: 'session-crud',
+      performedOn: '2026-08-16',
+      workoutName: 'Push B',
+      sets: [
+        {
+          id: page.records[0]!.id,
+          loadKg: 62.5,
+          repetitions: 8,
+          rpe: 9,
+          note: 'progressão',
+        },
+      ],
+    });
+
+    const updated = await repository.listHistoryPage(PRIMARY_USER_ID, 10);
+    expect(updated.records[0]).toMatchObject({
+      performedOn: '2026-08-16',
+      workoutName: 'Push B',
+      loadKg: 62.5,
+      repetitions: 8,
+      rpe: 9,
+      note: 'progressão',
+    });
+    await repository.deleteHistory(
+      PRIMARY_USER_ID,
+      updated.records.map(({ id }) => id),
+    );
+    await expect(repository.listHistoryPage(PRIMARY_USER_ID, 10)).resolves.toEqual({
+      records: [],
+      nextCursor: null,
+    });
+  });
+
   it('accepts a legacy record and a versioned record', async () => {
     const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
 
@@ -450,6 +510,33 @@ describe('historico_pesos validation', () => {
       createdAt: expect.any(Timestamp),
       updatedAt: expect.any(Timestamp),
     });
+  });
+
+  it('moves an edited weight to another date and deletes it', async () => {
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const repository = new FirebaseWeightRepository(database as unknown as Firestore);
+    const oldReference = doc(
+      database,
+      `usuarios/${PRIMARY_USER_ID}/historico_pesos/legacy-id`,
+    );
+    await setDoc(oldReference, validWeight);
+
+    await repository.replace(PRIMARY_USER_ID, 'legacy-id', {
+      recordedOn: '2026-07-03',
+      weightKg: 78.5,
+    });
+    const newReference = doc(
+      database,
+      `usuarios/${PRIMARY_USER_ID}/historico_pesos/2026-07-03`,
+    );
+    expect((await getDoc(oldReference)).exists()).toBe(false);
+    expect((await getDoc(newReference)).data()).toMatchObject({
+      Data: '2026-07-03',
+      Peso: 78.5,
+    });
+
+    await repository.delete(PRIMARY_USER_ID, '2026-07-03');
+    expect((await getDoc(newReference)).exists()).toBe(false);
   });
 });
 

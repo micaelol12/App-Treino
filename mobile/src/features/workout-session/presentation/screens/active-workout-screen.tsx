@@ -14,6 +14,7 @@ import { spacing } from '@/shared/theme/tokens';
 
 import { useActiveWorkoutStore } from '../active-workout.store';
 import { WorkoutTimer } from '../components/workout-timer';
+import { ExerciseHistoryButton } from '../components/exercise-history-button';
 import { WorkoutSetEditor } from '../components/workout-set-editor';
 import { getWorkoutSessionErrorMessage } from '../workout-session-error-message';
 import { useCompleteWorkoutSession } from '../workout-session-hooks';
@@ -117,6 +118,32 @@ export function ActiveWorkoutScreen() {
       title={draft.division}
       description={`${draft.performedOn} · exercício ${exerciseIndex + 1} de ${draft.exercises.length}`}
       action={<SecondaryButton label="Abortar" onPress={abort} tone="danger" />}
+      footer={
+        <View style={styles.navigation}>
+          <SecondaryButton
+            disabled={isFirst || complete.isPending}
+            label="Anterior"
+            onPress={previousExercise}
+            style={styles.navigationButton}
+          />
+          {!isLast ? (
+            <PrimaryButton
+              disabled={complete.isPending}
+              label="Próximo"
+              onPress={nextExercise}
+              style={styles.navigationButton}
+            />
+          ) : (
+            <PrimaryButton
+              disabled={complete.isPending}
+              label={complete.isPending ? 'Salvando…' : 'Concluir treino'}
+              onPress={() => void finish()}
+              style={styles.navigationButton}
+              testID="complete-workout"
+            />
+          )}
+        </View>
+      }
     >
       <View
         accessibilityRole="progressbar"
@@ -126,7 +153,12 @@ export function ActiveWorkoutScreen() {
           now: exerciseIndex + 1,
         }}
       >
-        <AppText variant="heading">{exercise.name}</AppText>
+        <View style={styles.exerciseHeader}>
+          <AppText style={styles.exerciseTitle} variant="heading">
+            {exercise.name}
+          </AppText>
+          <ExerciseHistoryButton exerciseName={exercise.name} />
+        </View>
       </View>
 
       <WorkoutTimer />
@@ -147,37 +179,14 @@ export function ActiveWorkoutScreen() {
           {feedback}
         </AppText>
       ) : null}
-
-      <View style={styles.navigation}>
-        <SecondaryButton
-          disabled={isFirst || complete.isPending}
-          label="Anterior"
-          onPress={previousExercise}
-          style={styles.navigationButton}
-        />
-        {!isLast ? (
-          <PrimaryButton
-            disabled={complete.isPending}
-            label="Próximo"
-            onPress={nextExercise}
-            style={styles.navigationButton}
-          />
-        ) : (
-          <PrimaryButton
-            disabled={complete.isPending}
-            label={complete.isPending ? 'Salvando…' : 'Concluir treino'}
-            onPress={() => void finish()}
-            style={styles.navigationButton}
-            testID="complete-workout"
-          />
-        )}
-      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   sets: { gap: spacing.sm },
+  exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  exerciseTitle: { flex: 1 },
   navigation: { flexDirection: 'row', gap: spacing.sm },
   navigationButton: { flex: 1 },
 });

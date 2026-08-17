@@ -6,10 +6,10 @@ import {
 
 describe('workout timer', () => {
   it.each([
-    [0, '00:00'],
-    [59_999, '00:59'],
-    [60_000, '01:00'],
-    [3_661_000, '01:01:01'],
+    [0, '00:00.000'],
+    [59_999, '00:59.999'],
+    [60_000, '01:00.000'],
+    [3_661_000, '01:01:01.000'],
   ])('formats %i milliseconds as %s', (elapsedMs, expected) => {
     expect(formatWorkoutTimer(elapsedMs)).toBe(expected);
   });

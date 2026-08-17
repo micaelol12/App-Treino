@@ -1,5 +1,10 @@
 export type WorkoutSessionFailureCode =
-  'configuration' | 'permission-denied' | 'network' | 'too-many-sets' | 'unknown';
+  | 'configuration'
+  | 'invalid-data'
+  | 'permission-denied'
+  | 'network'
+  | 'too-many-sets'
+  | 'unknown';
 
 export class WorkoutSessionFailure extends Error {
   constructor(

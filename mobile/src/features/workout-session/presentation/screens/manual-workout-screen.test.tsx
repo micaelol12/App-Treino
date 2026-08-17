@@ -25,6 +25,12 @@ jest.mock('@/features/workout-plans/presentation/workout-plan-hooks', () => ({
 
 jest.mock('../workout-session-hooks', () => ({
   useCompleteWorkoutSession: jest.fn(),
+  useExerciseHistory: () => ({
+    data: [],
+    isError: false,
+    isLoading: false,
+    isSuccess: true,
+  }),
 }));
 
 const mockUseAuth = jest.mocked(useAuth);
@@ -95,10 +101,8 @@ describe('ManualWorkoutScreen', () => {
     mockComplete.mockResolvedValue(2);
     await arrange();
 
-    await fireEvent.changeText(
-      screen.getByTestId('manual-workout-date-input'),
-      '2026-08-14',
-    );
+    await fireEvent.press(screen.getByTestId('manual-workout-date-input'));
+    await fireEvent.press(screen.getByTestId('manual-workout-date-input-day-2026-08-14'));
     await fireEvent.press(screen.getByTestId('manual-workout-prepare'));
 
     expect(screen.getByText('Supino')).toBeOnTheScreen();

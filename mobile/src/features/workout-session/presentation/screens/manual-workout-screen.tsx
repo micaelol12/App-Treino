@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { createWorkoutSessionId } from '../../application/create-workout-session-id';
 import type {
@@ -12,28 +12,23 @@ import { getWorkoutPlanErrorMessage } from '@/features/workout-plans/presentatio
 import { useWorkoutPlanExercises } from '@/features/workout-plans/presentation/workout-plan-hooks';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
+import { DatePickerField } from '@/shared/components/date-picker-field';
 import { EmptyState } from '@/shared/components/empty-state';
 import { PrimaryButton } from '@/shared/components/primary-button';
 import { Screen } from '@/shared/components/screen';
 import { SecondaryButton } from '@/shared/components/secondary-button';
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { radius, spacing } from '@/shared/theme/tokens';
+import { currentCivilDate } from '@/shared/validation/civil-date';
 
 import { WorkoutSetEditor } from '../components/workout-set-editor';
+import { ExerciseHistoryButton } from '../components/exercise-history-button';
 import { getWorkoutSessionErrorMessage } from '../workout-session-error-message';
 import { useCompleteWorkoutSession } from '../workout-session-hooks';
 
 type WorkoutSetPatch = Partial<
   Pick<WorkoutSetDraft, 'loadKg' | 'repetitions' | 'rpe' | 'note'>
 >;
-
-function currentCivilDate(): string {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 export function ManualWorkoutScreen() {
   const theme = useAppTheme();
@@ -140,7 +135,12 @@ export function ManualWorkoutScreen() {
       >
         {draft.exercises.map((exercise, exerciseIndex) => (
           <View key={exercise.planExerciseId} style={styles.exercise}>
-            <AppText variant="heading">{exercise.name}</AppText>
+            <View style={styles.exerciseHeader}>
+              <AppText style={styles.exerciseTitle} variant="heading">
+                {exercise.name}
+              </AppText>
+              <ExerciseHistoryButton exerciseName={exercise.name} />
+            </View>
             {exercise.sets.map((workoutSet, setIndex) => (
               <WorkoutSetEditor
                 exerciseName={exercise.name}
@@ -203,26 +203,12 @@ export function ManualWorkoutScreen() {
 
       {plans.isSuccess && plans.data.length > 0 ? (
         <Card>
-          <View style={styles.field}>
-            <AppText style={styles.label}>Data</AppText>
-            <TextInput
-              accessibilityLabel="Data do registro no formato AAAA-MM-DD"
-              autoCapitalize="none"
-              onChangeText={setPerformedOn}
-              placeholder="AAAA-MM-DD"
-              placeholderTextColor={theme.colors.textMuted}
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.colors.background,
-                  borderColor: theme.colors.border,
-                  color: theme.colors.text,
-                },
-              ]}
-              testID="manual-workout-date-input"
-              value={performedOn}
-            />
-          </View>
+          <DatePickerField
+            label="Data"
+            onChange={setPerformedOn}
+            testID="manual-workout-date-input"
+            value={performedOn}
+          />
           <View style={styles.field}>
             <AppText style={styles.label}>Divisão</AppText>
             <View accessibilityRole="radiogroup" style={styles.divisions}>
@@ -275,15 +261,10 @@ export function ManualWorkoutScreen() {
 
 const styles = StyleSheet.create({
   exercise: { gap: spacing.sm },
+  exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  exerciseTitle: { flex: 1 },
   field: { gap: spacing.xs },
   label: { fontWeight: '700' },
-  input: {
-    minHeight: 48,
-    paddingHorizontal: spacing.sm,
-    borderWidth: 1,
-    borderRadius: radius.sm,
-    fontSize: 16,
-  },
   divisions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   division: {
     minHeight: 48,

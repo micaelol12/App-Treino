@@ -31,14 +31,16 @@ export function getWorkoutTimerElapsedMs(
 }
 
 export function formatWorkoutTimer(elapsedMs: number): string {
-  const totalSeconds = Math.floor(Math.max(0, elapsedMs) / 1000);
+  const normalizedMs = Math.floor(Math.max(0, elapsedMs));
+  const milliseconds = normalizedMs % 1000;
+  const totalSeconds = Math.floor(normalizedMs / 1000);
   const seconds = totalSeconds % 60;
   const totalMinutes = Math.floor(totalSeconds / 60);
   const minutes = totalMinutes % 60;
   const hours = Math.floor(totalMinutes / 60);
   const parts = [minutes, seconds].map((part) => String(part).padStart(2, '0'));
 
-  return hours > 0
-    ? `${String(hours).padStart(2, '0')}:${parts.join(':')}`
-    : parts.join(':');
+  const time =
+    hours > 0 ? `${String(hours).padStart(2, '0')}:${parts.join(':')}` : parts.join(':');
+  return `${time}.${String(milliseconds).padStart(3, '0')}`;
 }

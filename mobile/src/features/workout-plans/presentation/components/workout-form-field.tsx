@@ -1,4 +1,4 @@
-import { type ComponentProps } from 'react';
+import { type ComponentProps, forwardRef } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { AppText } from '@/shared/components/app-text';
@@ -10,39 +10,40 @@ type WorkoutFormFieldProps = ComponentProps<typeof TextInput> & {
   readonly label: string;
 };
 
-export function WorkoutFormField({
-  error,
-  label,
-  style,
-  ...props
-}: WorkoutFormFieldProps) {
-  const theme = useAppTheme();
+export const WorkoutFormField = forwardRef<TextInput, WorkoutFormFieldProps>(
+  function WorkoutFormField({ error, label, style, ...props }, ref) {
+    const theme = useAppTheme();
 
-  return (
-    <View style={styles.field}>
-      <AppText variant="caption">{label}</AppText>
-      <TextInput
-        accessibilityLabel={label}
-        placeholderTextColor={theme.colors.textMuted}
-        {...props}
-        style={[
-          styles.input,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: error ? theme.colors.danger : theme.colors.border,
-            color: theme.colors.text,
-          },
-          style,
-        ]}
-      />
-      {error ? (
-        <AppText accessibilityLiveRegion="polite" style={{ color: theme.colors.danger }}>
-          {error}
-        </AppText>
-      ) : null}
-    </View>
-  );
-}
+    return (
+      <View style={styles.field}>
+        <AppText variant="caption">{label}</AppText>
+        <TextInput
+          accessibilityLabel={label}
+          placeholderTextColor={theme.colors.textMuted}
+          ref={ref}
+          {...props}
+          style={[
+            styles.input,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: error ? theme.colors.danger : theme.colors.border,
+              color: theme.colors.text,
+            },
+            style,
+          ]}
+        />
+        {error ? (
+          <AppText
+            accessibilityLiveRegion="polite"
+            style={{ color: theme.colors.danger }}
+          >
+            {error}
+          </AppText>
+        ) : null}
+      </View>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   field: { gap: spacing.xs },

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { StyleSheet, TextInput, View } from 'react-native';
 
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
@@ -19,6 +19,7 @@ import { AuthLink } from '../components/auth-link';
 export function LoginScreen() {
   const { signIn, startupError } = useAuth();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const passwordRef = useRef<TextInput>(null);
   const {
     control,
     formState: { isSubmitting },
@@ -54,7 +55,9 @@ export function LoginScreen() {
                 label="E-mail"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
+                onSubmitEditing={() => passwordRef.current?.focus()}
                 placeholder="voce@exemplo.com"
+                returnKeyType="next"
                 testID="auth-email-input"
                 textContentType="username"
                 value={field.value}
@@ -72,7 +75,10 @@ export function LoginScreen() {
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
                 placeholder="Sua senha"
+                ref={passwordRef}
+                returnKeyType="done"
                 secureTextEntry
+                onSubmitEditing={() => void submit()}
                 testID="auth-password-input"
                 textContentType="password"
                 value={field.value}

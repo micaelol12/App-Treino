@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, TextInput, View } from 'react-native';
 
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
@@ -35,6 +35,9 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
   const plans = useWorkoutPlanExercises();
   const { create, update } = useWorkoutPlanActions();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const nameRef = useRef<TextInput>(null);
+  const setsRef = useRef<TextInput>(null);
+  const orderRef = useRef<TextInput>(null);
   const exercise = plans.data?.find(({ id }) => id === exerciseId);
   const {
     control,
@@ -130,7 +133,9 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
                 label="Divisão"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
+                onSubmitEditing={() => nameRef.current?.focus()}
                 placeholder="Ex.: Push"
+                returnKeyType="next"
                 testID="workout-division-input"
                 value={field.value}
               />
@@ -147,6 +152,9 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
                 placeholder="Ex.: Supino reto"
+                ref={nameRef}
+                returnKeyType="next"
+                onSubmitEditing={() => setsRef.current?.focus()}
                 testID="workout-name-input"
                 value={field.value}
               />
@@ -162,6 +170,9 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
                 label="Séries padrão"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
+                onSubmitEditing={() => orderRef.current?.focus()}
+                ref={setsRef}
+                returnKeyType="next"
                 testID="workout-sets-input"
                 value={field.value}
               />
@@ -177,6 +188,9 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
                 label="Ordem"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
+                onSubmitEditing={() => void submit()}
+                ref={orderRef}
+                returnKeyType="done"
                 testID="workout-order-input"
                 value={field.value}
               />

@@ -1,16 +1,18 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { useWorkoutPlanExercises } from '@/features/workout-plans/presentation/workout-plan-hooks';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
 import { EmptyState } from '@/shared/components/empty-state';
+import { InfoModal } from '@/shared/components/info-modal';
 import { MetricChart } from '@/shared/components/metric-chart';
 import { PrimaryButton } from '@/shared/components/primary-button';
 import { Screen } from '@/shared/components/screen';
+import { SearchableSelect } from '@/shared/components/searchable-select';
 import { SecondaryButton } from '@/shared/components/secondary-button';
 import { useAppTheme } from '@/shared/theme/theme-provider';
-import { radius, spacing } from '@/shared/theme/tokens';
 
 import { calculateWorkoutProgress } from '../../domain/workout-progress';
 import { getProgressErrorMessage } from '../progress-error-message';
@@ -24,11 +26,14 @@ export function ProgressScreen() {
   const theme = useAppTheme();
   const plans = useWorkoutPlanExercises();
   const [selectedExercise, setSelectedExercise] = useState('');
+  const [helpOpen, setHelpOpen] = useState(false);
   const exerciseNames = useMemo(
     () => [...new Set((plans.data ?? []).map((exercise) => exercise.name))].sort(),
     [plans.data],
   );
-  const effectiveExercise = selectedExercise || exerciseNames[0] || '';
+  const effectiveExercise = exerciseNames.includes(selectedExercise)
+    ? selectedExercise
+    : (exerciseNames[0] ?? '');
   const history = useExerciseProgress(effectiveExercise);
   const records = useMemo(
     () => history.data?.pages.flatMap((page) => page.records) ?? [],
@@ -45,6 +50,18 @@ export function ProgressScreen() {
     <Screen
       title="Evolução"
       description="Compare carga máxima, 1RM estimada e volume por sessão."
+      action={
+        <Pressable
+          accessibilityHint="Explica como interpretar os gráficos"
+          accessibilityLabel="Ajuda sobre os gráficos"
+          accessibilityRole="button"
+          onPress={() => setHelpOpen(true)}
+          style={styles.helpButton}
+          testID="progress-help"
+        >
+          <Ionicons color={theme.colors.primary} name="help-circle-outline" size={30} />
+        </Pressable>
+      }
     >
       {plans.isLoading ? (
         <Card>
@@ -67,37 +84,13 @@ export function ProgressScreen() {
       ) : null}
       {exerciseNames.length > 0 ? (
         <Card>
-          <AppText variant="heading">Exercício</AppText>
-          <View accessibilityRole="radiogroup" style={styles.filters}>
-            {exerciseNames.map((exerciseName) => {
-              const selected = exerciseName === effectiveExercise;
-              return (
-                <Pressable
-                  accessibilityLabel={exerciseName}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: selected }}
-                  key={exerciseName}
-                  onPress={() => setSelectedExercise(exerciseName)}
-                  style={[
-                    styles.filter,
-                    {
-                      backgroundColor: selected
-                        ? theme.colors.primary
-                        : theme.colors.surfaceMuted,
-                    },
-                  ]}
-                >
-                  <AppText
-                    style={{
-                      color: selected ? theme.colors.onPrimary : theme.colors.text,
-                    }}
-                  >
-                    {exerciseName}
-                  </AppText>
-                </Pressable>
-              );
-            })}
-          </View>
+          <SearchableSelect
+            label="Exercício"
+            onChange={setSelectedExercise}
+            options={exerciseNames}
+            testID="progress-exercise-select"
+            value={effectiveExercise}
+          />
         </Card>
       ) : null}
 
@@ -181,16 +174,30 @@ export function ProgressScreen() {
           ) : null}
         </>
       ) : null}
+      <InfoModal
+        onClose={() => setHelpOpen(false)}
+        title="Como interpretar os gráficos"
+        visible={helpOpen}
+      >
+        <AppText variant="heading">Carga máxima</AppText>
+        <AppText style={{ color: theme.colors.textMuted }}>
+          É a maior carga registrada em uma série daquele exercício na sessão.
+        </AppText>
+        <AppText variant="heading">1RM estimada</AppText>
+        <AppText style={{ color: theme.colors.textMuted }}>
+          Estima a carga de uma repetição pela fórmula de Epley: carga × (1 + repetições ÷
+          30). É uma referência, não um teste máximo real.
+        </AppText>
+        <AppText variant="heading">Volume</AppText>
+        <AppText style={{ color: theme.colors.textMuted }}>
+          Soma carga × repetições de todas as séries da sessão. O eixo horizontal mostra
+          as datas e o vertical mostra o valor da métrica.
+        </AppText>
+      </InfoModal>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  filters: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  filter: {
-    minHeight: 48,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.pill,
-  },
+  helpButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
 });

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { StyleSheet, TextInput, View } from 'react-native';
 
 import { Card } from '@/shared/components/card';
 import { PrimaryButton } from '@/shared/components/primary-button';
@@ -18,6 +18,8 @@ import { AuthLink } from '../components/auth-link';
 export function SignUpScreen() {
   const { signUp, startupError } = useAuth();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmationRef = useRef<TextInput>(null);
   const {
     control,
     formState: { isSubmitting },
@@ -56,7 +58,9 @@ export function SignUpScreen() {
                 label="E-mail"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
+                onSubmitEditing={() => passwordRef.current?.focus()}
                 placeholder="voce@exemplo.com"
+                returnKeyType="next"
                 testID="auth-email-input"
                 textContentType="username"
                 value={field.value}
@@ -74,7 +78,10 @@ export function SignUpScreen() {
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
                 placeholder="Mínimo de 6 caracteres"
+                ref={passwordRef}
+                returnKeyType="next"
                 secureTextEntry
+                onSubmitEditing={() => confirmationRef.current?.focus()}
                 testID="auth-password-input"
                 textContentType="newPassword"
                 value={field.value}
@@ -92,7 +99,10 @@ export function SignUpScreen() {
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
                 placeholder="Repita sua senha"
+                ref={confirmationRef}
+                returnKeyType="done"
                 secureTextEntry
+                onSubmitEditing={() => void submit()}
                 testID="auth-password-confirmation-input"
                 textContentType="newPassword"
                 value={field.value}

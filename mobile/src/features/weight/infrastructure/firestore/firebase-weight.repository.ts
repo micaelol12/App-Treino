@@ -1,6 +1,7 @@
 import { FirebaseError } from 'firebase/app';
 import {
   collection,
+  deleteDoc,
   doc,
   documentId,
   getDocs,
@@ -112,6 +113,50 @@ export class FirebaseWeightRepository implements WeightRepository {
           { merge: true },
         );
       });
+    } catch (error) {
+      throw mapFirestoreFailure(error);
+    }
+  }
+
+  async replace(
+    userId: string,
+    originalDocumentId: string,
+    draft: WeightEntryDraft,
+  ): Promise<void> {
+    if (originalDocumentId === draft.recordedOn) return this.upsert(userId, draft);
+
+    try {
+      const originalReference = doc(
+        this.database,
+        collectionPath(userId),
+        originalDocumentId,
+      );
+      const targetReference = doc(
+        this.database,
+        collectionPath(userId),
+        draft.recordedOn,
+      );
+      await runTransaction(this.database, async (transaction) => {
+        const original = await transaction.get(originalReference);
+        const target = await transaction.get(targetReference);
+        const timestamp = serverTimestamp();
+        transaction.set(targetReference, {
+          Data: draft.recordedOn,
+          Peso: draft.weightKg,
+          schemaVersion: 1,
+          createdAt: target.data()?.createdAt ?? original.data()?.createdAt ?? timestamp,
+          updatedAt: timestamp,
+        });
+        transaction.delete(originalReference);
+      });
+    } catch (error) {
+      throw mapFirestoreFailure(error);
+    }
+  }
+
+  async delete(userId: string, documentId: string): Promise<void> {
+    try {
+      await deleteDoc(doc(this.database, collectionPath(userId), documentId));
     } catch (error) {
       throw mapFirestoreFailure(error);
     }
