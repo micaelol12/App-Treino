@@ -27,7 +27,7 @@ function groupByDivision(exercises: readonly WorkoutPlanExercise[]) {
   return groups;
 }
 
-export function WorkoutPlansSection() {
+export function WorkoutPlansSection({ showHeading = true }: { showHeading?: boolean }) {
   const router = useRouter();
   const theme = useAppTheme();
   const plans = useWorkoutPlanExercises();
@@ -77,19 +77,27 @@ export function WorkoutPlansSection() {
 
   return (
     <View style={styles.section}>
-      <View style={styles.headingRow}>
-        <View style={styles.headingCopy}>
-          <AppText variant="heading">Plano de treino</AppText>
-          <AppText style={{ color: theme.colors.textMuted }}>
-            Organize exercícios por divisão e ordem.
-          </AppText>
+      {showHeading ? (
+        <View style={styles.headingRow}>
+          <View style={styles.headingCopy}>
+            <AppText variant="heading">Plano de treino</AppText>
+            <AppText style={{ color: theme.colors.textMuted }}>
+              Organize exercícios por divisão e ordem.
+            </AppText>
+          </View>
+          <WorkoutPlanAction
+            label="Adicionar"
+            onPress={() => openExercise('novo')}
+            testID="workout-plan-add"
+          />
         </View>
+      ) : (
         <WorkoutPlanAction
-          label="Adicionar"
+          label="Adicionar exercício"
           onPress={() => openExercise('novo')}
           testID="workout-plan-add"
         />
-      </View>
+      )}
 
       {plans.isLoading ? (
         <Card>

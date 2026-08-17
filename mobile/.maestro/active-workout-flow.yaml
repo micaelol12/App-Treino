@@ -17,6 +17,8 @@ appId: com.micael.apptreino.development
     id: 'auth-sign-up-button'
 - tapOn: 'Ajustes'
 - tapOn:
+    id: 'settings-workout-plan'
+- tapOn:
     id: 'workout-plan-add'
 - tapOn:
     id: 'workout-division-input'
@@ -45,6 +47,10 @@ appId: com.micael.apptreino.development
 - tapOn: 'Iniciar treino'
 - assertVisible: 'Supino Reto'
 - tapOn:
+    id: 'workout-timer-mode-rest'
+- tapOn:
+    id: 'workout-timer-start'
+- tapOn:
     id: 'set-1-load'
 - eraseText
 - inputText: '60'
@@ -65,6 +71,8 @@ appId: com.micael.apptreino.development
 - stopApp
 - launchApp
 - assertVisible: 'Desenvolvimento'
+- assertVisible:
+    id: 'workout-timer-pause'
 - tapOn: 'Anterior'
 - assertVisible: 'Supino Reto'
 - assertVisible:

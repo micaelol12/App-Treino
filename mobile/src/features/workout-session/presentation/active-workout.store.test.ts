@@ -4,6 +4,7 @@ import { waitFor } from '@testing-library/react-native';
 import type { WorkoutSessionDraft } from '../domain/workout-session-draft';
 
 import { useActiveWorkoutStore } from './active-workout.store';
+import { createInitialWorkoutTimer } from './workout-timer';
 
 const draft: WorkoutSessionDraft = {
   sessionId: 'session-1',
@@ -30,6 +31,7 @@ describe('active workout store', () => {
     useActiveWorkoutStore.setState({
       draft: null,
       currentExerciseIndex: 0,
+      timer: createInitialWorkoutTimer(),
       hasHydrated: true,
     });
   });
@@ -67,7 +69,31 @@ describe('active workout store', () => {
     await useActiveWorkoutStore.persist.rehydrate();
 
     expect(useActiveWorkoutStore.getState()).toEqual(
-      expect.objectContaining({ draft, currentExerciseIndex: 1, hasHydrated: true }),
+      expect.objectContaining({
+        draft,
+        currentExerciseIndex: 1,
+        timer: createInitialWorkoutTimer(),
+        hasHydrated: true,
+      }),
+    );
+  });
+
+  it('persists timer actions without interval writes and derives elapsed time', () => {
+    useActiveWorkoutStore.getState().start(draft);
+    useActiveWorkoutStore.getState().selectTimerMode('rest');
+    useActiveWorkoutStore.getState().startTimer(1_000);
+    useActiveWorkoutStore.getState().pauseTimer(6_500);
+
+    expect(useActiveWorkoutStore.getState().timer).toEqual({
+      mode: 'rest',
+      status: 'paused',
+      startedAtMs: null,
+      accumulatedMs: 5_500,
+    });
+
+    useActiveWorkoutStore.getState().startTimer(10_000);
+    expect(useActiveWorkoutStore.getState().timer).toEqual(
+      expect.objectContaining({ status: 'running', startedAtMs: 10_000 }),
     );
   });
 
@@ -79,7 +105,11 @@ describe('active workout store', () => {
     useActiveWorkoutStore.getState().start(draft);
     useActiveWorkoutStore.getState().clear();
     expect(useActiveWorkoutStore.getState()).toEqual(
-      expect.objectContaining({ draft: null, currentExerciseIndex: 0 }),
+      expect.objectContaining({
+        draft: null,
+        currentExerciseIndex: 0,
+        timer: createInitialWorkoutTimer(),
+      }),
     );
   });
 });

@@ -45,7 +45,10 @@ const config: ExpoConfig = {
   android: { package: `com.micael.apptreino${variant.bundleSuffix}` },
   plugins: ['expo-router', 'expo-dev-client', 'expo-splash-screen'],
   experiments: { typedRoutes: true, reactCompiler: true },
-  extra: { appVariant },
+  extra: {
+    appVariant,
+    eas: { projectId: '9fc9b2cf-9bc7-492d-8f4a-d3641eedf81b' },
+  },
 };
 
 export default config;

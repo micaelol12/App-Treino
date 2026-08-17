@@ -3,16 +3,20 @@ import { useColorScheme } from 'react-native';
 
 import { usePreferencesStore } from '@/shared/stores/preferences.store';
 
-import { type AppTheme, themes } from './tokens';
+import { type AppTheme, createAppTheme } from './tokens';
 
 const ThemeContext = createContext<AppTheme | null>(null);
 
 export function AppThemeProvider({ children }: PropsWithChildren) {
   const systemScheme = useColorScheme();
   const preference = usePreferencesStore((state) => state.themePreference);
+  const colorPreference = usePreferencesStore((state) => state.colorThemePreference);
   const systemPreference = systemScheme === 'dark' ? 'dark' : 'light';
   const scheme = preference === 'system' ? systemPreference : preference;
-  const theme = useMemo(() => themes[scheme], [scheme]);
+  const theme = useMemo(
+    () => createAppTheme(scheme, colorPreference),
+    [colorPreference, scheme],
+  );
 
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }

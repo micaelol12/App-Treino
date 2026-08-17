@@ -10,16 +10,36 @@ export const spacing = {
 
 export const radius = { sm: 8, md: 14, lg: 22, pill: 999 } as const;
 
-const common = {
-  primary: '#5B5FEF',
-  primaryPressed: '#4549C9',
+export const colorPalettes = {
+  darkBlue: {
+    label: 'Azul escuro',
+    primary: '#1D4ED8',
+    primaryPressed: '#1E40AF',
+  },
+  green: {
+    label: 'Verde',
+    primary: '#067647',
+    primaryPressed: '#05603A',
+  },
+  red: {
+    label: 'Vermelho',
+    primary: '#B42318',
+    primaryPressed: '#912018',
+  },
+  purple: {
+    label: 'Roxo',
+    primary: '#5B5FEF',
+    primaryPressed: '#4549C9',
+  },
 } as const;
 
-export const themes = {
+export type ThemeColorPreference = keyof typeof colorPalettes;
+export type ThemeScheme = 'light' | 'dark';
+
+const baseThemes = {
   light: {
     dark: false,
     colors: {
-      ...common,
       background: '#F6F7FB',
       surface: '#FFFFFF',
       surfaceMuted: '#ECEEF5',
@@ -37,7 +57,6 @@ export const themes = {
   dark: {
     dark: true,
     colors: {
-      ...common,
       background: '#101116',
       surface: '#191B23',
       surfaceMuted: '#252834',
@@ -54,4 +73,26 @@ export const themes = {
   },
 } as const;
 
-export type AppTheme = (typeof themes)[keyof typeof themes];
+export function createAppTheme(
+  scheme: ThemeScheme,
+  colorPreference: ThemeColorPreference,
+) {
+  const baseTheme = baseThemes[scheme];
+  const palette = colorPalettes[colorPreference];
+
+  return {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      primary: palette.primary,
+      primaryPressed: palette.primaryPressed,
+    },
+  };
+}
+
+export const themes = {
+  light: createAppTheme('light', 'purple'),
+  dark: createAppTheme('dark', 'purple'),
+} as const;
+
+export type AppTheme = ReturnType<typeof createAppTheme>;

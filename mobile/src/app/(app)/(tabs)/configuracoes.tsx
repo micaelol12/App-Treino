@@ -1,11 +1,11 @@
+import { type Href, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useAuth } from '@/features/auth/presentation/auth-context';
 import { getAuthErrorMessage } from '@/features/auth/presentation/auth-error-message';
 import { AuthFeedback } from '@/features/auth/presentation/components/auth-feedback';
 import { AccountDeletionSection } from '@/features/auth/presentation/components/account-deletion-section';
-import { WorkoutPlansSection } from '@/features/workout-plans/presentation/components/workout-plans-section';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
 import { ExternalLink } from '@/shared/components/external-link';
@@ -15,7 +15,13 @@ import {
   type ThemePreference,
   usePreferencesStore,
 } from '@/shared/stores/preferences.store';
-import { spacing } from '@/shared/theme/tokens';
+import { useAppTheme } from '@/shared/theme/theme-provider';
+import {
+  colorPalettes,
+  radius,
+  spacing,
+  type ThemeColorPreference,
+} from '@/shared/theme/tokens';
 
 const choices: { label: string; value: ThemePreference }[] = [
   { label: 'Sistema', value: 'system' },
@@ -23,10 +29,22 @@ const choices: { label: string; value: ThemePreference }[] = [
   { label: 'Escuro', value: 'dark' },
 ];
 
+const colorChoices = Object.entries(colorPalettes) as [
+  ThemeColorPreference,
+  (typeof colorPalettes)[ThemeColorPreference],
+][];
+const workoutPlansRoute = '/configuracoes/planos' as Href;
+
 export default function SettingsRoute() {
+  const router = useRouter();
+  const theme = useAppTheme();
   const { deleteAccount, session, signOut } = useAuth();
   const preference = usePreferencesStore((state) => state.themePreference);
   const setPreference = usePreferencesStore((state) => state.setThemePreference);
+  const colorPreference = usePreferencesStore((state) => state.colorThemePreference);
+  const setColorPreference = usePreferencesStore(
+    (state) => state.setColorThemePreference,
+  );
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
 
@@ -44,7 +62,15 @@ export default function SettingsRoute() {
 
   return (
     <Screen title="Configurações" description="Personalize sua experiência.">
-      <WorkoutPlansSection />
+      <Card>
+        <AppText variant="heading">Plano de treino</AppText>
+        <AppText>Organize suas divisões, exercícios, séries e ordem.</AppText>
+        <PrimaryButton
+          label="Gerenciar plano"
+          onPress={() => router.push(workoutPlansRoute)}
+          testID="settings-workout-plan"
+        />
+      </Card>
       <Card>
         <AppText variant="heading">Conta</AppText>
         <AppText>{session?.email}</AppText>
@@ -69,6 +95,7 @@ export default function SettingsRoute() {
       </Card>
       <Card>
         <AppText variant="heading">Aparência</AppText>
+        <AppText style={styles.label}>Modo</AppText>
         <View style={styles.options}>
           {choices.map((choice) => (
             <PrimaryButton
@@ -79,9 +106,57 @@ export default function SettingsRoute() {
             />
           ))}
         </View>
+        <AppText style={styles.label}>Cor principal</AppText>
+        <View accessibilityRole="radiogroup" style={styles.colorOptions}>
+          {colorChoices.map(([value, palette]) => {
+            const selected = value === colorPreference;
+            return (
+              <Pressable
+                accessibilityLabel={palette.label}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: selected }}
+                key={value}
+                onPress={() => setColorPreference(value)}
+                style={[
+                  styles.colorOption,
+                  {
+                    backgroundColor: theme.colors.surfaceMuted,
+                    borderColor: selected ? theme.colors.primary : theme.colors.border,
+                  },
+                ]}
+                testID={`theme-color-${value}`}
+              >
+                <View
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                  style={[styles.swatch, { backgroundColor: palette.primary }]}
+                />
+                <AppText style={styles.colorLabel}>{palette.label}</AppText>
+                {selected ? <AppText variant="caption">Selecionado</AppText> : null}
+              </Pressable>
+            );
+          })}
+        </View>
       </Card>
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({ options: { gap: spacing.sm } });
+const styles = StyleSheet.create({
+  options: { gap: spacing.sm },
+  label: { fontWeight: '700', marginTop: spacing.xs },
+  colorOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  colorOption: {
+    minHeight: 72,
+    minWidth: 132,
+    flexGrow: 1,
+    flexBasis: '45%',
+    justifyContent: 'center',
+    gap: spacing.xxs,
+    padding: spacing.sm,
+    borderWidth: 2,
+    borderRadius: radius.md,
+  },
+  swatch: { width: 32, height: 16, borderRadius: radius.pill },
+  colorLabel: { fontWeight: '700' },
+});

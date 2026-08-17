@@ -17,6 +17,8 @@ appId: com.micael.apptreino.development
     id: 'auth-sign-up-button'
 - assertVisible: 'Seu treino'
 - tapOn: 'Ajustes'
+- tapOn:
+    id: 'settings-workout-plan'
 - assertVisible: 'Seu plano está vazio'
 - tapOn:
     id: 'workout-plan-add'

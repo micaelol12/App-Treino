@@ -1,4 +1,4 @@
-import { themes } from './tokens';
+import { colorPalettes, createAppTheme } from './tokens';
 
 function channel(value: number): number {
   const normalized = value / 255;
@@ -24,7 +24,14 @@ function contrast(foreground: string, background: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-describe.each(Object.entries(themes))('%s theme contrast', (_name, theme) => {
+const themes = (['light', 'dark'] as const).flatMap((scheme) =>
+  (Object.keys(colorPalettes) as (keyof typeof colorPalettes)[]).map((color) => ({
+    name: `${scheme}/${color}`,
+    theme: createAppTheme(scheme, color),
+  })),
+);
+
+describe.each(themes)('$name theme contrast', ({ theme }) => {
   it.each([
     ['text', 'background'],
     ['textMuted', 'background'],

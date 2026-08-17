@@ -13,6 +13,7 @@ import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
 
 import { useActiveWorkoutStore } from '../active-workout.store';
+import { WorkoutTimer } from '../components/workout-timer';
 import { WorkoutSetEditor } from '../components/workout-set-editor';
 import { getWorkoutSessionErrorMessage } from '../workout-session-error-message';
 import { useCompleteWorkoutSession } from '../workout-session-hooks';
@@ -127,6 +128,8 @@ export function ActiveWorkoutScreen() {
       >
         <AppText variant="heading">{exercise.name}</AppText>
       </View>
+
+      <WorkoutTimer />
 
       <View style={styles.sets}>
         {exercise.sets.map((workoutSet, setIndex) => (
