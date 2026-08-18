@@ -82,6 +82,16 @@ export function ExerciseFormPage() {
 
   const imagePreviews = useMemo(() => imageFiles.map((file) => ({ file, url: URL.createObjectURL(file) })), [imageFiles]);
   useEffect(() => () => imagePreviews.forEach((item) => URL.revokeObjectURL(item.url)), [imagePreviews]);
+  const gifPreviewUrl = useMemo(
+    () => (videoFile ? URL.createObjectURL(videoFile) : undefined),
+    [videoFile],
+  );
+  useEffect(
+    () => () => {
+      if (gifPreviewUrl) URL.revokeObjectURL(gifPreviewUrl);
+    },
+    [gifPreviewUrl],
+  );
 
   function field<Key extends keyof FormState>(key: Key, value: FormState[Key]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -96,17 +106,17 @@ export function ExerciseFormPage() {
     setSubmitting(true);
     setError(null);
     try {
-      if (imageFiles.some((file) => file.size >= 10 * 1024 * 1024)) {
-        throw new Error('Cada imagem deve ter menos de 10 MB.');
+      if (imageFiles.some((file) => file.size > 1 * 1024 * 1024)) {
+        throw new Error('Cada imagem deve ter no máximo 1 MB.');
       }
       if (imageFiles.some((file) => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type))) {
         throw new Error('Use imagens JPEG, PNG ou WebP.');
       }
-      if (videoFile && videoFile.size >= 150 * 1024 * 1024) {
-        throw new Error('O vídeo deve ter menos de 150 MB.');
+      if (videoFile && videoFile.size > 1 * 1024 * 1024) {
+        throw new Error('O GIF deve ter no máximo 1 MB.');
       }
-      if (videoFile && !['video/mp4', 'video/webm'].includes(videoFile.type)) {
-        throw new Error('Use vídeo MP4 ou WebM.');
+      if (videoFile && videoFile.type !== 'image/gif') {
+        throw new Error('Use somente animação no formato GIF.');
       }
       const parsed = exerciseFormSchema.parse({
         id: form.id,
@@ -157,20 +167,20 @@ export function ExerciseFormPage() {
           <label className="field"><span>Instruções *</span><textarea rows={7} value={form.instructions} onChange={(event) => field('instructions', event.target.value)} placeholder={'Posicione os pés firmemente.\nMantenha a coluna neutra.\nExecute o movimento de forma controlada.'} required /></label>
         </div></section>
 
-        <section className="panel form-section"><div className="section-heading"><span>03</span><div><h2>Imagem e vídeo</h2><p>Adicione demonstrações claras da execução correta.</p></div></div>
+        <section className="panel form-section"><div className="section-heading"><span>03</span><div><h2>Imagem e animação</h2><p>Adicione demonstrações claras da execução correta.</p></div></div>
           <div className="upload-grid">
-            <label className="upload-zone"><ImagePlus /><strong>Adicionar imagens</strong><span>PNG, JPEG ou WebP</span><input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={(event) => setImageFiles(Array.from(event.target.files ?? []))} /></label>
-            <label className="upload-zone"><FileVideo /><strong>Adicionar vídeo</strong><span>MP4 ou WebM</span><input type="file" accept="video/mp4,video/webm" onChange={(event) => setVideoFile(event.target.files?.[0])} /></label>
+            <label className="upload-zone"><ImagePlus /><strong>Adicionar imagens</strong><span>PNG, JPEG ou WebP · até 1 MB cada</span><input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={(event) => setImageFiles(Array.from(event.target.files ?? []))} /></label>
+            <label className="upload-zone"><FileVideo /><strong>Adicionar animação</strong><span>Somente GIF · até 1 MB</span><input type="file" accept="image/gif,.gif" onChange={(event) => setVideoFile(event.target.files?.[0])} /></label>
           </div>
           {(form.images.length > 0 || imagePreviews.length > 0 || form.videoUrl || videoFile) && <div className="media-preview-grid">
             {form.images.map((url) => <figure className="media-preview" key={url}><img src={url} alt="Prévia existente" /><button type="button" className="icon-button danger" onClick={() => field('images', form.images.filter((item) => item !== url))}><Trash2 size={16} /></button></figure>)}
             {imagePreviews.map(({ file, url }) => <figure className="media-preview" key={url}><img src={url} alt={file.name} /><span>{file.name}</span><button type="button" className="icon-button danger" onClick={() => setImageFiles((items) => items.filter((item) => item !== file))}><Trash2 size={16} /></button></figure>)}
-            {(form.videoUrl || videoFile) && <div className="media-preview video-preview"><FileVideo /><div><strong>{videoFile?.name ?? 'Vídeo cadastrado'}</strong><small>{videoFile ? `${(videoFile.size / 1024 / 1024).toFixed(1)} MB` : 'Arquivo existente'}</small></div><button type="button" className="icon-button danger" onClick={() => { setVideoFile(undefined); field('videoUrl', ''); }}><Trash2 size={16} /></button></div>}
+            {(form.videoUrl || gifPreviewUrl) && <figure className="media-preview gif-preview"><img src={gifPreviewUrl ?? form.videoUrl} alt={videoFile?.name ? `Prévia de ${videoFile.name}` : 'Prévia da animação cadastrada'} /><figcaption><strong>{videoFile?.name ?? 'Animação cadastrada'}</strong><small>{videoFile ? `${(videoFile.size / 1024 / 1024).toFixed(2)} MB` : 'GIF existente'}</small></figcaption><button type="button" className="icon-button danger" aria-label="Remover animação" onClick={() => { setVideoFile(undefined); field('videoUrl', ''); }}><Trash2 size={16} /></button></figure>}
           </div>}
         </section>
       </div>
 
-      <aside className="form-sidebar"><section className="panel publish-card"><h2>Publicação</h2><label className="toggle-row"><div><strong>Exercício ativo</strong><small>Disponível para novos planos</small></div><input type="checkbox" checked={form.active} onChange={(event) => field('active', event.target.checked)} /></label>{error && <div className="alert alert-error">{error}</div>}<button className="button button-primary button-block" disabled={submitting}><Save size={18} />{submitting ? 'Enviando e salvando…' : 'Salvar exercício'}</button><div className="save-note"><UploadCloud size={16} /><span>A mídia é enviada ao Firebase Storage ao salvar.</span></div></section></aside>
+      <aside className="form-sidebar"><section className="panel publish-card"><h2>Publicação</h2><label className="toggle-row"><div><strong>Exercício ativo</strong><small>Disponível para novos planos</small></div><input type="checkbox" checked={form.active} onChange={(event) => field('active', event.target.checked)} /></label>{error && <div className="alert alert-error">{error}</div>}<button className="button button-primary button-block" disabled={submitting}><Save size={18} />{submitting ? 'Enviando e salvando…' : 'Salvar exercício'}</button><div className="save-note"><UploadCloud size={16} /><span>Imagens e GIF de até 1 MB são enviados ao Firebase Storage.</span></div></section></aside>
     </form>
   </>;
 }

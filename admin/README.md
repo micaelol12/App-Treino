@@ -20,7 +20,7 @@ configurado e nunca deve ser habilitado em builds de produção.
 - dashboard com indicadores do catálogo;
 - listagem, busca e ativação de exercícios;
 - cadastro e edição de exercícios;
-- upload de imagens e vídeo para o Firebase Storage;
+- upload de imagens JPEG/PNG/WebP e animação GIF de até 1 MB para o Firebase Storage;
 - listagem e cadastro de equipamentos.
 
 O módulo de usuários depende de uma API com Firebase Admin SDK e está sinalizado na

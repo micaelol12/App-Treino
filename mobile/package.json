@@ -23,7 +23,7 @@
     "emulator:start": "npm run firebase:cli -- emulators:start --config ../firebase.json --project demo-app-treino --only auth,firestore",
     "emulator:seed": "node scripts/seed-firestore-emulator.cjs",
     "migrate:plans:v2": "node scripts/migrate-workout-plans-v2.cjs",
-    "test:rules": "npm run firebase:cli -- emulators:exec --config ../firebase.test.json --project demo-app-treino --only firestore \"npm run test:rules:inside\"",
+    "test:rules": "npm run firebase:cli -- emulators:exec --config ../firebase.test.json --project demo-app-treino --only firestore,storage \"npm run test:rules:inside\"",
     "test:rules:inside": "jest --config jest.rules.config.cjs --runInBand",
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test:unit:coverage",
     "test:all": "npm run verify && npm run test:rules"

@@ -42,7 +42,7 @@ export function ExercisesPage() {
           <div className="table-scroll"><table><thead><tr><th>Exercício</th><th>Categoria</th><th>Equipamento</th><th>Mídia</th><th>Status</th><th><span className="sr-only">Ações</span></th></tr></thead><tbody>
             {filtered.map((item) => { const active = item.active !== false; return <tr key={item.documentId}>
               <td><div className="entity-cell"><div className="exercise-thumb">{item.images[0] ? <img src={item.images[0]} alt="" /> : <ImageOff size={18} />}</div><div><strong>{item.name}</strong><small>{item.id}</small></div></div></td>
-              <td>{item.category}</td><td>{item.equipment || 'Sem equipamento'}</td><td><span className={item.images.length || item.videoUrl ? 'media-badge' : 'media-badge missing'}>{item.images.length} img. {item.videoUrl ? '• vídeo' : ''}</span></td>
+              <td>{item.category}</td><td>{item.equipment || 'Sem equipamento'}</td><td><span className={item.images.length || item.videoUrl ? 'media-badge' : 'media-badge missing'}>{item.images.length} img. {item.videoUrl ? '• GIF' : ''}</span></td>
               <td><button className={`status-pill ${active ? 'active' : 'inactive'}`} disabled={toggle.isPending} onClick={() => toggle.mutate({ id: item.documentId, active: !active })}>{active ? 'Ativo' : 'Inativo'}</button></td>
               <td><Link className="icon-button" aria-label={`Editar ${item.name}`} to={`/exercicios/${item.documentId}/editar`}><Pencil size={17} /></Link></td>
             </tr>; })}
