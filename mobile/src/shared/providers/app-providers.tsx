@@ -4,8 +4,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/features/auth/presentation/auth-context';
 import { createFirebaseAuthGateway } from '@/features/auth/infrastructure/firebase/firebase-auth.gateway';
-import { createFirebaseExerciseCatalogRepository } from '@/features/exercise-catalog/infrastructure/firestore/firebase-exercise-catalog.repository';
+import { CachedExerciseCatalogRepository } from '@/features/exercise-catalog/infrastructure/cached-exercise-catalog.repository';
+import { createFirebaseExerciseCatalogDataSource } from '@/features/exercise-catalog/infrastructure/firestore/firebase-exercise-catalog.repository';
+import { AsyncStorageExerciseCatalogDataSource } from '@/features/exercise-catalog/infrastructure/local/async-storage-exercise-catalog';
 import { ExerciseCatalogProvider } from '@/features/exercise-catalog/presentation/exercise-catalog-context';
+import { useExerciseCatalogSnapshot } from '@/features/exercise-catalog/presentation/exercise-catalog-hooks';
 import { createFirebaseWorkoutPlanRepository } from '@/features/workout-plans/infrastructure/firestore/firebase-workout-plan.repository';
 import { WorkoutPlanProvider } from '@/features/workout-plans/presentation/workout-plan-context';
 import { createFirebaseWorkoutDivisionRepository } from '@/features/workout-divisions/infrastructure/firestore/firebase-workout-division.repository';
@@ -36,6 +39,11 @@ function ActiveWorkoutLifecycle() {
   return null;
 }
 
+function ExerciseCatalogLifecycle() {
+  useExerciseCatalogSnapshot();
+  return null;
+}
+
 export function AppProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(createQueryClient);
 
@@ -51,8 +59,14 @@ export function AppProviders({ children }: PropsWithChildren) {
               repositoryFactory={createFirebaseWorkoutSessionRepository}
             >
               <ExerciseCatalogProvider
-                repositoryFactory={createFirebaseExerciseCatalogRepository}
+                repositoryFactory={() =>
+                  new CachedExerciseCatalogRepository(
+                    new AsyncStorageExerciseCatalogDataSource(),
+                    createFirebaseExerciseCatalogDataSource(),
+                  )
+                }
               >
+                <ExerciseCatalogLifecycle />
                 <WorkoutDivisionProvider
                   repositoryFactory={createFirebaseWorkoutDivisionRepository}
                 >

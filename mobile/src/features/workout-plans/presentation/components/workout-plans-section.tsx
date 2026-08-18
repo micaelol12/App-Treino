@@ -3,13 +3,14 @@ import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import type { WorkoutPlanExercise } from '../../domain/workout-plan-exercise';
+import { useExerciseCatalog } from '@/features/exercise-catalog/presentation/exercise-catalog-hooks';
+import { ExerciseMetadataChips } from '@/features/exercise-catalog/presentation/components/exercise-metadata-chips';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
 import { EmptyState } from '@/shared/components/empty-state';
 import { PrimaryButton } from '@/shared/components/primary-button';
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
-import { WorkoutDivisionsSection } from '@/features/workout-divisions/presentation/components/workout-divisions-section';
 
 import { getWorkoutPlanErrorMessage } from '../workout-plan-error-message';
 import { useWorkoutPlanActions, useWorkoutPlanExercises } from '../workout-plan-hooks';
@@ -17,34 +18,34 @@ import { WorkoutPlanAction } from './workout-plan-action';
 
 type WorkoutPlansSectionProps = {
   plans: ReturnType<typeof useWorkoutPlanExercises>;
+  divisionId?: string;
   showHeading?: boolean;
 };
 
-function groupByDivision(exercises: readonly WorkoutPlanExercise[]) {
-  const groups: { division: string; exercises: WorkoutPlanExercise[] }[] = [];
-  for (const exercise of exercises) {
-    const current = groups.at(-1);
-    if (!current || current.division !== exercise.division) {
-      groups.push({ division: exercise.division, exercises: [exercise] });
-    } else {
-      current.exercises.push(exercise);
-    }
-  }
-  return groups;
-}
-
 export function WorkoutPlansSection({
   plans,
+  divisionId,
   showHeading = true,
 }: WorkoutPlansSectionProps) {
   const router = useRouter();
   const theme = useAppTheme();
   const { move, remove } = useWorkoutPlanActions();
+  const catalog = useExerciseCatalog();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const isMutating = move.isPending || remove.isPending;
+  const exercises = (plans.data ?? []).filter(
+    (exercise) => !divisionId || exercise.divisionId === divisionId,
+  );
 
   const openExercise = (id: string) => {
+    if (divisionId) {
+      router.push({
+        pathname: '/configuracoes/divisao/[divisionId]/exercicio/[id]',
+        params: { divisionId, id },
+      });
+      return;
+    }
     router.push({ pathname: '/configuracoes/exercicio/[id]', params: { id } });
   };
 
@@ -85,13 +86,12 @@ export function WorkoutPlansSection({
 
   return (
     <View style={styles.section}>
-      <WorkoutDivisionsSection />
       {showHeading ? (
         <View style={styles.headingRow}>
           <View style={styles.headingCopy}>
-            <AppText variant="heading">Plano de treino</AppText>
+            <AppText variant="heading">Exercícios</AppText>
             <AppText style={{ color: theme.colors.textMuted }}>
-              Organize exercícios por divisão e ordem.
+              Adicione e organize os exercícios desta divisão.
             </AppText>
           </View>
           <WorkoutPlanAction
@@ -139,67 +139,70 @@ export function WorkoutPlansSection({
         </AppText>
       ) : null}
 
-      {plans.isSuccess && plans.data.length === 0 ? (
+      {plans.isSuccess && exercises.length === 0 ? (
         <EmptyState
-          title="Seu plano está vazio"
-          description="Adicione o primeiro exercício para começar a montar suas divisões."
+          title="Nenhum exercício nesta divisão"
+          description="Adicione o primeiro exercício para montar esta divisão."
         />
       ) : null}
 
       {plans.isSuccess
-        ? groupByDivision(plans.data).map((group) => (
-            <View key={group.division} style={styles.group}>
-              <AppText variant="heading">{group.division}</AppText>
-              {group.exercises.map((exercise, index) => (
-                <Card key={exercise.id}>
-                  <View style={styles.exerciseHeader}>
-                    <View style={styles.exerciseCopy}>
-                      <AppText style={styles.exerciseName}>{exercise.name}</AppText>
-                      <AppText style={{ color: theme.colors.textMuted }}>
-                        {exercise.defaultSets} séries · ordem {exercise.order}
-                        {exercise.sourceSchemaVersion < 2 ? ' · legado' : ''}
-                      </AppText>
-                    </View>
-                    <WorkoutPlanAction
-                      label="Editar"
-                      onPress={() => openExercise(exercise.id)}
-                      testID={`workout-plan-edit-${exercise.id}`}
-                    />
+        ? exercises.map((exercise, index) => {
+            const catalogExercise = catalog.data?.find(
+              ({ documentId }) => documentId === exercise.exerciseDocumentId,
+            );
+            return (
+              <Card key={exercise.id}>
+                <View style={styles.exerciseHeader}>
+                  <View style={styles.exerciseCopy}>
+                    <AppText style={styles.exerciseName}>{exercise.name}</AppText>
+                    <AppText style={{ color: theme.colors.textMuted }}>
+                      {exercise.defaultSets} séries · ordem {exercise.order}
+                      {exercise.sourceSchemaVersion < 2 ? ' · legado' : ''}
+                    </AppText>
+                    {catalogExercise ? (
+                      <ExerciseMetadataChips exercise={catalogExercise} />
+                    ) : null}
                   </View>
-                  <View style={styles.actions}>
-                    <WorkoutPlanAction
-                      disabled={
-                        isMutating || index === 0 || exercise.sourceSchemaVersion < 2
-                      }
-                      label="Subir"
-                      onPress={() => void moveExercise(exercise.id, 'up')}
-                      testID={`workout-plan-up-${exercise.id}`}
-                    />
-                    <WorkoutPlanAction
-                      disabled={
-                        isMutating ||
-                        index === group.exercises.length - 1 ||
-                        exercise.sourceSchemaVersion < 2
-                      }
-                      label="Descer"
-                      onPress={() => void moveExercise(exercise.id, 'down')}
-                      testID={`workout-plan-down-${exercise.id}`}
-                    />
-                    <WorkoutPlanAction
-                      disabled={isMutating || exercise.sourceSchemaVersion < 2}
-                      label="Excluir"
-                      onPress={() => confirmDelete(exercise)}
-                      testID={`workout-plan-delete-${exercise.id}`}
-                      tone="danger"
-                    />
-                  </View>
-                </Card>
-              ))}
-            </View>
-          ))
+                  <WorkoutPlanAction
+                    label="Editar"
+                    onPress={() => openExercise(exercise.id)}
+                    testID={`workout-plan-edit-${exercise.id}`}
+                  />
+                </View>
+                <View style={styles.actions}>
+                  <WorkoutPlanAction
+                    disabled={
+                      isMutating || index === 0 || exercise.sourceSchemaVersion < 2
+                    }
+                    label="Subir"
+                    onPress={() => void moveExercise(exercise.id, 'up')}
+                    testID={`workout-plan-up-${exercise.id}`}
+                  />
+                  <WorkoutPlanAction
+                    disabled={
+                      isMutating ||
+                      index === exercises.length - 1 ||
+                      exercise.sourceSchemaVersion < 2
+                    }
+                    label="Descer"
+                    onPress={() => void moveExercise(exercise.id, 'down')}
+                    testID={`workout-plan-down-${exercise.id}`}
+                  />
+                  <WorkoutPlanAction
+                    disabled={isMutating || exercise.sourceSchemaVersion < 2}
+                    label="Excluir"
+                    onPress={() => confirmDelete(exercise)}
+                    testID={`workout-plan-delete-${exercise.id}`}
+                    tone="danger"
+                  />
+                </View>
+              </Card>
+            );
+          })
         : null}
 
-      {plans.isSuccess && plans.data.length > 0 ? (
+      {plans.isSuccess && exercises.length > 0 ? (
         <WorkoutPlanAction
           disabled={plans.isFetching}
           label={plans.isFetching ? 'Atualizando…' : 'Atualizar plano'}
@@ -214,7 +217,6 @@ const styles = StyleSheet.create({
   section: { gap: spacing.md },
   headingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   headingCopy: { flex: 1, gap: spacing.xxs },
-  group: { gap: spacing.sm },
   exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   exerciseCopy: { flex: 1, gap: spacing.xxs },
   exerciseName: { fontWeight: '700' },

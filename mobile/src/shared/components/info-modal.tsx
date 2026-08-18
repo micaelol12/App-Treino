@@ -10,6 +10,7 @@ import { AppText } from './app-text';
 
 type InfoModalProps = PropsWithChildren<{
   readonly expanded?: boolean;
+  readonly scrollable?: boolean;
   readonly visible: boolean;
   readonly title: string;
   readonly onClose: () => void;
@@ -18,6 +19,7 @@ type InfoModalProps = PropsWithChildren<{
 export function InfoModal({
   children,
   expanded = false,
+  scrollable = true,
   onClose,
   title,
   visible,
@@ -49,7 +51,11 @@ export function InfoModal({
               <Ionicons color={theme.colors.text} name="close" size={26} />
             </Pressable>
           </View>
-          <ScrollView contentContainerStyle={styles.content}>{children}</ScrollView>
+          {scrollable ? (
+            <ScrollView contentContainerStyle={styles.content}>{children}</ScrollView>
+          ) : (
+            <View style={[styles.content, styles.staticContent]}>{children}</View>
+          )}
         </SafeAreaView>
       </View>
     </Modal>
@@ -76,4 +82,5 @@ const styles = StyleSheet.create({
   },
   close: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   content: { gap: spacing.md, padding: spacing.md },
+  staticContent: { flex: 1 },
 });

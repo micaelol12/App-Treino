@@ -1,13 +1,29 @@
 import { FirebaseError } from 'firebase/app';
 import { collection, getDocs, type Firestore } from 'firebase/firestore';
+import { z } from 'zod';
 
 import { ExerciseCatalogFailure } from '../../application/exercise-catalog-failure';
-import type { ExerciseCatalogRepository } from '../../application/exercise-catalog-repository';
+import {
+  exerciseTaxonomyNames,
+  type ExerciseCatalogSnapshot,
+  type ExerciseTaxonomies,
+  type ExerciseTaxonomyName,
+} from '../../application/exercise-catalog-repository';
 import { sortExercises } from '../../domain/exercise';
 import { getFirebaseFirestore } from '@/shared/infrastructure/firebase/firebase-firestore';
 import { InvalidFirestoreDocumentError } from '@/shared/infrastructure/firestore/invalid-firestore-document.error';
 
+import type { ExerciseCatalogRemoteDataSource } from '../cached-exercise-catalog.repository';
 import { mapExerciseDocument } from './exercise.mapper';
+
+const taxonomySchema = z
+  .object({
+    id: z.string().trim().min(1),
+    name: z.string().trim().min(1),
+    active: z.boolean(),
+    order: z.number().int().nonnegative(),
+  })
+  .passthrough();
 
 function initializeFirestore(): Firestore {
   try {
@@ -37,21 +53,43 @@ function mapFailure(error: unknown): ExerciseCatalogFailure {
   });
 }
 
-export class FirebaseExerciseCatalogRepository implements ExerciseCatalogRepository {
+export class FirebaseExerciseCatalogDataSource implements ExerciseCatalogRemoteDataSource {
   constructor(private readonly database: Firestore = initializeFirestore()) {}
 
-  async list() {
+  async download(): Promise<ExerciseCatalogSnapshot> {
     try {
-      const snapshot = await getDocs(collection(this.database, 'exercicios'));
-      return sortExercises(
-        snapshot.docs.map((item) => mapExerciseDocument(item.id, item.data())),
-      );
+      const [exerciseSnapshot, ...taxonomySnapshots] = await Promise.all([
+        getDocs(collection(this.database, 'exercicios')),
+        ...exerciseTaxonomyNames.map((name) => getDocs(collection(this.database, name))),
+      ]);
+      const taxonomies = Object.fromEntries(
+        exerciseTaxonomyNames.map((name, index) => [
+          name,
+          taxonomySnapshots[index]!.docs.map((item) =>
+            taxonomySchema.parse(item.data()),
+          ).sort(
+            (left, right) =>
+              left.order - right.order ||
+              left.name.localeCompare(right.name, 'pt-BR', { sensitivity: 'base' }),
+          ),
+        ]),
+      ) as unknown as Record<
+        ExerciseTaxonomyName,
+        ExerciseTaxonomies[ExerciseTaxonomyName]
+      >;
+      return {
+        exercises: sortExercises(
+          exerciseSnapshot.docs.map((item) => mapExerciseDocument(item.id, item.data())),
+        ),
+        taxonomies,
+        syncedAt: new Date().toISOString(),
+      };
     } catch (error) {
       throw mapFailure(error);
     }
   }
 }
 
-export function createFirebaseExerciseCatalogRepository(): ExerciseCatalogRepository {
-  return new FirebaseExerciseCatalogRepository();
+export function createFirebaseExerciseCatalogDataSource(): ExerciseCatalogRemoteDataSource {
+  return new FirebaseExerciseCatalogDataSource();
 }

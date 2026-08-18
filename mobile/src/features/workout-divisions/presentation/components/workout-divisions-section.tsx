@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
@@ -41,26 +42,25 @@ function errorMessage(error: unknown): string {
 }
 
 export function WorkoutDivisionsSection() {
+  const router = useRouter();
   const theme = useAppTheme();
   const divisions = useWorkoutDivisions();
   const { create, update } = useWorkoutDivisionActions();
-  const [editing, setEditing] = useState<WorkoutDivision | null>(null);
   const [name, setName] = useState('');
   const [order, setOrder] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
   const pending = create.isPending || update.isPending;
 
   const reset = () => {
-    setEditing(null);
     setName('');
     setOrder('');
   };
 
   const beginEdit = (division: WorkoutDivision) => {
-    setEditing(division);
-    setName(division.name);
-    setOrder(String(division.order));
-    setFeedback(null);
+    router.push({
+      pathname: '/configuracoes/divisao/[divisionId]',
+      params: { divisionId: division.id },
+    });
   };
 
   const save = async () => {
@@ -69,16 +69,9 @@ export function WorkoutDivisionsSection() {
       ? Number(order)
       : Math.max(0, ...(divisions.data ?? []).map((division) => division.order)) + 1;
     try {
-      if (editing) {
-        await update.mutateAsync({
-          divisionId: editing.id,
-          draft: { name, order: numericOrder, active: editing.active },
-        });
-      } else {
-        await create.mutateAsync({ name, order: numericOrder, active: true });
-      }
+      await create.mutateAsync({ name, order: numericOrder, active: true });
       reset();
-      setFeedback(editing ? 'Divisão atualizada.' : 'Divisão cadastrada.');
+      setFeedback('Divisão cadastrada.');
     } catch (error) {
       setFeedback(errorMessage(error));
     }
@@ -137,19 +130,16 @@ export function WorkoutDivisionsSection() {
           keyboardType="number-pad"
           label="Ordem"
           onChangeText={setOrder}
-          placeholder={
-            editing ? String(editing.order) : String((divisions.data?.length ?? 0) + 1)
-          }
+          placeholder={String((divisions.data?.length ?? 0) + 1)}
           testID="division-order-input"
           value={order}
         />
         <PrimaryButton
           disabled={pending}
-          label={editing ? 'Salvar divisão' : 'Cadastrar divisão'}
+          label="Cadastrar divisão"
           onPress={() => void save()}
           testID="division-save-button"
         />
-        {editing ? <WorkoutPlanAction label="Cancelar edição" onPress={reset} /> : null}
       </Card>
 
       {feedback ? <AppText accessibilityLiveRegion="polite">{feedback}</AppText> : null}

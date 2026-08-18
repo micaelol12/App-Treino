@@ -2,23 +2,22 @@ import { useRouter } from 'expo-router';
 
 import { Screen } from '@/shared/components/screen';
 import { SecondaryButton } from '@/shared/components/secondary-button';
-
-import { WorkoutPlansSection } from '../components/workout-plans-section';
-import { useWorkoutPlanExercises } from '../workout-plan-hooks';
+import { WorkoutDivisionsSection } from '@/features/workout-divisions/presentation/components/workout-divisions-section';
+import { useWorkoutDivisions } from '@/features/workout-divisions/presentation/workout-division-hooks';
 
 export function WorkoutPlansScreen() {
   const router = useRouter();
-  const plans = useWorkoutPlanExercises();
+  const divisions = useWorkoutDivisions();
 
   return (
     <Screen
       title="Plano de treino"
-      description="Organize exercícios por divisão e ordem."
+      description="Cadastre e organize suas divisões de treino."
       action={<SecondaryButton label="Voltar" onPress={() => router.back()} />}
-      onRefresh={() => plans.refetch()}
-      refreshing={plans.isRefetching}
+      onRefresh={() => divisions.refetch()}
+      refreshing={divisions.isRefetching}
     >
-      <WorkoutPlansSection plans={plans} showHeading={false} />
+      <WorkoutDivisionsSection />
     </Screen>
   );
 }

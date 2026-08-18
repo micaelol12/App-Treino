@@ -6,6 +6,7 @@ import { useAuth } from '@/features/auth/presentation/auth-context';
 import { getAuthErrorMessage } from '@/features/auth/presentation/auth-error-message';
 import { AuthFeedback } from '@/features/auth/presentation/components/auth-feedback';
 import { AccountDeletionSection } from '@/features/auth/presentation/components/account-deletion-section';
+import { ExerciseCatalogSyncSection } from '@/features/exercise-catalog/presentation/components/exercise-catalog-sync-section';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
 import { ExternalLink } from '@/shared/components/external-link';
@@ -71,6 +72,7 @@ export default function SettingsRoute() {
           testID="settings-workout-plan"
         />
       </Card>
+      <ExerciseCatalogSyncSection />
       <Card>
         <AppText variant="heading">Conta</AppText>
         <AppText>{session?.email}</AppText>

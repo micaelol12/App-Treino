@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { useExerciseCatalog } from '@/features/exercise-catalog/presentation/exercise-catalog-hooks';
+import { ExerciseCatalogSelect } from '@/features/exercise-catalog/presentation/components/exercise-catalog-select';
 import { useWorkoutDivisions } from '@/features/workout-divisions/presentation/workout-division-hooks';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
@@ -31,7 +32,13 @@ const defaultValues: WorkoutExerciseFormValues = {
   order: '1',
 };
 
-export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
+export function WorkoutExerciseScreen({
+  divisionId,
+  exerciseId,
+}: {
+  divisionId?: string;
+  exerciseId: string;
+}) {
   const router = useRouter();
   const theme = useAppTheme();
   const isCreating = exerciseId === 'novo';
@@ -50,7 +57,7 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
     reset,
   } = useForm<WorkoutExerciseFormValues>({
     resolver: zodResolver(workoutExerciseFormSchema),
-    defaultValues,
+    defaultValues: { ...defaultValues, divisionId: divisionId ?? '' },
   });
 
   useEffect(() => {
@@ -64,18 +71,16 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
     }
   }, [exercise, reset]);
 
-  const activeDivisions = (divisions.data ?? []).filter(({ active }) => active);
+  const activeDivisions = (divisions.data ?? []).filter(
+    (division) => division.active || division.id === divisionId,
+  );
+  const contextualDivision = divisionId
+    ? activeDivisions.find(({ id }) => id === divisionId)
+    : undefined;
   const divisionOptions = activeDivisions.map((division) => ({
     value: division.id,
     label: division.name,
     description: `Ordem ${division.order}`,
-  }));
-  const exerciseOptions = (catalog.data ?? []).map((item) => ({
-    value: item.documentId,
-    label: item.name,
-    description: [item.id, item.primaryMuscles.join(', '), item.equipment, item.level]
-      .filter(Boolean)
-      .join(' · '),
   }));
 
   const submit = handleSubmit(async (values) => {
@@ -138,7 +143,12 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
     );
   }
 
-  if (!isCreating && (!exercise || exercise.sourceSchemaVersion !== 2)) {
+  if (
+    !isCreating &&
+    (!exercise ||
+      exercise.sourceSchemaVersion !== 2 ||
+      (divisionId && exercise.divisionId !== divisionId))
+  ) {
     return (
       <Screen title="Editar exercício">
         <EmptyState
@@ -148,6 +158,18 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
               ? 'Migre este plano para o novo catálogo antes de editá-lo.'
               : 'Ele pode ter sido removido em outro dispositivo.'
           }
+        />
+        <PrimaryButton label="Voltar" onPress={() => router.back()} />
+      </Screen>
+    );
+  }
+
+  if (divisionId && !contextualDivision) {
+    return (
+      <Screen title={isCreating ? 'Adicionar exercício' : 'Editar exercício'}>
+        <EmptyState
+          title="Divisão não encontrada"
+          description="Ela pode ter sido removida em outro dispositivo."
         />
         <PrimaryButton label="Voltar" onPress={() => router.back()} />
       </Screen>
@@ -173,35 +195,41 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
     >
       <Card>
         <View style={styles.form}>
-          <Controller
-            control={control}
-            name="divisionId"
-            render={({ field, fieldState }) => (
-              <View style={styles.form}>
-                <SearchableSelect
-                  label="Divisão"
-                  onChange={field.onChange}
-                  options={divisionOptions}
-                  testID="workout-division-input"
-                  value={field.value}
-                />
-                {fieldState.error ? (
-                  <AppText style={{ color: theme.colors.danger }}>
-                    {fieldState.error.message}
-                  </AppText>
-                ) : null}
-              </View>
-            )}
-          />
+          {divisionId ? (
+            <View style={styles.form}>
+              <AppText style={styles.contextLabel}>Divisão</AppText>
+              <AppText>{contextualDivision?.name}</AppText>
+            </View>
+          ) : (
+            <Controller
+              control={control}
+              name="divisionId"
+              render={({ field, fieldState }) => (
+                <View style={styles.form}>
+                  <SearchableSelect
+                    label="Divisão"
+                    onChange={field.onChange}
+                    options={divisionOptions}
+                    testID="workout-division-input"
+                    value={field.value}
+                  />
+                  {fieldState.error ? (
+                    <AppText style={{ color: theme.colors.danger }}>
+                      {fieldState.error.message}
+                    </AppText>
+                  ) : null}
+                </View>
+              )}
+            />
+          )}
           <Controller
             control={control}
             name="exerciseDocumentId"
             render={({ field, fieldState }) => (
               <View style={styles.form}>
-                <SearchableSelect
-                  label="Exercício"
+                <ExerciseCatalogSelect
+                  exercises={catalog.data ?? []}
                   onChange={field.onChange}
-                  options={exerciseOptions}
                   testID="workout-name-input"
                   value={field.value}
                 />
@@ -271,4 +299,7 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
   );
 }
 
-const styles = StyleSheet.create({ form: { gap: spacing.md } });
+const styles = StyleSheet.create({
+  form: { gap: spacing.md },
+  contextLabel: { fontWeight: '700' },
+});

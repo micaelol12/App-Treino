@@ -14,6 +14,10 @@ jest.mock('expo-router', () => ({
 jest.mock('@/features/auth/presentation/auth-context', () => ({
   useAuth: jest.fn(),
 }));
+jest.mock(
+  '@/features/exercise-catalog/presentation/components/exercise-catalog-sync-section',
+  () => ({ ExerciseCatalogSyncSection: () => null }),
+);
 
 const mockUseAuth = jest.mocked(useAuth);
 

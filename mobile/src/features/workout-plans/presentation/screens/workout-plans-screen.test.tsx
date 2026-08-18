@@ -3,35 +3,36 @@ import { Text } from 'react-native';
 
 import { AppThemeProvider } from '@/shared/theme/theme-provider';
 
-import { useWorkoutPlanExercises } from '../workout-plan-hooks';
+import { useWorkoutDivisions } from '@/features/workout-divisions/presentation/workout-division-hooks';
 import { WorkoutPlansScreen } from './workout-plans-screen';
 
 const mockBack = jest.fn();
-const mockSection = jest.fn(({ showHeading }: { showHeading?: boolean }) => (
-  <Text>{showHeading === false ? 'Conteúdo do plano' : 'Cabeçalho duplicado'}</Text>
-));
+const mockSection = jest.fn(() => <Text>Lista de divisões</Text>);
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack }),
 }));
 
-jest.mock('../components/workout-plans-section', () => ({
-  WorkoutPlansSection: (props: { showHeading?: boolean }) => mockSection(props),
+jest.mock(
+  '@/features/workout-divisions/presentation/components/workout-divisions-section',
+  () => ({
+    WorkoutDivisionsSection: () => mockSection(),
+  }),
+);
+
+jest.mock('@/features/workout-divisions/presentation/workout-division-hooks', () => ({
+  useWorkoutDivisions: jest.fn(),
 }));
 
-jest.mock('../workout-plan-hooks', () => ({
-  useWorkoutPlanExercises: jest.fn(),
-}));
-
-const mockUseExercises = jest.mocked(useWorkoutPlanExercises);
+const mockUseDivisions = jest.mocked(useWorkoutDivisions);
 
 describe('WorkoutPlansScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseExercises.mockReturnValue({
+    mockUseDivisions.mockReturnValue({
       isRefetching: false,
       refetch: jest.fn(),
-    } as unknown as ReturnType<typeof useWorkoutPlanExercises>);
+    } as unknown as ReturnType<typeof useWorkoutDivisions>);
   });
 
   it('renders the plan without a duplicate heading and offers explicit back navigation', async () => {
@@ -41,7 +42,7 @@ describe('WorkoutPlansScreen', () => {
       </AppThemeProvider>,
     );
 
-    expect(screen.getByText('Conteúdo do plano')).toBeOnTheScreen();
+    expect(screen.getByText('Lista de divisões')).toBeOnTheScreen();
     await fireEvent.press(screen.getByText('Voltar'));
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
