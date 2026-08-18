@@ -131,6 +131,36 @@ describe('global exercise catalog rules', () => {
     await assertFails(setDoc(reference, validExercise));
   });
 
+  it('allows only administrators to maintain valid catalog documents', async () => {
+    const admin = testEnvironment
+      .authenticatedContext('catalog_admin', { admin: true })
+      .firestore();
+    const regularUser = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const timestamp = Timestamp.now();
+    const exercise = {
+      ...validExercise,
+      images: ['https://storage.example/exercise.jpg'],
+      videoUrl: 'https://storage.example/exercise.mp4',
+      active: true,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+    const equipment = {
+      id: 'barra-hexagonal',
+      name: 'Barra hexagonal',
+      active: true,
+      order: 100,
+      schemaVersion: 1,
+    };
+
+    await assertSucceeds(setDoc(doc(admin, 'exercicios/admin-created'), exercise));
+    await assertSucceeds(setDoc(doc(admin, 'equipamentos/admin-created'), equipment));
+    await assertFails(setDoc(doc(regularUser, 'equipamentos/user-created'), equipment));
+    await assertFails(
+      setDoc(doc(admin, 'exercicios/invalid'), { ...exercise, unexpected: true }),
+    );
+  });
+
   it('allows authenticated reads from every taxonomy collection', async () => {
     await testEnvironment.withSecurityRulesDisabled(async (context) => {
       for (const name of [

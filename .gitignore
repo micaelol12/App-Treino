@@ -18,3 +18,8 @@ mobile/.env.*
 mobile/*.tsbuildinfo
 mobile/android/
 mobile/ios/
+admin/.env
+admin/.env.*
+!admin/.env.example
+admin/dist/
+admin/*.tsbuildinfo

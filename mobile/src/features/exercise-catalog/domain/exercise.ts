@@ -11,6 +11,8 @@ export interface Exercise {
   readonly instructions: readonly string[];
   readonly category: string;
   readonly images: readonly string[];
+  readonly videoUrl?: string | null | undefined;
+  readonly active?: boolean | undefined;
 }
 
 export function sortExercises(exercises: readonly Exercise[]): Exercise[] {

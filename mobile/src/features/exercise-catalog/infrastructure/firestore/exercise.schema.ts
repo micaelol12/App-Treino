@@ -13,6 +13,10 @@ export const exerciseDocumentSchema = z
     instructions: z.array(z.string().trim().min(1)),
     category: z.string().trim().min(1),
     images: z.array(z.string().trim().min(1)),
+    videoUrl: z.string().trim().url().nullable().optional(),
+    active: z.boolean().optional(),
+    createdAt: z.unknown().optional(),
+    updatedAt: z.unknown().optional(),
   })
   .strict();
 

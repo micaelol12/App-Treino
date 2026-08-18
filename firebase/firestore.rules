@@ -6,6 +6,81 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.get('admin', false) == true;
+    }
+
+    function isValidExercise(data) {
+      let required = [
+        'id',
+        'name',
+        'force',
+        'level',
+        'mechanic',
+        'equipment',
+        'primaryMuscles',
+        'secondaryMuscles',
+        'instructions',
+        'category',
+        'images'
+      ];
+      let optional = ['videoUrl', 'active', 'createdAt', 'updatedAt'];
+
+      return data.keys().hasAll(required)
+        && data.keys().hasOnly(required.concat(optional))
+        && data['id'] is string
+        && data['id'].size() >= 1
+        && data['id'].size() <= 160
+        && data['name'] is string
+        && data['name'].size() >= 1
+        && data['name'].size() <= 160
+        && (data['force'] == null || data['force'] is string)
+        && data['level'] is string
+        && data['level'].size() >= 1
+        && (data['mechanic'] == null || data['mechanic'] is string)
+        && (data['equipment'] == null || data['equipment'] is string)
+        && data['primaryMuscles'] is list
+        && data['primaryMuscles'].size() >= 1
+        && data['primaryMuscles'].size() <= 20
+        && data['secondaryMuscles'] is list
+        && data['secondaryMuscles'].size() <= 20
+        && data['instructions'] is list
+        && data['instructions'].size() >= 1
+        && data['instructions'].size() <= 50
+        && data['category'] is string
+        && data['category'].size() >= 1
+        && data['images'] is list
+        && data['images'].size() <= 12
+        && (data.get('videoUrl', null) == null || data.get('videoUrl', null) is string)
+        && data.get('active', true) is bool
+        && data.get('createdAt', request.time) is timestamp
+        && data.get('updatedAt', request.time) is timestamp;
+    }
+
+    function isValidTaxonomy(data) {
+      let required = ['id', 'name', 'active', 'order'];
+      let optional = ['exerciseCount', 'schemaVersion', 'createdAt', 'updatedAt'];
+
+      return data.keys().hasAll(required)
+        && data.keys().hasOnly(required.concat(optional))
+        && data['id'] is string
+        && data['id'].size() >= 1
+        && data['id'].size() <= 160
+        && data['name'] is string
+        && data['name'].size() >= 1
+        && data['name'].size() <= 160
+        && data['active'] is bool
+        && data['order'] is int
+        && data['order'] >= 0
+        && data['order'] <= 9999
+        && data.get('exerciseCount', 0) is int
+        && data.get('exerciseCount', 0) >= 0
+        && data.get('schemaVersion', 1) is int
+        && data.get('createdAt', request.time) is timestamp
+        && data.get('updatedAt', request.time) is timestamp;
+    }
+
     function isCivilDate(value) {
       return value is string
         && value.size() == 10
@@ -207,7 +282,9 @@ service cloud.firestore {
 
     match /exercicios/{documentId} {
       allow read: if request.auth != null;
-      allow write: if false;
+      allow create, update: if isAdmin()
+        && isValidExercise(request.resource.data);
+      allow delete: if false;
     }
 
     match /{collectionName}/{documentId} {
@@ -220,7 +297,17 @@ service cloud.firestore {
           'mecanicas',
           'musculos'
         ];
-      allow write: if false;
+      allow create, update: if isAdmin()
+        && collectionName in [
+          'equipamentos',
+          'categorias',
+          'forcas',
+          'niveis',
+          'mecanicas',
+          'musculos'
+        ]
+        && isValidTaxonomy(request.resource.data);
+      allow delete: if false;
     }
 
     match /{document=**} {
