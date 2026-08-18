@@ -1,0 +1,39 @@
+appId: com.micael.apptreino.development
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: 'auth-sign-up-link'
+- tapOn:
+    id: 'auth-email-input'
+- inputText: 'e2e-delete@app-treino.local'
+- tapOn:
+    id: 'auth-password-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-password-confirmation-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-sign-up-button'
+- tapOn: 'Ajustes'
+- scrollUntilVisible:
+    element:
+      id: 'account-deletion-password'
+    direction: DOWN
+- tapOn:
+    id: 'account-deletion-password'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'account-deletion-button'
+- assertVisible: 'Excluir conta e dados?'
+- tapOn: 'Excluir permanentemente'
+- assertVisible: 'Entrar'
+- tapOn:
+    id: 'auth-email-input'
+- inputText: 'e2e-delete@app-treino.local'
+- tapOn:
+    id: 'auth-password-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-login-button'
+- assertVisible: 'E-mail ou senha inválidos.'

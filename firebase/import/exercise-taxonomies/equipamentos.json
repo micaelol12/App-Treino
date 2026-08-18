@@ -1,0 +1,98 @@
+[
+  {
+    "id": "peso-do-corpo",
+    "name": "Peso do corpo",
+    "active": true,
+    "order": 1,
+    "exerciseCount": 111,
+    "schemaVersion": 1
+  },
+  {
+    "id": "halteres",
+    "name": "Halteres",
+    "active": true,
+    "order": 2,
+    "exerciseCount": 123,
+    "schemaVersion": 1
+  },
+  {
+    "id": "barra",
+    "name": "Barra",
+    "active": true,
+    "order": 3,
+    "exerciseCount": 170,
+    "schemaVersion": 1
+  },
+  {
+    "id": "barra-w",
+    "name": "Barra W",
+    "active": true,
+    "order": 4,
+    "exerciseCount": 9,
+    "schemaVersion": 1
+  },
+  {
+    "id": "cabo",
+    "name": "Cabo",
+    "active": true,
+    "order": 5,
+    "exerciseCount": 81,
+    "schemaVersion": 1
+  },
+  {
+    "id": "maquina",
+    "name": "Máquina",
+    "active": true,
+    "order": 6,
+    "exerciseCount": 67,
+    "schemaVersion": 1
+  },
+  {
+    "id": "kettlebell",
+    "name": "Kettlebell",
+    "active": true,
+    "order": 7,
+    "exerciseCount": 53,
+    "schemaVersion": 1
+  },
+  {
+    "id": "faixas",
+    "name": "Faixas",
+    "active": true,
+    "order": 8,
+    "exerciseCount": 20,
+    "schemaVersion": 1
+  },
+  {
+    "id": "bola-de-exercicio",
+    "name": "Bola de exercício",
+    "active": true,
+    "order": 9,
+    "exerciseCount": 12,
+    "schemaVersion": 1
+  },
+  {
+    "id": "bola-medicinal",
+    "name": "Bola medicinal",
+    "active": true,
+    "order": 10,
+    "exerciseCount": 17,
+    "schemaVersion": 1
+  },
+  {
+    "id": "rolo-de-espuma",
+    "name": "Rolo de espuma",
+    "active": true,
+    "order": 11,
+    "exerciseCount": 11,
+    "schemaVersion": 1
+  },
+  {
+    "id": "outros",
+    "name": "Outros",
+    "active": true,
+    "order": 12,
+    "exerciseCount": 122,
+    "schemaVersion": 1
+  }
+]

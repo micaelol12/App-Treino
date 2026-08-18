@@ -1,0 +1,172 @@
+[
+  {
+    "id": "peito",
+    "name": "Peito",
+    "active": true,
+    "order": 1,
+    "exerciseCount": 147,
+    "primaryExerciseCount": 84,
+    "secondaryExerciseCount": 63,
+    "schemaVersion": 1
+  },
+  {
+    "id": "dorsais",
+    "name": "Dorsais",
+    "active": true,
+    "order": 2,
+    "exerciseCount": 93,
+    "primaryExerciseCount": 38,
+    "secondaryExerciseCount": 56,
+    "schemaVersion": 1
+  },
+  {
+    "id": "meio-das-costas",
+    "name": "Meio das costas",
+    "active": true,
+    "order": 3,
+    "exerciseCount": 97,
+    "primaryExerciseCount": 34,
+    "secondaryExerciseCount": 64,
+    "schemaVersion": 1
+  },
+  {
+    "id": "inferior-das-costas",
+    "name": "Inferior das costas",
+    "active": true,
+    "order": 4,
+    "exerciseCount": 131,
+    "primaryExerciseCount": 27,
+    "secondaryExerciseCount": 104,
+    "schemaVersion": 1
+  },
+  {
+    "id": "ombros",
+    "name": "Ombros",
+    "active": true,
+    "order": 5,
+    "exerciseCount": 335,
+    "primaryExerciseCount": 127,
+    "secondaryExerciseCount": 209,
+    "schemaVersion": 1
+  },
+  {
+    "id": "trapezio",
+    "name": "Trapézio",
+    "active": true,
+    "order": 6,
+    "exerciseCount": 97,
+    "primaryExerciseCount": 15,
+    "secondaryExerciseCount": 82,
+    "schemaVersion": 1
+  },
+  {
+    "id": "biceps",
+    "name": "Bíceps",
+    "active": true,
+    "order": 7,
+    "exerciseCount": 127,
+    "primaryExerciseCount": 53,
+    "secondaryExerciseCount": 74,
+    "schemaVersion": 1
+  },
+  {
+    "id": "triceps",
+    "name": "Tríceps",
+    "active": true,
+    "order": 8,
+    "exerciseCount": 218,
+    "primaryExerciseCount": 71,
+    "secondaryExerciseCount": 147,
+    "schemaVersion": 1
+  },
+  {
+    "id": "antebracos",
+    "name": "Antebraços",
+    "active": true,
+    "order": 9,
+    "exerciseCount": 119,
+    "primaryExerciseCount": 25,
+    "secondaryExerciseCount": 94,
+    "schemaVersion": 1
+  },
+  {
+    "id": "abdominais",
+    "name": "Abdominais",
+    "active": true,
+    "order": 10,
+    "exerciseCount": 149,
+    "primaryExerciseCount": 93,
+    "secondaryExerciseCount": 56,
+    "schemaVersion": 1
+  },
+  {
+    "id": "gluteos",
+    "name": "Glúteos",
+    "active": true,
+    "order": 11,
+    "exerciseCount": 242,
+    "primaryExerciseCount": 22,
+    "secondaryExerciseCount": 220,
+    "schemaVersion": 1
+  },
+  {
+    "id": "quadriceps",
+    "name": "Quadríceps",
+    "active": true,
+    "order": 12,
+    "exerciseCount": 227,
+    "primaryExerciseCount": 148,
+    "secondaryExerciseCount": 82,
+    "schemaVersion": 1
+  },
+  {
+    "id": "isquiotibiais",
+    "name": "Isquiotibiais",
+    "active": true,
+    "order": 13,
+    "exerciseCount": 277,
+    "primaryExerciseCount": 79,
+    "secondaryExerciseCount": 201,
+    "schemaVersion": 1
+  },
+  {
+    "id": "adutores",
+    "name": "Adutores",
+    "active": true,
+    "order": 14,
+    "exerciseCount": 54,
+    "primaryExerciseCount": 13,
+    "secondaryExerciseCount": 41,
+    "schemaVersion": 1
+  },
+  {
+    "id": "abdutores",
+    "name": "Abdutores",
+    "active": true,
+    "order": 15,
+    "exerciseCount": 43,
+    "primaryExerciseCount": 8,
+    "secondaryExerciseCount": 35,
+    "schemaVersion": 1
+  },
+  {
+    "id": "panturrilhas",
+    "name": "Panturrilhas",
+    "active": true,
+    "order": 16,
+    "exerciseCount": 209,
+    "primaryExerciseCount": 28,
+    "secondaryExerciseCount": 181,
+    "schemaVersion": 1
+  },
+  {
+    "id": "pescoco",
+    "name": "Pescoço",
+    "active": true,
+    "order": 17,
+    "exerciseCount": 9,
+    "primaryExerciseCount": 8,
+    "secondaryExerciseCount": 1,
+    "schemaVersion": 1
+  }
+]

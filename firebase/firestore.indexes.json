@@ -1,0 +1,37 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "config_treinos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "Divisao", "order": "ASCENDING" },
+        { "fieldPath": "Ordem", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "historico_treinos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "`Exercício`", "order": "ASCENDING" },
+        { "fieldPath": "Data", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "historico_treinos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "exerciseId", "order": "ASCENDING" },
+        { "fieldPath": "Data", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "historico_treinos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "Treino", "order": "ASCENDING" },
+        { "fieldPath": "Data", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

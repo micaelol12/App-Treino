@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "sourceFile": "exercises-ptbr-full-translation.json",
+  "sourceExerciseCount": 873,
+  "collections": [
+    {
+      "name": "equipamentos",
+      "sourceFields": [
+        "equipment"
+      ],
+      "file": "equipamentos.json",
+      "documentCount": 12,
+      "nullExerciseCount": 77,
+      "logicalIdField": "id",
+      "supportsAutomaticDocumentIds": true
+    },
+    {
+      "name": "categorias",
+      "sourceFields": [
+        "category"
+      ],
+      "file": "categorias.json",
+      "documentCount": 7,
+      "nullExerciseCount": 0,
+      "logicalIdField": "id",
+      "supportsAutomaticDocumentIds": true
+    },
+    {
+      "name": "forcas",
+      "sourceFields": [
+        "force"
+      ],
+      "file": "forcas.json",
+      "documentCount": 3,
+      "nullExerciseCount": 29,
+      "logicalIdField": "id",
+      "supportsAutomaticDocumentIds": true
+    },
+    {
+      "name": "niveis",
+      "sourceFields": [
+        "level"
+      ],
+      "file": "niveis.json",
+      "documentCount": 3,
+      "nullExerciseCount": 0,
+      "logicalIdField": "id",
+      "supportsAutomaticDocumentIds": true
+    },
+    {
+      "name": "mecanicas",
+      "sourceFields": [
+        "mechanic"
+      ],
+      "file": "mecanicas.json",
+      "documentCount": 2,
+      "nullExerciseCount": 87,
+      "logicalIdField": "id",
+      "supportsAutomaticDocumentIds": true
+    },
+    {
+      "name": "musculos",
+      "sourceFields": [
+        "primaryMuscles",
+        "secondaryMuscles"
+      ],
+      "file": "musculos.json",
+      "documentCount": 17,
+      "nullExerciseCount": 0,
+      "logicalIdField": "id",
+      "supportsAutomaticDocumentIds": true
+    }
+  ]
+}

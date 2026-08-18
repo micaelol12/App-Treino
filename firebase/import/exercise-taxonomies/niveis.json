@@ -1,0 +1,26 @@
+[
+  {
+    "id": "iniciante",
+    "name": "Iniciante",
+    "active": true,
+    "order": 1,
+    "exerciseCount": 523,
+    "schemaVersion": 1
+  },
+  {
+    "id": "intermediario",
+    "name": "Intermediário",
+    "active": true,
+    "order": 2,
+    "exerciseCount": 293,
+    "schemaVersion": 1
+  },
+  {
+    "id": "avancado",
+    "name": "Avançado",
+    "active": true,
+    "order": 3,
+    "exerciseCount": 57,
+    "schemaVersion": 1
+  }
+]

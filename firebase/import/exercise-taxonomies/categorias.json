@@ -1,0 +1,58 @@
+[
+  {
+    "id": "forca",
+    "name": "Força",
+    "active": true,
+    "order": 1,
+    "exerciseCount": 581,
+    "schemaVersion": 1
+  },
+  {
+    "id": "alongamento",
+    "name": "Alongamento",
+    "active": true,
+    "order": 2,
+    "exerciseCount": 123,
+    "schemaVersion": 1
+  },
+  {
+    "id": "cardio",
+    "name": "Cardio",
+    "active": true,
+    "order": 3,
+    "exerciseCount": 14,
+    "schemaVersion": 1
+  },
+  {
+    "id": "powerlifting",
+    "name": "Powerlifting",
+    "active": true,
+    "order": 4,
+    "exerciseCount": 38,
+    "schemaVersion": 1
+  },
+  {
+    "id": "levantamento-olimpico",
+    "name": "Levantamento olímpico",
+    "active": true,
+    "order": 5,
+    "exerciseCount": 35,
+    "schemaVersion": 1
+  },
+  {
+    "id": "pliometria",
+    "name": "Pliometria",
+    "active": true,
+    "order": 6,
+    "exerciseCount": 61,
+    "schemaVersion": 1
+  },
+  {
+    "id": "strongman",
+    "name": "Strongman",
+    "active": true,
+    "order": 7,
+    "exerciseCount": 21,
+    "schemaVersion": 1
+  }
+]

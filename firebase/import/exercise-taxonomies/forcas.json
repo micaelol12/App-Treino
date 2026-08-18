@@ -1,0 +1,26 @@
+[
+  {
+    "id": "push",
+    "name": "Empurrar",
+    "active": true,
+    "order": 1,
+    "exerciseCount": 369,
+    "schemaVersion": 1
+  },
+  {
+    "id": "pull",
+    "name": "Puxar",
+    "active": true,
+    "order": 2,
+    "exerciseCount": 371,
+    "schemaVersion": 1
+  },
+  {
+    "id": "static",
+    "name": "Estática",
+    "active": true,
+    "order": 3,
+    "exerciseCount": 104,
+    "schemaVersion": 1
+  }
+]

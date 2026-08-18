@@ -1,0 +1,35 @@
+appId: com.micael.apptreino.development
+---
+- launchApp:
+    clearState: true
+- assertVisible: 'Entrar'
+- tapOn:
+    id: 'auth-sign-up-link'
+- tapOn:
+    id: 'auth-email-input'
+- inputText: 'e2e@app-treino.local'
+- tapOn:
+    id: 'auth-password-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-password-confirmation-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-sign-up-button'
+- assertVisible: 'Seu treino'
+- stopApp
+- launchApp
+- assertVisible: 'Seu treino'
+- tapOn: 'Ajustes'
+- tapOn:
+    id: 'auth-sign-out-button'
+- assertVisible: 'Entrar'
+- tapOn:
+    id: 'auth-email-input'
+- inputText: 'e2e@app-treino.local'
+- tapOn:
+    id: 'auth-password-input'
+- inputText: 'Treino123'
+- tapOn:
+    id: 'auth-login-button'
+- assertVisible: 'Seu treino'

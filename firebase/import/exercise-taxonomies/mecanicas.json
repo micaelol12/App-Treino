@@ -1,0 +1,18 @@
+[
+  {
+    "id": "composto",
+    "name": "Composto",
+    "active": true,
+    "order": 1,
+    "exerciseCount": 489,
+    "schemaVersion": 1
+  },
+  {
+    "id": "isolado",
+    "name": "Isolado",
+    "active": true,
+    "order": 2,
+    "exerciseCount": 297,
+    "schemaVersion": 1
+  }
+]
