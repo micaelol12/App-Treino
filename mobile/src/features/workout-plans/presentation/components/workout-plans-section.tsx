@@ -9,6 +9,7 @@ import { EmptyState } from '@/shared/components/empty-state';
 import { PrimaryButton } from '@/shared/components/primary-button';
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
+import { WorkoutDivisionsSection } from '@/features/workout-divisions/presentation/components/workout-divisions-section';
 
 import { getWorkoutPlanErrorMessage } from '../workout-plan-error-message';
 import { useWorkoutPlanActions, useWorkoutPlanExercises } from '../workout-plan-hooks';
@@ -84,6 +85,7 @@ export function WorkoutPlansSection({
 
   return (
     <View style={styles.section}>
+      <WorkoutDivisionsSection />
       {showHeading ? (
         <View style={styles.headingRow}>
           <View style={styles.headingCopy}>
@@ -155,7 +157,7 @@ export function WorkoutPlansSection({
                       <AppText style={styles.exerciseName}>{exercise.name}</AppText>
                       <AppText style={{ color: theme.colors.textMuted }}>
                         {exercise.defaultSets} séries · ordem {exercise.order}
-                        {exercise.sourceSchemaVersion === 0 ? ' · legado' : ''}
+                        {exercise.sourceSchemaVersion < 2 ? ' · legado' : ''}
                       </AppText>
                     </View>
                     <WorkoutPlanAction
@@ -166,19 +168,25 @@ export function WorkoutPlansSection({
                   </View>
                   <View style={styles.actions}>
                     <WorkoutPlanAction
-                      disabled={isMutating || index === 0}
+                      disabled={
+                        isMutating || index === 0 || exercise.sourceSchemaVersion < 2
+                      }
                       label="Subir"
                       onPress={() => void moveExercise(exercise.id, 'up')}
                       testID={`workout-plan-up-${exercise.id}`}
                     />
                     <WorkoutPlanAction
-                      disabled={isMutating || index === group.exercises.length - 1}
+                      disabled={
+                        isMutating ||
+                        index === group.exercises.length - 1 ||
+                        exercise.sourceSchemaVersion < 2
+                      }
                       label="Descer"
                       onPress={() => void moveExercise(exercise.id, 'down')}
                       testID={`workout-plan-down-${exercise.id}`}
                     />
                     <WorkoutPlanAction
-                      disabled={isMutating}
+                      disabled={isMutating || exercise.sourceSchemaVersion < 2}
                       label="Excluir"
                       onPress={() => confirmDelete(exercise)}
                       testID={`workout-plan-delete-${exercise.id}`}

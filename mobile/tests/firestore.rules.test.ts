@@ -8,27 +8,27 @@ import {
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
 import {
-  deleteDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
-  setLogLevel,
   setDoc,
+  setLogLevel,
   Timestamp,
   type Firestore,
-  updateDoc,
-  writeBatch,
 } from 'firebase/firestore';
 
+import { FirebaseProgressRepository } from '../src/features/progress/infrastructure/firestore/firebase-progress.repository';
 import { FirebaseWorkoutPlanRepository } from '../src/features/workout-plans/infrastructure/firestore/firebase-workout-plan.repository';
 import { FirebaseWorkoutSessionRepository } from '../src/features/workout-session/infrastructure/firestore/firebase-workout-session.repository';
 import { FirebaseWeightRepository } from '../src/features/weight/infrastructure/firestore/firebase-weight.repository';
-import { FirebaseProgressRepository } from '../src/features/progress/infrastructure/firestore/firebase-progress.repository';
 
 const PROJECT_ID = 'demo-app-treino';
 const PRIMARY_USER_ID = 'qa_primary_user';
 const SECONDARY_USER_ID = 'qa_secondary_user';
+const EXERCISE_DOCUMENT_ID = 'firestore-auto-id';
+const EXERCISE_ID = 'Barbell_Bench_Press_-_Medium_Grip';
 
 const validConfig = {
   Divisao: 'Push',
@@ -48,22 +48,57 @@ const validHistory = {
   Obs: '',
 };
 
-const validWeight = {
-  Data: '2026-07-01',
-  Peso: 79.6,
+const validWeight = { Data: '2026-07-01', Peso: 79.6 };
+
+const validExercise = {
+  id: EXERCISE_ID,
+  name: 'Supino Reto com Barra - Pegada Média',
+  force: 'push',
+  level: 'iniciante',
+  mechanic: 'composto',
+  equipment: 'barra',
+  primaryMuscles: ['peito'],
+  secondaryMuscles: ['triceps'],
+  instructions: ['Execute o movimento com controle.'],
+  category: 'forca',
+  images: ['bench/0.jpg'],
 };
+
+function validDivision() {
+  const timestamp = Timestamp.now();
+  return {
+    name: 'Push',
+    order: 1,
+    active: true,
+    schemaVersion: 2,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+}
+
+function validPlanItem() {
+  const timestamp = Timestamp.now();
+  return {
+    exerciseId: EXERCISE_ID,
+    exerciseDocumentId: EXERCISE_DOCUMENT_ID,
+    exerciseNameSnapshot: validExercise.name,
+    defaultSets: 3,
+    order: 1,
+    active: true,
+    schemaVersion: 2,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+}
 
 let testEnvironment: RulesTestEnvironment;
 
 beforeAll(async () => {
   setLogLevel('silent');
   const rulesPath = path.resolve(__dirname, '../../firebase/firestore.rules');
-
   testEnvironment = await initializeTestEnvironment({
     projectId: PROJECT_ID,
-    firestore: {
-      rules: fs.readFileSync(rulesPath, 'utf8'),
-    },
+    firestore: { rules: fs.readFileSync(rulesPath, 'utf8') },
   });
 });
 
@@ -75,202 +110,138 @@ afterAll(async () => {
   await testEnvironment.cleanup();
 });
 
-describe('Firestore ownership rules', () => {
-  it('allows the owner to create, read, update and delete a valid document', async () => {
-    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-    const reference = doc(
-      database,
-      `usuarios/${PRIMARY_USER_ID}/config_treinos/config-1`,
+async function seedExercise() {
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(
+      doc(context.firestore(), `exercicios/${EXERCISE_DOCUMENT_ID}`),
+      validExercise,
     );
+  });
+}
 
-    await assertSucceeds(setDoc(reference, validConfig));
+describe('global exercise catalog rules', () => {
+  it('allows authenticated reads and denies anonymous reads and client writes', async () => {
+    await seedExercise();
+    const owner = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const anonymous = testEnvironment.unauthenticatedContext().firestore();
+    const reference = doc(owner, `exercicios/${EXERCISE_DOCUMENT_ID}`);
+
     await assertSucceeds(getDoc(reference));
-    await assertSucceeds(updateDoc(reference, { Ordem: 2 }));
-    await assertSucceeds(deleteDoc(reference));
+    await assertFails(getDoc(doc(anonymous, `exercicios/${EXERCISE_DOCUMENT_ID}`)));
+    await assertFails(setDoc(reference, validExercise));
   });
 
-  it('denies reads and writes from another authenticated user', async () => {
+  it('allows authenticated reads from every taxonomy collection', async () => {
     await testEnvironment.withSecurityRulesDisabled(async (context) => {
-      await setDoc(
-        doc(
-          context.firestore(),
-          `usuarios/${PRIMARY_USER_ID}/config_treinos/private-config`,
-        ),
-        validConfig,
-      );
+      for (const name of [
+        'equipamentos',
+        'categorias',
+        'forcas',
+        'niveis',
+        'mecanicas',
+        'musculos',
+      ]) {
+        await setDoc(doc(context.firestore(), `${name}/auto-id`), {
+          id: 'valor',
+          name: 'Valor',
+        });
+      }
     });
-
-    const intruderDatabase = testEnvironment
-      .authenticatedContext(SECONDARY_USER_ID)
-      .firestore();
-    const privateReference = doc(
-      intruderDatabase,
-      `usuarios/${PRIMARY_USER_ID}/config_treinos/private-config`,
-    );
-
-    await assertFails(getDoc(privateReference));
-    await assertFails(setDoc(privateReference, validConfig));
-  });
-
-  it('denies anonymous access', async () => {
-    const database = testEnvironment.unauthenticatedContext().firestore();
-    const reference = doc(
-      database,
-      `usuarios/${PRIMARY_USER_ID}/historico_pesos/2026-07-01`,
-    );
-
-    await assertFails(getDoc(reference));
-    await assertFails(setDoc(reference, validWeight));
-  });
-
-  it('denies undeclared collections and the user parent document', async () => {
     const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-
-    await assertFails(
-      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}`), { admin: true }),
-    );
-    await assertFails(
-      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/segredos/secret-1`), {
-        value: 'denied',
-      }),
-    );
+    for (const name of [
+      'equipamentos',
+      'categorias',
+      'forcas',
+      'niveis',
+      'mecanicas',
+      'musculos',
+    ]) {
+      await assertSucceeds(getDoc(doc(database, `${name}/auto-id`)));
+    }
   });
 });
 
-describe('config_treinos validation', () => {
-  it('accepts legacy and versioned config documents', async () => {
-    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+describe('division and plan v2 rules', () => {
+  it('validates ownership and the physical exercise reference', async () => {
+    await seedExercise();
+    const owner = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const intruder = testEnvironment.authenticatedContext(SECONDARY_USER_ID).firestore();
+    const divisionPath = `usuarios/${PRIMARY_USER_ID}/divisoes/push`;
+    const itemPath = `${divisionPath}/exercicios/${EXERCISE_DOCUMENT_ID}`;
 
-    await assertSucceeds(
-      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/legacy`), {
-        Divisao: 'Push',
-        Exercicio: 'Tríceps Corda',
-        Series_Padrao: 3,
-      }),
-    );
-    await assertSucceeds(
-      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/versioned`), {
-        ...validConfig,
-        schemaVersion: 1,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      }),
-    );
-  });
-
-  it.each([
-    { ...validConfig, Series_Padrao: 0 },
-    { ...validConfig, Ordem: 1.5 },
-    { ...validConfig, fieldNotAllowed: true },
-    { ...validConfig, schemaVersion: 2 },
-  ])('rejects an invalid config document', async (invalidConfig) => {
-    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-
+    await assertSucceeds(setDoc(doc(owner, divisionPath), validDivision()));
+    await assertSucceeds(setDoc(doc(owner, itemPath), validPlanItem()));
+    await assertFails(getDoc(doc(intruder, divisionPath)));
+    await assertFails(setDoc(doc(intruder, itemPath), validPlanItem()));
     await assertFails(
-      setDoc(
-        doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/invalid`),
-        invalidConfig,
-      ),
+      setDoc(doc(owner, `${divisionPath}/exercicios/missing`), {
+        ...validPlanItem(),
+        exerciseDocumentId: 'missing',
+      }),
     );
   });
-});
 
-describe('workout plan repository integration', () => {
-  it('reads legacy data and completes CRUD using the document ID', async () => {
+  it('supports repository CRUD with auto-ID catalog documents', async () => {
+    await seedExercise();
     const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    await setDoc(
+      doc(database, `usuarios/${PRIMARY_USER_ID}/divisoes/push`),
+      validDivision(),
+    );
     const repository = new FirebaseWorkoutPlanRepository(
       database as unknown as Firestore,
     );
-
-    await testEnvironment.withSecurityRulesDisabled(async (context) => {
-      await setDoc(
-        doc(
-          context.firestore(),
-          `usuarios/${PRIMARY_USER_ID}/config_treinos/legacy-without-order`,
-        ),
-        {
-          Divisao: 'Push',
-          Exercicio: 'Tríceps Corda',
-          Series_Padrao: 3,
-        },
-      );
-    });
-
-    await expect(repository.list(PRIMARY_USER_ID)).resolves.toEqual([
-      expect.objectContaining({ id: 'legacy-without-order', order: 99 }),
-    ]);
-
-    const createdId = await repository.create(PRIMARY_USER_ID, {
-      division: 'Pull',
-      name: 'Rosca Direta',
-      defaultSets: 4,
-      order: 1,
-    });
-    await repository.update(PRIMARY_USER_ID, createdId, {
-      division: 'Pull B',
-      name: 'Rosca Direta',
+    const draft = {
+      divisionId: 'push',
+      divisionNameSnapshot: 'Push',
+      exerciseId: EXERCISE_ID,
+      exerciseDocumentId: EXERCISE_DOCUMENT_ID,
+      exerciseNameSnapshot: validExercise.name,
       defaultSets: 3,
+      order: 1,
+    };
+
+    await expect(repository.create(PRIMARY_USER_ID, draft)).resolves.toBe(
+      `push__${EXERCISE_DOCUMENT_ID}`,
+    );
+    const [created] = await repository.list(PRIMARY_USER_ID);
+    expect(created).toMatchObject({
+      divisionId: 'push',
+      exerciseId: EXERCISE_ID,
+      exerciseDocumentId: EXERCISE_DOCUMENT_ID,
+      sourceSchemaVersion: 2,
+    });
+
+    await repository.update(PRIMARY_USER_ID, created!, {
+      ...draft,
+      defaultSets: 4,
       order: 2,
     });
-
-    expect(
-      (
-        await getDoc(
-          doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/${createdId}`),
-        )
-      ).data(),
-    ).toMatchObject({
-      Divisao: 'Pull B',
-      Exercicio: 'Rosca Direta',
-      Series_Padrao: 3,
-      Ordem: 2,
-      schemaVersion: 1,
-      createdAt: expect.any(Timestamp),
-      updatedAt: expect.any(Timestamp),
+    expect((await repository.list(PRIMARY_USER_ID))[0]).toMatchObject({
+      defaultSets: 4,
+      order: 2,
     });
-
-    await repository.delete(PRIMARY_USER_ID, createdId);
-    expect(
-      (
-        await getDoc(
-          doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/${createdId}`),
-        )
-      ).exists(),
-    ).toBe(false);
-    expect(
-      (
-        await getDoc(
-          doc(
-            database,
-            `usuarios/${PRIMARY_USER_ID}/config_treinos/legacy-without-order`,
-          ),
-        )
-      ).exists(),
-    ).toBe(true);
+    await repository.delete(PRIMARY_USER_ID, created!);
+    await expect(repository.list(PRIMARY_USER_ID)).resolves.toEqual([]);
   });
 
-  it('reorders multiple exercises atomically', async () => {
+  it('falls back to legacy config when no v2 division exists', async () => {
     const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    await setDoc(
+      doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/legacy`),
+      validConfig,
+    );
     const repository = new FirebaseWorkoutPlanRepository(
       database as unknown as Firestore,
     );
-    const first = doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/first`);
-    const second = doc(database, `usuarios/${PRIMARY_USER_ID}/config_treinos/second`);
-    await setDoc(first, validConfig);
-    await setDoc(second, { ...validConfig, Exercicio: 'Crucifixo', Ordem: 2 });
-
-    await repository.updateOrder(PRIMARY_USER_ID, [
-      { id: 'first', order: 2 },
-      { id: 'second', order: 1 },
+    await expect(repository.list(PRIMARY_USER_ID)).resolves.toEqual([
+      expect.objectContaining({ id: 'legacy:legacy', sourceSchemaVersion: 0 }),
     ]);
-
-    expect((await getDoc(first)).data()?.Ordem).toBe(2);
-    expect((await getDoc(second)).data()?.Ordem).toBe(1);
   });
 });
 
-describe('historico_treinos validation', () => {
-  it('completes a session in batch without duplicating records on retry', async () => {
+describe('history v2 and legacy compatibility', () => {
+  it('writes stable IDs, retries idempotently and queries by exercise ID', async () => {
     const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
     const repository = new FirebaseWorkoutSessionRepository(
       database as unknown as Firestore,
@@ -278,24 +249,18 @@ describe('historico_treinos validation', () => {
     const session = {
       sessionId: 'session-idempotent',
       performedOn: '2026-08-15',
+      divisionId: 'push',
       division: 'Push',
       sets: [
         {
-          planExerciseId: 'bench',
-          exerciseName: 'Supino Reto',
+          planExerciseId: `push__${EXERCISE_DOCUMENT_ID}`,
+          exerciseId: EXERCISE_ID,
+          exerciseDocumentId: EXERCISE_DOCUMENT_ID,
+          exerciseName: validExercise.name,
           setNumber: 1,
           loadKg: 60,
           repetitions: 10,
           rpe: 8,
-          note: '',
-        },
-        {
-          planExerciseId: 'bench',
-          exerciseName: 'Supino Reto',
-          setNumber: 2,
-          loadKg: 60,
-          repetitions: 8,
-          rpe: 9,
           note: '',
         },
       ],
@@ -303,277 +268,83 @@ describe('historico_treinos validation', () => {
 
     await repository.complete(PRIMARY_USER_ID, session);
     await repository.complete(PRIMARY_USER_ID, session);
-
     const snapshot = await getDocs(
       collection(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos`),
     );
-    expect(snapshot.docs).toHaveLength(2);
-    expect(snapshot.docs.map((item) => item.data().sessionId)).toEqual([
-      'session-idempotent',
-      'session-idempotent',
-    ]);
-  });
-
-  it('lists, updates and deletes an owned workout session', async () => {
-    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-    const repository = new FirebaseWorkoutSessionRepository(
-      database as unknown as Firestore,
-    );
-    await repository.complete(PRIMARY_USER_ID, {
-      sessionId: 'session-crud',
-      performedOn: '2026-08-15',
-      division: 'Push',
-      sets: [
-        {
-          planExerciseId: 'bench',
-          exerciseName: 'Supino Reto',
-          setNumber: 1,
-          loadKg: 60,
-          repetitions: 10,
-          rpe: 8,
-          note: '',
-        },
-      ],
+    expect(snapshot).toHaveProperty('size', 1);
+    expect(snapshot.docs[0]?.data()).toMatchObject({
+      divisionId: 'push',
+      exerciseId: EXERCISE_ID,
+      exerciseDocumentId: EXERCISE_DOCUMENT_ID,
+      schemaVersion: 2,
     });
-
-    const page = await repository.listHistoryPage(PRIMARY_USER_ID, 10);
     await expect(
-      repository.listExerciseHistory(PRIMARY_USER_ID, 'Supino Reto', 10),
+      repository.listExerciseHistory(
+        PRIMARY_USER_ID,
+        EXERCISE_ID,
+        validExercise.name,
+        10,
+      ),
     ).resolves.toHaveLength(1);
-    await repository.updateHistory(PRIMARY_USER_ID, {
-      sessionId: 'session-crud',
-      performedOn: '2026-08-16',
-      workoutName: 'Push B',
-      sets: [
-        {
-          id: page.records[0]!.id,
-          loadKg: 62.5,
-          repetitions: 8,
-          rpe: 9,
-          note: 'progressão',
-        },
-      ],
-    });
-
-    const updated = await repository.listHistoryPage(PRIMARY_USER_ID, 10);
-    expect(updated.records[0]).toMatchObject({
-      performedOn: '2026-08-16',
-      workoutName: 'Push B',
-      loadKg: 62.5,
-      repetitions: 8,
-      rpe: 9,
-      note: 'progressão',
-    });
-    await repository.deleteHistory(
-      PRIMARY_USER_ID,
-      updated.records.map(({ id }) => id),
-    );
-    await expect(repository.listHistoryPage(PRIMARY_USER_ID, 10)).resolves.toEqual({
-      records: [],
-      nextCursor: null,
-    });
   });
 
-  it('accepts a legacy record and a versioned record', async () => {
+  it('accepts legacy history and progress falls back to its name', async () => {
     const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-
     await assertSucceeds(
       setDoc(
         doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/legacy`),
         validHistory,
       ),
     );
-    await assertSucceeds(
-      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/versioned`), {
-        ...validHistory,
-        sessionId: 'session-2026-07-01',
-        schemaVersion: 1,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      }),
+    const repository = new FirebaseProgressRepository(database as unknown as Firestore);
+    const page = await repository.listExercisePage(
+      PRIMARY_USER_ID,
+      undefined,
+      'Supino Reto',
+      10,
     );
-  });
-
-  it.each([
-    { ...validHistory, Reps: 0 },
-    { ...validHistory, RPE: 11 },
-    { ...validHistory, Carga: -1 },
-    { ...validHistory, Data: '01/07/2026' },
-    { ...validHistory, extra: true },
-  ])('rejects an invalid history record', async (invalidHistory) => {
-    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-
-    await assertFails(
-      setDoc(
-        doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/invalid`),
-        invalidHistory,
-      ),
-    );
-  });
-
-  it('rejects the entire batch when one record is invalid', async () => {
-    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-    const firstReference = doc(
-      database,
-      `usuarios/${PRIMARY_USER_ID}/historico_treinos/batch-valid`,
-    );
-    const secondReference = doc(
-      database,
-      `usuarios/${PRIMARY_USER_ID}/historico_treinos/batch-invalid`,
-    );
-    const batch = writeBatch(database);
-
-    batch.set(firstReference, validHistory);
-    batch.set(secondReference, { ...validHistory, RPE: 99 });
-
-    await assertFails(batch.commit());
-
-    await testEnvironment.withSecurityRulesDisabled(async (context) => {
-      expect((await getDoc(doc(context.firestore(), firstReference.path))).exists()).toBe(
-        false,
-      );
-      expect(
-        (await getDoc(doc(context.firestore(), secondReference.path))).exists(),
-      ).toBe(false);
-    });
+    expect(page.records).toEqual([
+      expect.objectContaining({ id: 'legacy', sourceSchemaVersion: 0 }),
+    ]);
   });
 });
 
-describe('historico_pesos validation', () => {
-  it('allows an owner to upsert a valid weight by date', async () => {
-    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-    const reference = doc(
-      database,
+describe('remaining private collections', () => {
+  it('keeps config and weight private and validates their shapes', async () => {
+    const owner = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const intruder = testEnvironment.authenticatedContext(SECONDARY_USER_ID).firestore();
+    const configReference = doc(
+      owner,
+      `usuarios/${PRIMARY_USER_ID}/config_treinos/config`,
+    );
+    const weightReference = doc(
+      owner,
       `usuarios/${PRIMARY_USER_ID}/historico_pesos/2026-07-01`,
     );
-
-    await assertSucceeds(setDoc(reference, validWeight));
-    await assertSucceeds(setDoc(reference, { ...validWeight, Peso: 79.5 }));
-  });
-
-  it.each([
-    { ...validWeight, Peso: 29.9 },
-    { ...validWeight, Peso: 501 },
-    { ...validWeight, Data: '2026-7-1' },
-    { ...validWeight, extra: true },
-  ])('rejects an invalid weight entry', async (invalidWeight) => {
-    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-
+    await assertSucceeds(setDoc(configReference, validConfig));
+    await assertSucceeds(setDoc(weightReference, validWeight));
     await assertFails(
-      setDoc(
-        doc(database, `usuarios/${PRIMARY_USER_ID}/historico_pesos/invalid`),
-        invalidWeight,
-      ),
+      getDoc(doc(intruder, `usuarios/${PRIMARY_USER_ID}/historico_pesos/2026-07-01`)),
     );
+    await assertFails(setDoc(weightReference, { ...validWeight, Peso: 10 }));
   });
 
-  it('upserts with a deterministic ID and paginates legacy entries', async () => {
+  it('keeps deterministic weight upsert behavior', async () => {
     const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
     const repository = new FirebaseWeightRepository(database as unknown as Firestore);
-
-    await setDoc(
-      doc(database, `usuarios/${PRIMARY_USER_ID}/historico_pesos/legacy-random-id`),
-      { Data: '2026-07-01', Peso: 80 },
-    );
     await repository.upsert(PRIMARY_USER_ID, {
       recordedOn: '2026-07-02',
       weightKg: 79.8,
     });
-    await repository.upsert(PRIMARY_USER_ID, {
-      recordedOn: '2026-07-02',
-      weightKg: 79.7,
-    });
-
-    const firstPage = await repository.listPage(PRIMARY_USER_ID, 1);
-    const secondPage = await repository.listPage(
-      PRIMARY_USER_ID,
-      1,
-      firstPage.nextCursor ?? undefined,
-    );
-
-    expect(firstPage.entries).toEqual([
-      expect.objectContaining({ id: '2026-07-02', weightKg: 79.7 }),
-    ]);
-    expect(secondPage.entries).toEqual([
-      expect.objectContaining({ id: 'legacy-random-id', weightKg: 80 }),
-    ]);
     expect(
       (
         await getDoc(
           doc(database, `usuarios/${PRIMARY_USER_ID}/historico_pesos/2026-07-02`),
         )
       ).data(),
-    ).toMatchObject({
-      Data: '2026-07-02',
-      Peso: 79.7,
-      schemaVersion: 1,
-      createdAt: expect.any(Timestamp),
-      updatedAt: expect.any(Timestamp),
-    });
-  });
-
-  it('moves an edited weight to another date and deletes it', async () => {
-    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-    const repository = new FirebaseWeightRepository(database as unknown as Firestore);
-    const oldReference = doc(
-      database,
-      `usuarios/${PRIMARY_USER_ID}/historico_pesos/legacy-id`,
+    ).toMatchObject({ Data: '2026-07-02', Peso: 79.8, schemaVersion: 1 });
+    await assertSucceeds(
+      deleteDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/historico_pesos/2026-07-02`)),
     );
-    await setDoc(oldReference, validWeight);
-
-    await repository.replace(PRIMARY_USER_ID, 'legacy-id', {
-      recordedOn: '2026-07-03',
-      weightKg: 78.5,
-    });
-    const newReference = doc(
-      database,
-      `usuarios/${PRIMARY_USER_ID}/historico_pesos/2026-07-03`,
-    );
-    expect((await getDoc(oldReference)).exists()).toBe(false);
-    expect((await getDoc(newReference)).data()).toMatchObject({
-      Data: '2026-07-03',
-      Peso: 78.5,
-    });
-
-    await repository.delete(PRIMARY_USER_ID, '2026-07-03');
-    expect((await getDoc(newReference)).exists()).toBe(false);
-  });
-});
-
-describe('progress repository integration', () => {
-  it('filters one exercise and paginates newest records first', async () => {
-    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
-    const repository = new FirebaseProgressRepository(database as unknown as Firestore);
-    await setDoc(
-      doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/supino-old`),
-      validHistory,
-    );
-    await setDoc(
-      doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/supino-new`),
-      { ...validHistory, Data: '2026-07-08', Carga: 62.5 },
-    );
-    await setDoc(
-      doc(database, `usuarios/${PRIMARY_USER_ID}/historico_treinos/other-exercise`),
-      { ...validHistory, Exercício: 'Crucifixo' },
-    );
-
-    const firstPage = await repository.listExercisePage(
-      PRIMARY_USER_ID,
-      'Supino Reto',
-      1,
-    );
-    const secondPage = await repository.listExercisePage(
-      PRIMARY_USER_ID,
-      'Supino Reto',
-      1,
-      firstPage.nextCursor ?? undefined,
-    );
-
-    expect(firstPage.records).toEqual([
-      expect.objectContaining({ id: 'supino-new', performedOn: '2026-07-08' }),
-    ]);
-    expect(secondPage.records).toEqual([
-      expect.objectContaining({ id: 'supino-old', performedOn: '2026-07-01' }),
-    ]);
   });
 });

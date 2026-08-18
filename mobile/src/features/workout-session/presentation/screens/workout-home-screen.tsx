@@ -31,14 +31,19 @@ export function WorkoutHomeScreen() {
   const start = useActiveWorkoutStore((state) => state.start);
   const clear = useActiveWorkoutStore((state) => state.clear);
   const [performedOn, setPerformedOn] = useState(currentCivilDate);
-  const [selectedDivision, setSelectedDivision] = useState('');
+  const [selectedDivisionId, setSelectedDivisionId] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const divisions = useMemo(
-    () => [...new Set((plans.data ?? []).map((exercise) => exercise.division))],
-    [plans.data],
-  );
-  const effectiveDivision = selectedDivision || divisions[0] || '';
+  const divisions = useMemo(() => {
+    const unique = new Map(
+      (plans.data ?? []).map((exercise) => [
+        exercise.divisionId,
+        { id: exercise.divisionId, name: exercise.division },
+      ]),
+    );
+    return [...unique.values()];
+  }, [plans.data]);
+  const effectiveDivisionId = selectedDivisionId || divisions[0]?.id || '';
 
   useEffect(() => {
     if (hasHydrated && draft && session && draft.userId !== session.uid) clear();
@@ -53,7 +58,7 @@ export function WorkoutHomeScreen() {
           sessionId: createWorkoutSessionId(),
           userId: session.uid,
           performedOn,
-          division: effectiveDivision,
+          divisionId: effectiveDivisionId,
           exercises: plans.data,
         }),
       );
@@ -151,14 +156,14 @@ export function WorkoutHomeScreen() {
             <AppText style={styles.label}>Divisão</AppText>
             <View accessibilityRole="radiogroup" style={styles.divisions}>
               {divisions.map((division) => {
-                const selected = division === effectiveDivision;
+                const selected = division.id === effectiveDivisionId;
                 return (
                   <Pressable
-                    accessibilityLabel={division}
+                    accessibilityLabel={division.name}
                     accessibilityRole="radio"
                     accessibilityState={{ checked: selected }}
-                    key={division}
-                    onPress={() => setSelectedDivision(division)}
+                    key={division.id}
+                    onPress={() => setSelectedDivisionId(division.id)}
                     style={[
                       styles.division,
                       {
@@ -173,7 +178,7 @@ export function WorkoutHomeScreen() {
                         color: selected ? theme.colors.onPrimary : theme.colors.text,
                       }}
                     >
-                      {division}
+                      {division.name}
                     </AppText>
                   </Pressable>
                 );

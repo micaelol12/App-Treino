@@ -17,6 +17,11 @@ export function mapWorkoutHistoryDocument(
     id: documentId,
     performedOn: document.Data,
     workoutName: document.Treino,
+    ...(document.divisionId ? { divisionId: document.divisionId } : {}),
+    ...(document.exerciseId ? { exerciseId: document.exerciseId } : {}),
+    ...(document.exerciseDocumentId
+      ? { exerciseDocumentId: document.exerciseDocumentId }
+      : {}),
     exerciseName: document.Exercício,
     setNumber: document.Série,
     loadKg: document.Carga,

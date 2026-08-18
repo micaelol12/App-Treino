@@ -123,7 +123,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
     }),
     {
       name: 'app-treino-active-workout',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => AsyncStorage),
       partialize: ({ currentExerciseIndex, draft, timer }) => ({
         currentExerciseIndex,
@@ -133,7 +133,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
       migrate: (persistedState, version): PersistedActiveWorkoutState => {
         const state = persistedState as Partial<PersistedActiveWorkoutState>;
         return {
-          draft: state.draft ?? null,
+          draft: version < 3 ? null : (state.draft ?? null),
           currentExerciseIndex: state.currentExerciseIndex ?? 0,
           timer:
             version < 2

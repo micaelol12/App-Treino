@@ -37,12 +37,19 @@ export function ManualWorkoutScreen() {
   const complete = useCompleteWorkoutSession();
   const submitting = useRef(false);
   const [performedOn, setPerformedOn] = useState(currentCivilDate);
-  const [selectedDivision, setSelectedDivision] = useState('');
+  const [selectedDivisionId, setSelectedDivisionId] = useState('');
   const [draft, setDraft] = useState<WorkoutSessionDraft | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const divisions = [...new Set((plans.data ?? []).map((exercise) => exercise.division))];
-  const effectiveDivision = selectedDivision || divisions[0] || '';
+  const divisions = [
+    ...new Map(
+      (plans.data ?? []).map((exercise) => [
+        exercise.divisionId,
+        { id: exercise.divisionId, name: exercise.division },
+      ]),
+    ).values(),
+  ];
+  const effectiveDivisionId = selectedDivisionId || divisions[0]?.id || '';
 
   const prepareForm = () => {
     if (!session || !plans.data) return;
@@ -54,7 +61,7 @@ export function ManualWorkoutScreen() {
           sessionId: createWorkoutSessionId(),
           userId: session.uid,
           performedOn,
-          division: effectiveDivision,
+          divisionId: effectiveDivisionId,
           exercises: plans.data,
         }),
       );
@@ -139,7 +146,10 @@ export function ManualWorkoutScreen() {
               <AppText style={styles.exerciseTitle} variant="heading">
                 {exercise.name}
               </AppText>
-              <ExerciseHistoryButton exerciseName={exercise.name} />
+              <ExerciseHistoryButton
+                exerciseId={exercise.exerciseId}
+                exerciseName={exercise.name}
+              />
             </View>
             {exercise.sets.map((workoutSet, setIndex) => (
               <WorkoutSetEditor
@@ -215,14 +225,14 @@ export function ManualWorkoutScreen() {
             <AppText style={styles.label}>Divisão</AppText>
             <View accessibilityRole="radiogroup" style={styles.divisions}>
               {divisions.map((division) => {
-                const selected = division === effectiveDivision;
+                const selected = division.id === effectiveDivisionId;
                 return (
                   <Pressable
-                    accessibilityLabel={division}
+                    accessibilityLabel={division.name}
                     accessibilityRole="radio"
                     accessibilityState={{ checked: selected }}
-                    key={division}
-                    onPress={() => setSelectedDivision(division)}
+                    key={division.id}
+                    onPress={() => setSelectedDivisionId(division.id)}
                     style={[
                       styles.division,
                       {
@@ -231,14 +241,14 @@ export function ManualWorkoutScreen() {
                           : theme.colors.surfaceMuted,
                       },
                     ]}
-                    testID={`manual-workout-division-${division}`}
+                    testID={`manual-workout-division-${division.name}`}
                   >
                     <AppText
                       style={{
                         color: selected ? theme.colors.onPrimary : theme.colors.text,
                       }}
                     >
-                      {division}
+                      {division.name}
                     </AppText>
                   </Pressable>
                 );

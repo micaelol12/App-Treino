@@ -40,27 +40,42 @@ const mockUseComplete = jest.mocked(useCompleteWorkoutSession);
 const exercises = [
   {
     id: 'bench',
+    documentId: 'bench-document',
+    divisionId: 'push',
     division: 'Push',
+    divisionOrder: 1,
+    exerciseId: 'bench-catalog',
+    exerciseDocumentId: 'bench-document',
     name: 'Supino',
     defaultSets: 2,
     order: 1,
-    sourceSchemaVersion: 1 as const,
+    sourceSchemaVersion: 2 as const,
   },
   {
     id: 'fly',
+    documentId: 'fly-document',
+    divisionId: 'push',
     division: 'Push',
+    divisionOrder: 1,
+    exerciseId: 'fly-catalog',
+    exerciseDocumentId: 'fly-document',
     name: 'Crucifixo',
     defaultSets: 1,
     order: 2,
-    sourceSchemaVersion: 1 as const,
+    sourceSchemaVersion: 2 as const,
   },
   {
     id: 'row',
+    documentId: 'row-document',
+    divisionId: 'pull',
     division: 'Pull',
+    divisionOrder: 2,
+    exerciseId: 'row-catalog',
+    exerciseDocumentId: 'row-document',
     name: 'Remada',
     defaultSets: 3,
     order: 1,
-    sourceSchemaVersion: 1 as const,
+    sourceSchemaVersion: 2 as const,
   },
 ];
 
@@ -105,8 +120,8 @@ describe('ManualWorkoutScreen', () => {
     await fireEvent.press(screen.getByTestId('manual-workout-date-input-day-2026-08-14'));
     await fireEvent.press(screen.getByTestId('manual-workout-prepare'));
 
-    expect(screen.getByText('Supino')).toBeOnTheScreen();
-    expect(screen.getByText('Crucifixo')).toBeOnTheScreen();
+    expect(screen.getAllByText('Supino').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Crucifixo').length).toBeGreaterThan(0);
     expect(screen.queryByText('Remada')).not.toBeOnTheScreen();
     expect(screen.getByTestId('manual-bench-set-2-repetitions')).toBeOnTheScreen();
 
@@ -124,6 +139,7 @@ describe('ManualWorkoutScreen', () => {
           sessionId: 'manual-session-1',
           userId: 'user-1',
           performedOn: '2026-08-14',
+          divisionId: 'push',
           division: 'Push',
           exercises: [
             expect.objectContaining({

@@ -14,7 +14,8 @@ service cloud.firestore {
 
     function hasValidMetadata(data) {
       return data.get('schemaVersion', 1) is int
-        && data.get('schemaVersion', 1) == 1
+        && (data.get('schemaVersion', 1) == 1
+          || data.get('schemaVersion', 1) == 2)
         && data.get('sessionId', '') is string
         && data.get('sessionId', '').size() <= 128
         && data.get('createdAt', request.time) is timestamp
@@ -39,12 +40,21 @@ service cloud.firestore {
         && data.get('Ordem', 99) is int
         && data.get('Ordem', 99) >= 1
         && data.get('Ordem', 99) <= 999
+        && data.get('schemaVersion', 1) == 1
         && hasValidMetadata(data);
     }
 
     function isValidWorkoutHistory(data) {
       let required = ['Data', 'Treino', 'Exercício', 'Série', 'Carga', 'Reps', 'RPE', 'Obs'];
-      let optional = ['sessionId', 'schemaVersion', 'createdAt', 'updatedAt'];
+      let optional = [
+        'sessionId',
+        'divisionId',
+        'exerciseId',
+        'exerciseDocumentId',
+        'schemaVersion',
+        'createdAt',
+        'updatedAt'
+      ];
 
       return data.keys().hasAll(required)
         && data.keys().hasOnly(required.concat(optional))
@@ -69,7 +79,76 @@ service cloud.firestore {
         && data['RPE'] <= 10
         && data['Obs'] is string
         && data['Obs'].size() <= 500
+        && data.get('divisionId', '') is string
+        && data.get('divisionId', '').size() <= 160
+        && data.get('exerciseId', '') is string
+        && data.get('exerciseId', '').size() <= 160
+        && data.get('exerciseDocumentId', '') is string
+        && data.get('exerciseDocumentId', '').size() <= 160
         && hasValidMetadata(data);
+    }
+
+    function isValidDivision(data) {
+      let required = [
+        'name',
+        'order',
+        'active',
+        'schemaVersion',
+        'createdAt',
+        'updatedAt'
+      ];
+
+      return data.keys().hasAll(required)
+        && data.keys().hasOnly(required)
+        && data['name'] is string
+        && data['name'].size() >= 1
+        && data['name'].size() <= 80
+        && data['order'] is int
+        && data['order'] >= 1
+        && data['order'] <= 999
+        && data['active'] is bool
+        && data['schemaVersion'] == 2
+        && data['createdAt'] is timestamp
+        && data['updatedAt'] is timestamp;
+    }
+
+    function isValidPlanItem(data) {
+      let required = [
+        'exerciseId',
+        'exerciseDocumentId',
+        'exerciseNameSnapshot',
+        'defaultSets',
+        'order',
+        'active',
+        'schemaVersion',
+        'createdAt',
+        'updatedAt'
+      ];
+      let exercisePath = /databases/$(database)/documents/exercicios/$(data['exerciseDocumentId']);
+
+      return data.keys().hasAll(required)
+        && data.keys().hasOnly(required)
+        && data['exerciseId'] is string
+        && data['exerciseId'].size() >= 1
+        && data['exerciseId'].size() <= 160
+        && data['exerciseDocumentId'] is string
+        && data['exerciseDocumentId'].size() >= 1
+        && data['exerciseDocumentId'].size() <= 160
+        && data['exerciseNameSnapshot'] is string
+        && data['exerciseNameSnapshot'].size() >= 1
+        && data['exerciseNameSnapshot'].size() <= 160
+        && data['defaultSets'] is int
+        && data['defaultSets'] >= 1
+        && data['defaultSets'] <= 10
+        && data['order'] is int
+        && data['order'] >= 1
+        && data['order'] <= 999
+        && data['active'] is bool
+        && data['schemaVersion'] == 2
+        && data['createdAt'] is timestamp
+        && data['updatedAt'] is timestamp
+        && exists(exercisePath)
+        && get(exercisePath).data['id'] == data['exerciseId'];
     }
 
     function isValidWeightEntry(data) {
@@ -82,6 +161,7 @@ service cloud.firestore {
         && data['Peso'] is number
         && data['Peso'] >= 30
         && data['Peso'] <= 500
+        && data.get('schemaVersion', 1) == 1
         && hasValidMetadata(data);
     }
 
@@ -92,6 +172,24 @@ service cloud.firestore {
         allow read, delete: if isOwner(userId);
         allow create, update: if isOwner(userId)
           && isValidWorkoutConfig(request.resource.data);
+      }
+
+      match /divisoes/{divisionId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && isValidDivision(request.resource.data);
+
+        match /exercicios/{documentId} {
+          allow read, delete: if isOwner(userId);
+          allow create, update: if isOwner(userId)
+            && isValidPlanItem(request.resource.data)
+            && get(/databases/$(database)/documents/usuarios/$(userId)/divisoes/$(divisionId)).data['active'] == true;
+        }
+      }
+
+      match /migracoes/{documentId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
       }
 
       match /historico_treinos/{documentId} {
@@ -105,6 +203,24 @@ service cloud.firestore {
         allow create, update: if isOwner(userId)
           && isValidWeightEntry(request.resource.data);
       }
+    }
+
+    match /exercicios/{documentId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /{collectionName}/{documentId} {
+      allow read: if request.auth != null
+        && collectionName in [
+          'equipamentos',
+          'categorias',
+          'forcas',
+          'niveis',
+          'mecanicas',
+          'musculos'
+        ];
+      allow write: if false;
     }
 
     match /{document=**} {

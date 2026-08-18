@@ -4,10 +4,8 @@ import { WorkoutPlanRuleError } from '../domain/workout-plan-rules';
 export function getWorkoutPlanErrorMessage(error: unknown): string {
   if (error instanceof WorkoutPlanRuleError) {
     const messages: Record<WorkoutPlanRuleError['code'], string> = {
-      'division-required': 'Informe a divisão.',
-      'division-too-long': 'A divisão deve ter no máximo 80 caracteres.',
-      'name-required': 'Informe o exercício.',
-      'name-too-long': 'O exercício deve ter no máximo 120 caracteres.',
+      'division-required': 'Selecione uma divisão cadastrada.',
+      'exercise-required': 'Selecione um exercício do catálogo.',
       'invalid-default-sets': 'As séries devem ser um número inteiro entre 1 e 10.',
       'invalid-order': 'A ordem deve ser um número inteiro entre 1 e 999.',
     };

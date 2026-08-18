@@ -13,6 +13,7 @@ export interface ProgressPage {
 export interface ProgressRepository {
   listExercisePage(
     userId: string,
+    exerciseId: string | undefined,
     exerciseName: string,
     pageSize: number,
     cursor?: ProgressPageCursor,

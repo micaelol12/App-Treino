@@ -6,6 +6,8 @@ Esta configuração usa `demo-app-treino` como projeto padrão. IDs com prefixo 
 
 - `firestore.rules`: autorização por proprietário e validação das três coleções;
 - `firestore.indexes.json`: índices previstos para ordenação e filtros paginados;
+- `import/exercise-taxonomies`: JSONs e manifesto das seis taxonomias do catálogo;
+- `scripts/generate-exercise-taxonomies.cjs`: gerador determinístico das taxonomias;
 - `../firebase.json`: portas e associação dos arquivos;
 - `../firebase.test.json`: configuração isolada dos testes na porta 8082;
 - `../.firebaserc`: projeto demo local.
@@ -34,3 +36,20 @@ firebase deploy --only firestore:rules,firestore:indexes --project <alias-aprova
 ```
 
 Nenhum deploy remoto faz parte da Fase 1.
+
+## Migrar planos para catálogo e divisões v2
+
+O migrador usa credenciais padrão do Google/Firebase Admin, começa em modo de
+simulação e nunca remove `config_treinos`:
+
+```powershell
+cd mobile
+npm run migrate:plans:v2 -- --project <project-id> --user <uid> `
+  --aliases ../firebase/migrations/workout-plan-aliases.example.json `
+  --report ../firebase/migrations/report.json
+```
+
+Revise `pending` no relatório. Para gravar documentos v2, repita exatamente o
+comando com `--apply`. A gravação é bloqueada enquanto existir uma pendência. O
+script é idempotente, usa IDs determinísticos para as divisões e o ID físico
+existente em `exercicios` para cada item do plano.

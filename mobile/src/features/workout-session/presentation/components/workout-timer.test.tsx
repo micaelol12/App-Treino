@@ -11,15 +11,12 @@ describe('WorkoutTimer', () => {
     useActiveWorkoutStore.setState({ timer: createInitialWorkoutTimer() });
   });
 
-  it('switches mode and exposes start, pause, continue and reset controls', async () => {
+  it('exposes start, pause, continue and reset controls', async () => {
     await render(
       <AppThemeProvider>
         <WorkoutTimer />
       </AppThemeProvider>,
     );
-
-    await fireEvent.press(screen.getByTestId('workout-timer-mode-rest'));
-    expect(useActiveWorkoutStore.getState().timer.mode).toBe('rest');
 
     await fireEvent.press(screen.getByTestId('workout-timer-start'));
     expect(useActiveWorkoutStore.getState().timer.status).toBe('running');
@@ -29,8 +26,6 @@ describe('WorkoutTimer', () => {
     expect(screen.getByText('Continuar')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByTestId('workout-timer-reset'));
-    expect(useActiveWorkoutStore.getState().timer).toEqual(
-      createInitialWorkoutTimer('rest'),
-    );
+    expect(useActiveWorkoutStore.getState().timer).toEqual(createInitialWorkoutTimer());
   });
 });

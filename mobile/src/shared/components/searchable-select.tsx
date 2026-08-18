@@ -17,11 +17,21 @@ function normalize(value: string): string {
 
 type SearchableSelectProps = {
   readonly label: string;
-  readonly options: readonly string[];
+  readonly options: readonly (string | SearchableSelectOption)[];
   readonly value: string;
   readonly onChange: (value: string) => void;
   readonly testID?: string;
 };
+
+export interface SearchableSelectOption {
+  readonly value: string;
+  readonly label: string;
+  readonly description?: string;
+}
+
+function toOption(option: string | SearchableSelectOption): SearchableSelectOption {
+  return typeof option === 'string' ? { value: option, label: option } : option;
+}
 
 export function SearchableSelect({
   label,
@@ -33,10 +43,17 @@ export function SearchableSelect({
   const theme = useAppTheme();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const normalizedOptions = useMemo(() => options.map(toOption), [options]);
+  const selectedLabel =
+    normalizedOptions.find((option) => option.value === value)?.label ?? value;
   const filtered = useMemo(() => {
     const term = normalize(search.trim());
-    return term ? options.filter((option) => normalize(option).includes(term)) : options;
-  }, [options, search]);
+    return term
+      ? normalizedOptions.filter((option) =>
+          normalize(`${option.label} ${option.description ?? ''}`).includes(term),
+        )
+      : normalizedOptions;
+  }, [normalizedOptions, search]);
 
   const close = () => {
     setOpen(false);
@@ -47,7 +64,7 @@ export function SearchableSelect({
     <View style={styles.field}>
       <AppText style={styles.label}>{label}</AppText>
       <Pressable
-        accessibilityLabel={`${label}: ${value}`}
+        accessibilityLabel={`${label}: ${selectedLabel}`}
         accessibilityRole="button"
         onPress={() => setOpen(true)}
         style={({ pressed }) => [
@@ -61,7 +78,7 @@ export function SearchableSelect({
         testID={testID}
       >
         <AppText numberOfLines={1} style={styles.value}>
-          {value}
+          {selectedLabel || 'Selecione'}
         </AppText>
         <Ionicons color={theme.colors.textMuted} name="chevron-down" size={22} />
       </Pressable>
@@ -87,14 +104,14 @@ export function SearchableSelect({
         />
         {filtered.length ? (
           filtered.map((option) => {
-            const selected = option === value;
+            const selected = option.value === value;
             return (
               <Pressable
                 accessibilityRole="radio"
                 accessibilityState={{ checked: selected }}
-                key={option}
+                key={option.value}
                 onPress={() => {
-                  onChange(option);
+                  onChange(option.value);
                   close();
                 }}
                 style={[
@@ -102,7 +119,18 @@ export function SearchableSelect({
                   { backgroundColor: selected ? theme.colors.surfaceMuted : undefined },
                 ]}
               >
-                <AppText style={styles.value}>{option}</AppText>
+                <View style={styles.optionCopy}>
+                  <AppText>{option.label}</AppText>
+                  {option.description ? (
+                    <AppText
+                      numberOfLines={2}
+                      style={{ color: theme.colors.textMuted }}
+                      variant="caption"
+                    >
+                      {option.description}
+                    </AppText>
+                  ) : null}
+                </View>
                 {selected ? (
                   <Ionicons color={theme.colors.primary} name="checkmark" size={22} />
                 ) : null}
@@ -147,4 +175,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
   },
+  optionCopy: { flex: 1, gap: spacing.xxs },
 });

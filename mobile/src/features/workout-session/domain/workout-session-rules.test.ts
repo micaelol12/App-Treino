@@ -10,19 +10,29 @@ import {
 const plan: WorkoutPlanExercise[] = [
   {
     id: 'bench',
+    documentId: 'exercise-document',
+    divisionId: 'push',
     division: 'Push',
+    divisionOrder: 1,
+    exerciseId: 'bench-catalog',
+    exerciseDocumentId: 'exercise-document',
     name: 'Supino',
     defaultSets: 2,
     order: 1,
-    sourceSchemaVersion: 1,
+    sourceSchemaVersion: 2,
   },
   {
     id: 'row',
+    documentId: 'row-document',
+    divisionId: 'pull',
     division: 'Pull',
+    divisionOrder: 2,
+    exerciseId: 'row-catalog',
+    exerciseDocumentId: 'row-document',
     name: 'Remada',
     defaultSets: 3,
     order: 1,
-    sourceSchemaVersion: 1,
+    sourceSchemaVersion: 2,
   },
 ];
 
@@ -31,7 +41,7 @@ function createDraft(): WorkoutSessionDraft {
     sessionId: 'session-1',
     userId: 'user-1',
     performedOn: '2026-08-15',
-    division: 'Push',
+    divisionId: 'push',
     exercises: plan,
   });
 }
@@ -42,10 +52,13 @@ describe('workout session rules', () => {
       sessionId: 'session-1',
       userId: 'user-1',
       performedOn: '2026-08-15',
+      divisionId: 'push',
       division: 'Push',
       exercises: [
         {
           planExerciseId: 'bench',
+          exerciseId: 'bench-catalog',
+          exerciseDocumentId: 'exercise-document',
           name: 'Supino',
           sets: [
             { setNumber: 1, loadKg: '0', repetitions: '0', rpe: '8', note: '' },
@@ -58,8 +71,8 @@ describe('workout session rules', () => {
 
   it.each([
     [{ performedOn: '2026-02-30' }, 'date'],
-    [{ division: ' ' }, 'division'],
-    [{ division: 'Legs' }, 'empty-plan'],
+    [{ divisionId: ' ' }, 'division'],
+    [{ divisionId: 'legs' }, 'empty-plan'],
     [{ sessionId: '' }, 'empty-plan'],
     [{ userId: '' }, 'empty-plan'],
   ] as const)('rejects invalid session creation input', (override, code) => {
@@ -68,7 +81,7 @@ describe('workout session rules', () => {
         sessionId: 'session-1',
         userId: 'user-1',
         performedOn: '2026-08-15',
-        division: 'Push',
+        divisionId: 'push',
         exercises: plan,
         ...override,
       }),
@@ -93,10 +106,13 @@ describe('workout session rules', () => {
     expect(result).toEqual({
       sessionId: 'session-1',
       performedOn: '2026-08-15',
+      divisionId: 'push',
       division: 'Push',
       sets: [
         {
           planExerciseId: 'bench',
+          exerciseId: 'bench-catalog',
+          exerciseDocumentId: 'exercise-document',
           exerciseName: 'Supino',
           setNumber: 1,
           loadKg: 62.5,

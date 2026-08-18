@@ -4,11 +4,14 @@ import { Controller, useForm } from 'react-hook-form';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
+import { useExerciseCatalog } from '@/features/exercise-catalog/presentation/exercise-catalog-hooks';
+import { useWorkoutDivisions } from '@/features/workout-divisions/presentation/workout-division-hooks';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
 import { EmptyState } from '@/shared/components/empty-state';
 import { PrimaryButton } from '@/shared/components/primary-button';
 import { Screen } from '@/shared/components/screen';
+import { SearchableSelect } from '@/shared/components/searchable-select';
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
 
@@ -22,8 +25,8 @@ import {
 import { useWorkoutPlanActions, useWorkoutPlanExercises } from '../workout-plan-hooks';
 
 const defaultValues: WorkoutExerciseFormValues = {
-  division: '',
-  name: '',
+  divisionId: '',
+  exerciseDocumentId: '',
   defaultSets: '3',
   order: '1',
 };
@@ -33,9 +36,10 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
   const theme = useAppTheme();
   const isCreating = exerciseId === 'novo';
   const plans = useWorkoutPlanExercises();
+  const divisions = useWorkoutDivisions();
+  const catalog = useExerciseCatalog();
   const { create, update } = useWorkoutPlanActions();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const nameRef = useRef<TextInput>(null);
   const setsRef = useRef<TextInput>(null);
   const orderRef = useRef<TextInput>(null);
   const exercise = plans.data?.find(({ id }) => id === exerciseId);
@@ -50,66 +54,112 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
   });
 
   useEffect(() => {
-    if (exercise) {
+    if (exercise?.exerciseDocumentId) {
       reset({
-        division: exercise.division,
-        name: exercise.name,
+        divisionId: exercise.divisionId,
+        exerciseDocumentId: exercise.exerciseDocumentId,
         defaultSets: String(exercise.defaultSets),
         order: String(exercise.order),
       });
     }
   }, [exercise, reset]);
 
+  const activeDivisions = (divisions.data ?? []).filter(({ active }) => active);
+  const divisionOptions = activeDivisions.map((division) => ({
+    value: division.id,
+    label: division.name,
+    description: `Ordem ${division.order}`,
+  }));
+  const exerciseOptions = (catalog.data ?? []).map((item) => ({
+    value: item.documentId,
+    label: item.name,
+    description: [item.id, item.primaryMuscles.join(', '), item.equipment, item.level]
+      .filter(Boolean)
+      .join(' · '),
+  }));
+
   const submit = handleSubmit(async (values) => {
     setSubmissionError(null);
+    const division = activeDivisions.find(({ id }) => id === values.divisionId);
+    const catalogExercise = catalog.data?.find(
+      ({ documentId }) => documentId === values.exerciseDocumentId,
+    );
+    if (!division || !catalogExercise) {
+      setSubmissionError('Atualize os dados e selecione divisão e exercício novamente.');
+      return;
+    }
     const draft = {
-      division: values.division,
-      name: values.name,
+      divisionId: division.id,
+      divisionNameSnapshot: division.name,
+      exerciseId: catalogExercise.id,
+      exerciseDocumentId: catalogExercise.documentId,
+      exerciseNameSnapshot: catalogExercise.name,
       defaultSets: Number(values.defaultSets),
       order: Number(values.order),
     };
 
     try {
-      if (isCreating) {
-        await create.mutateAsync(draft);
-      } else {
-        await update.mutateAsync({ draft, exerciseId });
-      }
+      if (isCreating) await create.mutateAsync(draft);
+      else await update.mutateAsync({ draft, exerciseId });
       router.back();
     } catch (error) {
       setSubmissionError(getWorkoutPlanErrorMessage(error));
     }
   });
 
-  if (!isCreating && plans.isLoading) {
+  const loading = plans.isLoading || divisions.isLoading || catalog.isLoading;
+  const loadError = plans.error ?? divisions.error ?? catalog.error;
+
+  if (loading) {
     return (
-      <Screen title="Editar exercício">
+      <Screen title={isCreating ? 'Adicionar exercício' : 'Editar exercício'}>
         <Card>
-          <AppText>Carregando exercício…</AppText>
+          <AppText>Carregando catálogo e divisões…</AppText>
         </Card>
       </Screen>
     );
   }
 
-  if (!isCreating && plans.isError) {
+  if (loadError) {
     return (
-      <Screen title="Editar exercício">
+      <Screen title={isCreating ? 'Adicionar exercício' : 'Editar exercício'}>
         <Card>
           <AppText accessibilityRole="alert" style={{ color: theme.colors.danger }}>
-            {getWorkoutPlanErrorMessage(plans.error)}
+            Não foi possível carregar o catálogo ou as divisões.
           </AppText>
-          <PrimaryButton label="Tentar novamente" onPress={() => void plans.refetch()} />
+          <PrimaryButton
+            label="Tentar novamente"
+            onPress={() =>
+              void Promise.all([plans.refetch(), divisions.refetch(), catalog.refetch()])
+            }
+          />
         </Card>
       </Screen>
     );
   }
 
-  if (!isCreating && plans.isSuccess && !exercise) {
+  if (!isCreating && (!exercise || exercise.sourceSchemaVersion !== 2)) {
     return (
       <Screen title="Editar exercício">
         <EmptyState
-          title="Exercício não encontrado"
-          description="Ele pode ter sido removido em outro dispositivo."
+          title={exercise ? 'Item legado' : 'Exercício não encontrado'}
+          description={
+            exercise
+              ? 'Migre este plano para o novo catálogo antes de editá-lo.'
+              : 'Ele pode ter sido removido em outro dispositivo.'
+          }
+        />
+        <PrimaryButton label="Voltar" onPress={() => router.back()} />
+      </Screen>
+    );
+  }
+
+  if (!activeDivisions.length) {
+    return (
+      <Screen title="Adicionar exercício">
+        <EmptyState
+          title="Cadastre uma divisão primeiro"
+          description="Volte ao plano de treino e crie ao menos uma divisão ativa."
         />
         <PrimaryButton label="Voltar" onPress={() => router.back()} />
       </Screen>
@@ -119,45 +169,48 @@ export function WorkoutExerciseScreen({ exerciseId }: { exerciseId: string }) {
   return (
     <Screen
       title={isCreating ? 'Adicionar exercício' : 'Editar exercício'}
-      description="Os dados são salvos no mesmo formato aceito pelo aplicativo legado."
+      description="Selecione somente exercícios cadastrados no catálogo."
     >
       <Card>
         <View style={styles.form}>
           <Controller
             control={control}
-            name="division"
+            name="divisionId"
             render={({ field, fieldState }) => (
-              <WorkoutFormField
-                autoCapitalize="words"
-                error={fieldState.error?.message}
-                label="Divisão"
-                onBlur={field.onBlur}
-                onChangeText={field.onChange}
-                onSubmitEditing={() => nameRef.current?.focus()}
-                placeholder="Ex.: Push"
-                returnKeyType="next"
-                testID="workout-division-input"
-                value={field.value}
-              />
+              <View style={styles.form}>
+                <SearchableSelect
+                  label="Divisão"
+                  onChange={field.onChange}
+                  options={divisionOptions}
+                  testID="workout-division-input"
+                  value={field.value}
+                />
+                {fieldState.error ? (
+                  <AppText style={{ color: theme.colors.danger }}>
+                    {fieldState.error.message}
+                  </AppText>
+                ) : null}
+              </View>
             )}
           />
           <Controller
             control={control}
-            name="name"
+            name="exerciseDocumentId"
             render={({ field, fieldState }) => (
-              <WorkoutFormField
-                autoCapitalize="words"
-                error={fieldState.error?.message}
-                label="Exercício"
-                onBlur={field.onBlur}
-                onChangeText={field.onChange}
-                placeholder="Ex.: Supino reto"
-                ref={nameRef}
-                returnKeyType="next"
-                onSubmitEditing={() => setsRef.current?.focus()}
-                testID="workout-name-input"
-                value={field.value}
-              />
+              <View style={styles.form}>
+                <SearchableSelect
+                  label="Exercício"
+                  onChange={field.onChange}
+                  options={exerciseOptions}
+                  testID="workout-name-input"
+                  value={field.value}
+                />
+                {fieldState.error ? (
+                  <AppText style={{ color: theme.colors.danger }}>
+                    {fieldState.error.message}
+                  </AppText>
+                ) : null}
+              </View>
             )}
           />
           <Controller

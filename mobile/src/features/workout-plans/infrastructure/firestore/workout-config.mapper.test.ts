@@ -13,8 +13,12 @@ describe('mapWorkoutConfigDocument', () => {
         Series_Padrao: 3,
       }),
     ).toEqual({
-      id: 'exercise-1',
+      id: 'legacy:exercise-1',
+      documentId: 'exercise-1',
+      divisionId: 'legacy:Push',
       division: 'Push',
+      divisionOrder: 999,
+      exerciseId: 'legacy:exercise-1',
       name: 'Supino Reto',
       defaultSets: 3,
       order: LEGACY_FALLBACK_EXERCISE_ORDER,

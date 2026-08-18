@@ -25,16 +25,22 @@ function shortDate(value: string): string {
 export function ProgressScreen() {
   const theme = useAppTheme();
   const plans = useWorkoutPlanExercises();
-  const [selectedExercise, setSelectedExercise] = useState('');
+  const [selectedExerciseId, setSelectedExerciseId] = useState('');
   const [helpOpen, setHelpOpen] = useState(false);
-  const exerciseNames = useMemo(
-    () => [...new Set((plans.data ?? []).map((exercise) => exercise.name))].sort(),
-    [plans.data],
+  const exercises = useMemo(() => {
+    const unique = new Map(
+      (plans.data ?? []).map((exercise) => [exercise.exerciseId, exercise]),
+    );
+    return [...unique.values()].sort((left, right) =>
+      left.name.localeCompare(right.name, 'pt-BR'),
+    );
+  }, [plans.data]);
+  const effectiveExercise =
+    exercises.find(({ exerciseId }) => exerciseId === selectedExerciseId) ?? exercises[0];
+  const history = useExerciseProgress(
+    effectiveExercise?.exerciseId ?? '',
+    effectiveExercise?.name ?? '',
   );
-  const effectiveExercise = exerciseNames.includes(selectedExercise)
-    ? selectedExercise
-    : (exerciseNames[0] ?? '');
-  const history = useExerciseProgress(effectiveExercise);
   const records = useMemo(
     () => history.data?.pages.flatMap((page) => page.records) ?? [],
     [history.data],
@@ -80,20 +86,24 @@ export function ProgressScreen() {
           <PrimaryButton label="Tentar novamente" onPress={() => void plans.refetch()} />
         </Card>
       ) : null}
-      {plans.isSuccess && exerciseNames.length === 0 ? (
+      {plans.isSuccess && exercises.length === 0 ? (
         <EmptyState
           title="Nenhum exercício configurado"
           description="Adicione exercícios na aba Ajustes para consultar a evolução."
         />
       ) : null}
-      {exerciseNames.length > 0 ? (
+      {exercises.length > 0 ? (
         <Card>
           <SearchableSelect
             label="Exercício"
-            onChange={setSelectedExercise}
-            options={exerciseNames}
+            onChange={setSelectedExerciseId}
+            options={exercises.map((exercise) => ({
+              value: exercise.exerciseId,
+              label: exercise.name,
+              description: exercise.division,
+            }))}
             testID="progress-exercise-select"
-            value={effectiveExercise}
+            value={effectiveExercise?.exerciseId ?? ''}
           />
         </Card>
       ) : null}

@@ -24,4 +24,30 @@ describe('SearchableSelect', () => {
     await fireEvent.press(screen.getByText('Supino inclinado'));
     expect(onChange).toHaveBeenCalledWith('Supino inclinado');
   });
+
+  it('displays labels but returns stable option values', async () => {
+    const onChange = jest.fn();
+    await render(
+      <AppThemeProvider>
+        <SearchableSelect
+          label="Exercício"
+          onChange={onChange}
+          options={[
+            {
+              value: 'firestore-auto-id',
+              label: 'Rosca Direta com Barra',
+              description: 'bíceps · barra',
+            },
+          ]}
+          testID="catalog-exercise"
+          value=""
+        />
+      </AppThemeProvider>,
+    );
+
+    await fireEvent.press(screen.getByTestId('catalog-exercise'));
+    await fireEvent.changeText(screen.getByTestId('catalog-exercise-search'), 'biceps');
+    await fireEvent.press(screen.getByText('Rosca Direta com Barra'));
+    expect(onChange).toHaveBeenCalledWith('firestore-auto-id');
+  });
 });

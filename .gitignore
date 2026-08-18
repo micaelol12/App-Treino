@@ -7,6 +7,7 @@ ui-debug.log
 .firebase/
 .firebase-runtime/
 .firecrawl/
+firebase/migrations/report*.json
 mobile/.expo/
 mobile/dist/
 mobile/expo-env.d.ts

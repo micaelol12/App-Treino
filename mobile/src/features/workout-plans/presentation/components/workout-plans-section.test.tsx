@@ -16,6 +16,11 @@ jest.mock('../workout-plan-hooks', () => ({
   useWorkoutPlanExercises: jest.fn(),
 }));
 
+jest.mock(
+  '@/features/workout-divisions/presentation/components/workout-divisions-section',
+  () => ({ WorkoutDivisionsSection: () => null }),
+);
+
 const mockUseExercises = jest.mocked(useWorkoutPlanExercises);
 const mockUseActions = jest.mocked(useWorkoutPlanActions);
 
@@ -89,7 +94,11 @@ describe('WorkoutPlansSection', () => {
       data: [
         {
           id: 'exercise-id',
+          documentId: 'exercise-document',
+          divisionId: 'legacy:Push',
           division: 'Push',
+          divisionOrder: 999,
+          exerciseId: 'legacy:exercise-id',
           name: 'Supino Reto',
           defaultSets: 3,
           order: 1,

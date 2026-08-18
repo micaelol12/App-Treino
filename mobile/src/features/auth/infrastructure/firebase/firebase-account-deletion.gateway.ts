@@ -15,6 +15,7 @@ const ACCOUNT_COLLECTIONS = [
   'config_treinos',
   'historico_treinos',
   'historico_pesos',
+  'migracoes',
 ] as const;
 const DELETE_BATCH_SIZE = 450;
 function initializeFirestore(): Firestore {
@@ -39,6 +40,14 @@ export async function deleteAccountDocuments(
   database: Firestore = initializeFirestore(),
 ): Promise<void> {
   try {
+    const divisions = await getDocs(collection(database, `usuarios/${userId}/divisoes`));
+    for (const division of divisions.docs) {
+      await deleteCollection(
+        database,
+        `usuarios/${userId}/divisoes/${division.id}/exercicios`,
+      );
+    }
+    await deleteCollection(database, `usuarios/${userId}/divisoes`);
     for (const collectionName of ACCOUNT_COLLECTIONS) {
       await deleteCollection(database, `usuarios/${userId}/${collectionName}`);
     }

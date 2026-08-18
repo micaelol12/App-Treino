@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { firestoreMetadataShape } from '../../../../shared/infrastructure/firestore/firestore-metadata.schema';
+import { firestoreTimestampSchema } from '../../../../shared/infrastructure/firestore/firestore-metadata.schema';
 import { isCivilDate } from '../../../../shared/validation/civil-date';
 
 export const workoutHistoryDocumentSchema = z
@@ -14,7 +14,12 @@ export const workoutHistoryDocumentSchema = z
     RPE: z.number().int().min(1).max(10),
     Obs: z.string().max(500),
     sessionId: z.string().min(1).max(128).optional(),
-    ...firestoreMetadataShape,
+    divisionId: z.string().min(1).max(160).optional(),
+    exerciseId: z.string().min(1).max(160).optional(),
+    exerciseDocumentId: z.string().min(1).max(160).optional(),
+    schemaVersion: z.union([z.literal(1), z.literal(2)]).optional(),
+    createdAt: firestoreTimestampSchema.optional(),
+    updatedAt: firestoreTimestampSchema.optional(),
   })
   .strict();
 

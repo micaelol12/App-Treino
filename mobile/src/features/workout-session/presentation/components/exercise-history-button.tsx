@@ -16,11 +16,17 @@ import { groupWorkoutHistory } from '../../domain/workout-history';
 import { getWorkoutSessionErrorMessage } from '../workout-session-error-message';
 import { useExerciseHistory } from '../workout-session-hooks';
 
-export function ExerciseHistoryButton({ exerciseName }: { exerciseName: string }) {
+export function ExerciseHistoryButton({
+  exerciseId,
+  exerciseName,
+}: {
+  exerciseId?: string;
+  exerciseName: string;
+}) {
   const router = useRouter();
   const theme = useAppTheme();
   const [open, setOpen] = useState(false);
-  const history = useExerciseHistory(exerciseName, open);
+  const history = useExerciseHistory(exerciseName, exerciseId, open);
   const sessions = groupWorkoutHistory(history.data ?? []).slice(0, 5);
 
   return (

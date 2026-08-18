@@ -16,8 +16,12 @@ export function mapWorkoutConfigDocument(
   );
 
   return {
-    id: documentId,
+    id: `legacy:${documentId}`,
+    documentId,
+    divisionId: `legacy:${encodeURIComponent(document.Divisao)}`,
     division: document.Divisao,
+    divisionOrder: 999,
+    exerciseId: `legacy:${documentId}`,
     name: document.Exercicio,
     defaultSets: document.Series_Padrao,
     order: document.Ordem ?? LEGACY_FALLBACK_EXERCISE_ORDER,

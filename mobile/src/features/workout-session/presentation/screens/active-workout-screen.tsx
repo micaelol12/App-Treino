@@ -157,7 +157,10 @@ export function ActiveWorkoutScreen() {
           <AppText style={styles.exerciseTitle} variant="heading">
             {exercise.name}
           </AppText>
-          <ExerciseHistoryButton exerciseName={exercise.name} />
+          <ExerciseHistoryButton
+            exerciseId={exercise.exerciseId}
+            exerciseName={exercise.name}
+          />
         </View>
       </View>
 

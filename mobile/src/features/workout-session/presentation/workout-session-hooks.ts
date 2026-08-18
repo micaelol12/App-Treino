@@ -56,17 +56,21 @@ export function useWorkoutHistory() {
   });
 }
 
-export function useExerciseHistory(exerciseName: string, enabled: boolean) {
+export function useExerciseHistory(
+  exerciseName: string,
+  exerciseId: string | undefined,
+  enabled: boolean,
+) {
   const { session } = useAuth();
   const repository = useWorkoutSessionRepository();
   const userId = session?.uid;
 
   return useQuery({
-    queryKey: ['exercise-history', userId, exerciseName],
+    queryKey: ['exercise-history', userId, exerciseId, exerciseName],
     enabled: Boolean(userId && exerciseName && enabled),
     queryFn: () => {
       if (!userId) throw new Error('Authenticated user required');
-      return repository.listExerciseHistory(userId, exerciseName, 100);
+      return repository.listExerciseHistory(userId, exerciseId, exerciseName, 100);
     },
   });
 }

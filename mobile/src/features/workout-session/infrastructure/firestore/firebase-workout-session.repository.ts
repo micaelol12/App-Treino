@@ -97,7 +97,12 @@ export class FirebaseWorkoutSessionRepository implements WorkoutSessionRepositor
           RPE: set.rpe,
           Obs: set.note,
           sessionId: session.sessionId,
-          schemaVersion: 1,
+          divisionId: session.divisionId,
+          exerciseId: set.exerciseId,
+          ...(set.exerciseDocumentId
+            ? { exerciseDocumentId: set.exerciseDocumentId }
+            : {}),
+          schemaVersion: 2,
           createdAt: timestamp,
           updatedAt: timestamp,
         });
@@ -140,18 +145,39 @@ export class FirebaseWorkoutSessionRepository implements WorkoutSessionRepositor
     }
   }
 
-  async listExerciseHistory(userId: string, exerciseName: string, pageSize: number) {
+  async listExerciseHistory(
+    userId: string,
+    exerciseId: string | undefined,
+    exerciseName: string,
+    pageSize: number,
+  ) {
     try {
-      const snapshot = await getDocs(
-        query(
-          collection(this.database, historyPath(userId)),
-          where('Exercício', '==', exerciseName),
-          orderBy('Data', 'desc'),
-          orderBy(documentId(), 'desc'),
-          queryLimit(pageSize),
-        ),
+      const runQuery = (field: 'exerciseId' | 'Exercício', value: string) =>
+        getDocs(
+          query(
+            collection(this.database, historyPath(userId)),
+            where(field, '==', value),
+            orderBy('Data', 'desc'),
+            orderBy(documentId(), 'desc'),
+            queryLimit(pageSize),
+          ),
+        );
+      const snapshots = await Promise.all([
+        runQuery('Exercício', exerciseName),
+        ...(exerciseId ? [runQuery('exerciseId', exerciseId)] : []),
+      ]);
+      const records = new Map(
+        snapshots
+          .flatMap((snapshot) => snapshot.docs)
+          .map((item) => [item.id, mapWorkoutHistoryDocument(item.id, item.data())]),
       );
-      return snapshot.docs.map((item) => mapWorkoutHistoryDocument(item.id, item.data()));
+      return [...records.values()]
+        .sort(
+          (left, right) =>
+            right.performedOn.localeCompare(left.performedOn) ||
+            right.id.localeCompare(left.id),
+        )
+        .slice(0, pageSize);
     } catch (error) {
       throw mapFirestoreFailure(error);
     }

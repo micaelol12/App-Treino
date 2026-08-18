@@ -7,7 +7,11 @@ import type {
 export interface WorkoutPlanRepository {
   list(userId: string): Promise<WorkoutPlanExercise[]>;
   create(userId: string, draft: WorkoutExerciseDraft): Promise<string>;
-  update(userId: string, exerciseId: string, draft: WorkoutExerciseDraft): Promise<void>;
-  delete(userId: string, exerciseId: string): Promise<void>;
+  update(
+    userId: string,
+    exercise: WorkoutPlanExercise,
+    draft: WorkoutExerciseDraft,
+  ): Promise<void>;
+  delete(userId: string, exercise: WorkoutPlanExercise): Promise<void>;
   updateOrder(userId: string, updates: readonly ExerciseOrderUpdate[]): Promise<void>;
 }

@@ -7,10 +7,13 @@ const draft: WorkoutSessionDraft = {
   sessionId: 'session-1',
   userId: 'user-1',
   performedOn: '2026-08-15',
+  divisionId: 'push',
   division: 'Push',
   exercises: [
     {
       planExerciseId: 'bench',
+      exerciseId: 'bench-catalog',
+      exerciseDocumentId: 'bench-document',
       name: 'Supino',
       sets: [
         { setNumber: 1, loadKg: '60', repetitions: '10', rpe: '8', note: '' },
@@ -37,10 +40,13 @@ describe('CompleteWorkoutSession', () => {
     expect(complete).toHaveBeenCalledWith('user-1', {
       sessionId: 'session-1',
       performedOn: '2026-08-15',
+      divisionId: 'push',
       division: 'Push',
       sets: [
         {
           planExerciseId: 'bench',
+          exerciseId: 'bench-catalog',
+          exerciseDocumentId: 'bench-document',
           exerciseName: 'Supino',
           setNumber: 1,
           loadKg: 60,

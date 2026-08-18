@@ -20,6 +20,14 @@
       "collectionGroup": "historico_treinos",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "exerciseId", "order": "ASCENDING" },
+        { "fieldPath": "Data", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "historico_treinos",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "Treino", "order": "ASCENDING" },
         { "fieldPath": "Data", "order": "DESCENDING" }
       ]

@@ -1,6 +1,6 @@
 # ADR 0003 — Preservar o contrato Firestore legado na primeira versão
 
-- Status: Aceito para o contrato de dados; convivência encerrada pelo ADR 0004
+- Status: Superado parcialmente pelo ADR 0005; legado mantido durante a migração
 - Data: 14/08/2026
 
 ## Contexto

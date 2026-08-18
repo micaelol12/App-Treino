@@ -6,19 +6,25 @@ import { useProgressRepository } from './progress-context';
 
 const PAGE_SIZE = 200;
 
-export function useExerciseProgress(exerciseName: string) {
+export function useExerciseProgress(exerciseId: string, exerciseName: string) {
   const { session } = useAuth();
   const repository = useProgressRepository();
   const userId = session?.uid;
 
   return useInfiniteQuery({
-    queryKey: ['exercise-progress', userId, exerciseName],
+    queryKey: ['exercise-progress', userId, exerciseId, exerciseName],
     enabled: Boolean(userId && exerciseName),
     initialPageParam: undefined as
       { readonly id: string; readonly performedOn: string } | undefined,
     queryFn: ({ pageParam }) => {
       if (!userId) throw new Error('Authenticated user required');
-      return repository.listExercisePage(userId, exerciseName, PAGE_SIZE, pageParam);
+      return repository.listExercisePage(
+        userId,
+        exerciseId || undefined,
+        exerciseName,
+        PAGE_SIZE,
+        pageParam,
+      );
     },
     getNextPageParam: (page) => page.nextCursor ?? undefined,
   });

@@ -60,21 +60,31 @@ export class FirebaseProgressRepository implements ProgressRepository {
 
   async listExercisePage(
     userId: string,
+    exerciseId: string | undefined,
     exerciseName: string,
     pageSize: number,
     cursor?: ProgressPageCursor,
   ): Promise<ProgressPage> {
     try {
-      const constraints: QueryConstraint[] = [
-        where('Exercício', '==', exerciseName),
-        orderBy('Data', 'desc'),
-        orderBy(documentId(), 'desc'),
-        queryLimit(pageSize),
-      ];
-      if (cursor) constraints.push(startAfter(cursor.performedOn, cursor.id));
-      const snapshot = await getDocs(
-        query(collection(this.database, collectionPath(userId)), ...constraints),
+      const run = async (field: 'exerciseId' | 'Exercício', value: string) => {
+        const constraints: QueryConstraint[] = [
+          where(field, '==', value),
+          orderBy('Data', 'desc'),
+          orderBy(documentId(), 'desc'),
+          queryLimit(pageSize),
+        ];
+        if (cursor) constraints.push(startAfter(cursor.performedOn, cursor.id));
+        return getDocs(
+          query(collection(this.database, collectionPath(userId)), ...constraints),
+        );
+      };
+      let snapshot = await run(
+        exerciseId ? 'exerciseId' : 'Exercício',
+        exerciseId ?? exerciseName,
       );
+      if (snapshot.empty && exerciseId && !cursor) {
+        snapshot = await run('Exercício', exerciseName);
+      }
       const records = snapshot.docs.map((item) =>
         mapWorkoutHistoryDocument(item.id, item.data()),
       );

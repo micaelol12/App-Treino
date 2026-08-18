@@ -21,6 +21,7 @@ export interface WorkoutSessionRepository {
   ): Promise<WorkoutHistoryPage>;
   listExerciseHistory(
     userId: string,
+    exerciseId: string | undefined,
     exerciseName: string,
     pageSize: number,
   ): Promise<readonly WorkoutSetRecord[]>;

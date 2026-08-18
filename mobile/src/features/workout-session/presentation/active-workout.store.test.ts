@@ -10,15 +10,18 @@ const draft: WorkoutSessionDraft = {
   sessionId: 'session-1',
   userId: 'user-1',
   performedOn: '2026-08-15',
+  divisionId: 'push',
   division: 'Push',
   exercises: [
     {
       planExerciseId: 'bench',
+      exerciseId: 'bench-catalog',
       name: 'Supino',
       sets: [{ setNumber: 1, loadKg: '0', repetitions: '0', rpe: '8', note: '' }],
     },
     {
       planExerciseId: 'fly',
+      exerciseId: 'fly-catalog',
       name: 'Crucifixo',
       sets: [{ setNumber: 1, loadKg: '0', repetitions: '0', rpe: '8', note: '' }],
     },
@@ -63,7 +66,7 @@ describe('active workout store', () => {
     useActiveWorkoutStore.setState({ draft: null, currentExerciseIndex: 0 });
     await AsyncStorage.setItem(
       'app-treino-active-workout',
-      JSON.stringify({ state: { draft, currentExerciseIndex: 1 }, version: 1 }),
+      JSON.stringify({ state: { draft, currentExerciseIndex: 1 }, version: 3 }),
     );
 
     await useActiveWorkoutStore.persist.rehydrate();

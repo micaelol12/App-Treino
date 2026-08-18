@@ -31,7 +31,7 @@ type CreateWorkoutSessionDraftInput = {
   readonly sessionId: string;
   readonly userId: string;
   readonly performedOn: string;
-  readonly division: string;
+  readonly divisionId: string;
   readonly exercises: readonly WorkoutPlanExercise[];
 };
 
@@ -55,15 +55,15 @@ function createDefaultSet(setNumber: number): WorkoutSetDraft {
 }
 
 export function createWorkoutSessionDraft({
-  division,
+  divisionId,
   exercises,
   performedOn,
   sessionId,
   userId,
 }: CreateWorkoutSessionDraftInput): WorkoutSessionDraft {
-  const normalizedDivision = division.trim();
+  const normalizedDivisionId = divisionId.trim();
   const selectedExercises = exercises.filter(
-    (exercise) => exercise.division === normalizedDivision,
+    (exercise) => exercise.divisionId === normalizedDivisionId,
   );
 
   if (!sessionId.trim() || !userId.trim()) {
@@ -72,20 +72,28 @@ export function createWorkoutSessionDraft({
   if (!isCivilDate(performedOn)) {
     throw new WorkoutSessionValidationError('date');
   }
-  if (!normalizedDivision) {
+  if (!normalizedDivisionId) {
     throw new WorkoutSessionValidationError('division');
   }
   if (!selectedExercises.length) {
     throw new WorkoutSessionValidationError('empty-plan');
   }
 
+  const division = selectedExercises[0];
+  if (!division) throw new WorkoutSessionValidationError('empty-plan');
+
   return {
     sessionId,
     userId,
     performedOn,
-    division: normalizedDivision,
+    divisionId: normalizedDivisionId,
+    division: division.division,
     exercises: selectedExercises.map((exercise) => ({
       planExerciseId: exercise.id,
+      exerciseId: exercise.exerciseId,
+      ...(exercise.exerciseDocumentId
+        ? { exerciseDocumentId: exercise.exerciseDocumentId }
+        : {}),
       name: exercise.name,
       sets: Array.from({ length: exercise.defaultSets }, (_, index) =>
         createDefaultSet(index + 1),
@@ -171,6 +179,10 @@ export function prepareWorkoutSessionCompletion(
         : [
             {
               planExerciseId: exercise.planExerciseId,
+              exerciseId: exercise.exerciseId,
+              ...(exercise.exerciseDocumentId
+                ? { exerciseDocumentId: exercise.exerciseDocumentId }
+                : {}),
               exerciseName: exercise.name,
               setNumber: set.setNumber,
               loadKg,
@@ -189,6 +201,7 @@ export function prepareWorkoutSessionCompletion(
   return {
     sessionId: draft.sessionId,
     performedOn: draft.performedOn,
+    divisionId: draft.divisionId,
     division: draft.division,
     sets,
   };

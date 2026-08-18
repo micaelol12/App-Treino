@@ -55,6 +55,8 @@ describe('phase 0 Firestore fixture contract', () => {
     expect(plans).toHaveLength(5);
     expect(history).toHaveLength(4);
     expect(weights).toHaveLength(8);
-    expect(plans.find((plan) => plan.id === 'push_legacy_sem_ordem')?.order).toBe(99);
+    expect(plans.find((plan) => plan.id === 'legacy:push_legacy_sem_ordem')?.order).toBe(
+      99,
+    );
   });
 });

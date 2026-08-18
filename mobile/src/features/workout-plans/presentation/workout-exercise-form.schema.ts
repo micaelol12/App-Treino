@@ -11,16 +11,8 @@ const integerField = (label: string, minimum: number, maximum: number) =>
     });
 
 export const workoutExerciseFormSchema = z.object({
-  division: z
-    .string()
-    .trim()
-    .min(1, 'Informe a divisão.')
-    .max(80, 'A divisão deve ter no máximo 80 caracteres.'),
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Informe o exercício.')
-    .max(120, 'O exercício deve ter no máximo 120 caracteres.'),
+  divisionId: z.string().trim().min(1, 'Selecione a divisão.'),
+  exerciseDocumentId: z.string().trim().min(1, 'Selecione o exercício.'),
   defaultSets: integerField('Séries', 1, 10),
   order: integerField('Ordem', 1, 999),
 });

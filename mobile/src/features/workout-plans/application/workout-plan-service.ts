@@ -40,7 +40,8 @@ export class WorkoutPlanService {
     const normalizedDraft = validateWorkoutExerciseDraft(draft);
     const exercises = await this.repository.list(userId);
 
-    if (!exercises.some(({ id }) => id === exerciseId)) {
+    const exercise = exercises.find(({ id }) => id === exerciseId);
+    if (!exercise) {
       throw new WorkoutPlanFailure('not-found');
     }
     if (hasDuplicateExercise(exercises, normalizedDraft, exerciseId)) {
@@ -50,11 +51,15 @@ export class WorkoutPlanService {
       throw new WorkoutPlanFailure('duplicate-order');
     }
 
-    await this.repository.update(userId, exerciseId, normalizedDraft);
+    await this.repository.update(userId, exercise, normalizedDraft);
   }
 
   async delete(userId: string, exerciseId: string): Promise<void> {
-    await this.repository.delete(userId, exerciseId);
+    const exercise = (await this.repository.list(userId)).find(
+      ({ id }) => id === exerciseId,
+    );
+    if (!exercise) throw new WorkoutPlanFailure('not-found');
+    await this.repository.delete(userId, exercise);
   }
 
   async move(
