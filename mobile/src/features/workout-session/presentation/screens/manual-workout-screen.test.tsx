@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { Alert } from 'react-native';
 
 import { useAuth } from '@/features/auth/presentation/auth-context';
+import { useExerciseCatalog } from '@/features/exercise-catalog/presentation/exercise-catalog-hooks';
 import { useWorkoutPlanExercises } from '@/features/workout-plans/presentation/workout-plan-hooks';
 import { AppThemeProvider } from '@/shared/theme/theme-provider';
 
@@ -19,6 +20,10 @@ jest.mock('@/features/auth/presentation/auth-context', () => ({
   useAuth: jest.fn(),
 }));
 
+jest.mock('@/features/exercise-catalog/presentation/exercise-catalog-hooks', () => ({
+  useExerciseCatalog: jest.fn(),
+}));
+
 jest.mock('@/features/workout-plans/presentation/workout-plan-hooks', () => ({
   useWorkoutPlanExercises: jest.fn(),
 }));
@@ -34,6 +39,7 @@ jest.mock('../workout-session-hooks', () => ({
 }));
 
 const mockUseAuth = jest.mocked(useAuth);
+const mockUseCatalog = jest.mocked(useExerciseCatalog);
 const mockUseExercises = jest.mocked(useWorkoutPlanExercises);
 const mockUseComplete = jest.mocked(useCompleteWorkoutSession);
 
@@ -92,6 +98,13 @@ async function arrange() {
     isSuccess: true,
     refetch: jest.fn(),
   } as unknown as ReturnType<typeof useWorkoutPlanExercises>);
+  mockUseCatalog.mockReturnValue({
+    data: [],
+    error: null,
+    isError: false,
+    isLoading: false,
+    isSuccess: true,
+  } as unknown as ReturnType<typeof useExerciseCatalog>);
   mockUseComplete.mockReturnValue({
     isPending: false,
     mutateAsync: mockComplete,

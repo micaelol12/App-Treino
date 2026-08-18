@@ -13,9 +13,10 @@ import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
 
 import { useActiveWorkoutStore } from '../active-workout.store';
-import { WorkoutTimer } from '../components/workout-timer';
 import { ExerciseHistoryButton } from '../components/exercise-history-button';
+import { ExerciseInstructionsButton } from '../components/exercise-instructions-button';
 import { WorkoutSetEditor } from '../components/workout-set-editor';
+import { WorkoutTimer } from '../components/workout-timer';
 import { getWorkoutSessionErrorMessage } from '../workout-session-error-message';
 import { useCompleteWorkoutSession } from '../workout-session-hooks';
 
@@ -157,10 +158,17 @@ export function ActiveWorkoutScreen() {
           <AppText style={styles.exerciseTitle} variant="heading">
             {exercise.name}
           </AppText>
-          <ExerciseHistoryButton
-            exerciseId={exercise.exerciseId}
-            exerciseName={exercise.name}
-          />
+          <View style={styles.exerciseActions}>
+            <ExerciseInstructionsButton
+              exerciseDocumentId={exercise.exerciseDocumentId}
+              exerciseId={exercise.exerciseId}
+              exerciseName={exercise.name}
+            />
+            <ExerciseHistoryButton
+              exerciseId={exercise.exerciseId}
+              exerciseName={exercise.name}
+            />
+          </View>
         </View>
       </View>
 
@@ -190,6 +198,7 @@ const styles = StyleSheet.create({
   sets: { gap: spacing.sm },
   exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   exerciseTitle: { flex: 1 },
+  exerciseActions: { flexDirection: 'row' },
   navigation: { flexDirection: 'row', gap: spacing.sm },
   navigationButton: { flex: 1 },
 });

@@ -23,6 +23,7 @@ import { currentCivilDate } from '@/shared/validation/civil-date';
 
 import { WorkoutSetEditor } from '../components/workout-set-editor';
 import { ExerciseHistoryButton } from '../components/exercise-history-button';
+import { ExerciseInstructionsButton } from '../components/exercise-instructions-button';
 import { getWorkoutSessionErrorMessage } from '../workout-session-error-message';
 import { useCompleteWorkoutSession } from '../workout-session-hooks';
 
@@ -146,10 +147,17 @@ export function ManualWorkoutScreen() {
               <AppText style={styles.exerciseTitle} variant="heading">
                 {exercise.name}
               </AppText>
-              <ExerciseHistoryButton
-                exerciseId={exercise.exerciseId}
-                exerciseName={exercise.name}
-              />
+              <View style={styles.exerciseActions}>
+                <ExerciseInstructionsButton
+                  exerciseDocumentId={exercise.exerciseDocumentId}
+                  exerciseId={exercise.exerciseId}
+                  exerciseName={exercise.name}
+                />
+                <ExerciseHistoryButton
+                  exerciseId={exercise.exerciseId}
+                  exerciseName={exercise.name}
+                />
+              </View>
             </View>
             {exercise.sets.map((workoutSet, setIndex) => (
               <WorkoutSetEditor
@@ -275,6 +283,7 @@ const styles = StyleSheet.create({
   exercise: { gap: spacing.sm },
   exerciseHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   exerciseTitle: { flex: 1 },
+  exerciseActions: { flexDirection: 'row' },
   field: { gap: spacing.xs },
   label: { fontWeight: '700' },
   divisions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
