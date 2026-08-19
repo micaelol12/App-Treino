@@ -23,7 +23,7 @@ const taxonomySchema = z
     active: z.boolean(),
     order: z.number().int().nonnegative(),
   })
-  .passthrough();
+  .strip();
 
 function initializeFirestore(): Firestore {
   try {
