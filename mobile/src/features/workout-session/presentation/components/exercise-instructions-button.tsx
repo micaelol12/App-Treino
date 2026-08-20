@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
 
 import { useExerciseCatalog } from '@/features/exercise-catalog/presentation/exercise-catalog-hooks';
 import { AppText } from '@/shared/components/app-text';
@@ -59,6 +60,13 @@ export function ExerciseInstructionsButton({
             title="Instruções indisponíveis"
           />
         ) : null}
+        {exercise?.videoUrl && (
+          <Image
+            source={{ uri: exercise.videoUrl }}
+            style={{...styles.video,borderColor: theme.colors.border}}
+            contentFit="cover"
+          />
+        )}
         {exercise?.instructions.map((instruction, index) => (
           <View key={`${index}-${instruction}`} style={styles.instruction}>
             <View
@@ -94,4 +102,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   numberText: { fontWeight: '700' },
+  video: { width: '80%', height: 200, marginBottom: spacing.sm, alignSelf: 'center', borderRadius: 8, borderWidth: 1, },
 });
