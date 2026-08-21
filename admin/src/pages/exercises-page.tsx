@@ -27,8 +27,6 @@ export function ExercisesPage() {
   }, [exercises.data, search, status]);
 
 
-  console.log('Exercises data:', exercises); // Log the exercises data for debugging
-
   return (
     <>
       <PageHeader eyebrow="CATÁLOGO" title="Exercícios" description="Administre os exercícios exibidos no aplicativo e mantenha a demonstração visual atualizada." actions={<Link className="button button-primary" to="/exercicios/novo"><Plus size={18} />Novo exercício</Link>} />

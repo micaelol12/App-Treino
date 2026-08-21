@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import type { WorkoutPlanExercise } from '../../domain/workout-plan-exercise';
@@ -15,12 +15,52 @@ import { spacing } from '@/shared/theme/tokens';
 import { getWorkoutPlanErrorMessage } from '../workout-plan-error-message';
 import { useWorkoutPlanActions, useWorkoutPlanExercises } from '../workout-plan-hooks';
 import { WorkoutPlanAction } from './workout-plan-action';
+import { MetricChart, MetricChartPoint } from '@/shared/components/metric-chart';
+import { Exercise } from '@/features/exercise-catalog/domain/exercise';
 
 type WorkoutPlansSectionProps = {
   plans: ReturnType<typeof useWorkoutPlanExercises>;
   divisionId?: string;
   showHeading?: boolean;
 };
+
+export function calculateWorkoutProgressForExercise(catalog: readonly Exercise[], exercises: readonly WorkoutPlanExercise[]): MetricChartPoint[] {
+  const selectedExercises =
+    catalog?.filter(({ documentId }) =>
+      exercises.some(
+        exercise => exercise.exerciseDocumentId === documentId
+      )
+    ) ?? [];
+
+  const muscleScores = selectedExercises.reduce<Record<string, number>>(
+    (acc, exercise) => {
+      exercise.primaryMuscles.forEach(muscle => {
+        acc[muscle] = (acc[muscle] ?? 0) + 1;
+      });
+
+      exercise.secondaryMuscles.forEach(muscle => {
+        acc[muscle] = (acc[muscle] ?? 0) + 0.25;
+      });
+
+      return acc;
+    },
+    {}
+  );
+
+  const total = Object.values(muscleScores).reduce(
+    (sum, value) => sum + value,
+    0
+  );
+
+  const points = Object.entries(muscleScores).map(([label, score]) => ({
+    label,
+    value: total > 0
+      ? Number(((score / total) * 100).toFixed(1))
+      : 0,
+  }));
+
+  return points
+}
 
 export function WorkoutPlansSection({
   plans,
@@ -84,6 +124,8 @@ export function WorkoutPlansSection({
     );
   };
 
+  const points = useMemo(() => calculateWorkoutProgressForExercise(catalog.data ?? [], exercises), [catalog.data, exercises]);
+
   return (
     <View style={styles.section}>
       {showHeading ? (
@@ -146,61 +188,85 @@ export function WorkoutPlansSection({
         />
       ) : null}
 
+      {plans.isSuccess && exercises.length > 0 ? (
+        <AppText style={{ color: theme.colors.textMuted }}>
+          {exercises.length} exercício{exercises.length > 1 ? 's' : ''}
+        </AppText>
+      ) : null}
+
       {plans.isSuccess
         ? exercises.map((exercise, index) => {
-            const catalogExercise = catalog.data?.find(
-              ({ documentId }) => documentId === exercise.exerciseDocumentId,
-            );
-            return (
-              <Card key={exercise.id}>
-                <View style={styles.exerciseHeader}>
-                  <View style={styles.exerciseCopy}>
-                    <AppText style={styles.exerciseName}>{exercise.name}</AppText>
-                    <AppText style={{ color: theme.colors.textMuted }}>
-                      {exercise.defaultSets} séries · ordem {exercise.order}
-                      {exercise.sourceSchemaVersion < 2 ? ' · legado' : ''}
-                    </AppText>
-                    {catalogExercise ? (
-                      <ExerciseMetadataChips exercise={catalogExercise} />
-                    ) : null}
-                  </View>
-                  <WorkoutPlanAction
-                    label="Editar"
-                    onPress={() => openExercise(exercise.id)}
-                    testID={`workout-plan-edit-${exercise.id}`}
-                  />
+          const catalogExercise = catalog.data?.find(
+            ({ documentId }) => documentId === exercise.exerciseDocumentId,
+          );
+          return (
+            <Card key={exercise.id}>
+              <View style={styles.exerciseHeader}>
+                <View style={styles.exerciseCopy}>
+                  <AppText style={styles.exerciseName}>{exercise.name}</AppText>
+                  <AppText style={{ color: theme.colors.textMuted }}>
+                    {exercise.defaultSets} séries · ordem {exercise.order}
+                    {exercise.sourceSchemaVersion < 2 ? ' · legado' : ''}
+                  </AppText>
+                  {catalogExercise ? (
+                    <ExerciseMetadataChips exercise={catalogExercise} />
+                  ) : null}
                 </View>
-                <View style={styles.actions}>
-                  <WorkoutPlanAction
-                    disabled={
-                      isMutating || index === 0 || exercise.sourceSchemaVersion < 2
-                    }
-                    label="Subir"
-                    onPress={() => void moveExercise(exercise.id, 'up')}
-                    testID={`workout-plan-up-${exercise.id}`}
-                  />
-                  <WorkoutPlanAction
-                    disabled={
-                      isMutating ||
-                      index === exercises.length - 1 ||
-                      exercise.sourceSchemaVersion < 2
-                    }
-                    label="Descer"
-                    onPress={() => void moveExercise(exercise.id, 'down')}
-                    testID={`workout-plan-down-${exercise.id}`}
-                  />
-                  <WorkoutPlanAction
-                    disabled={isMutating || exercise.sourceSchemaVersion < 2}
-                    label="Excluir"
-                    onPress={() => confirmDelete(exercise)}
-                    testID={`workout-plan-delete-${exercise.id}`}
-                    tone="danger"
-                  />
-                </View>
-              </Card>
-            );
-          })
+                <WorkoutPlanAction
+                  label="Editar"
+                  onPress={() => openExercise(exercise.id)}
+                  testID={`workout-plan-edit-${exercise.id}`}
+                />
+              </View>
+              <View style={styles.actions}>
+                <WorkoutPlanAction
+                  disabled={
+                    isMutating || index === 0 || exercise.sourceSchemaVersion < 2
+                  }
+                  label="Subir"
+                  onPress={() => void moveExercise(exercise.id, 'up')}
+                  testID={`workout-plan-up-${exercise.id}`}
+                />
+                <WorkoutPlanAction
+                  disabled={
+                    isMutating ||
+                    index === exercises.length - 1 ||
+                    exercise.sourceSchemaVersion < 2
+                  }
+                  label="Descer"
+                  onPress={() => void moveExercise(exercise.id, 'down')}
+                  testID={`workout-plan-down-${exercise.id}`}
+                />
+                <WorkoutPlanAction
+                  disabled={isMutating || exercise.sourceSchemaVersion < 2}
+                  label="Excluir"
+                  onPress={() => confirmDelete(exercise)}
+                  testID={`workout-plan-delete-${exercise.id}`}
+                  tone="danger"
+                />
+              </View>
+            </Card>
+          );
+        })
         : null}
+
+      {plans.isSuccess && exercises.length > 0 ? (
+        <Card>
+          <AppText variant="heading">Divisão Muscular</AppText>
+          <MetricChart
+            kind='horizontalBar'
+            showLengend={false}
+            accessibilitySummary={`Divisão Muscular`}
+            series={[
+              {
+                name: '',
+                color: theme.colors.primary,
+                points: points,
+              },
+            ]}
+          />
+        </Card>
+      ) : null}
 
       {plans.isSuccess && exercises.length > 0 ? (
         <WorkoutPlanAction
