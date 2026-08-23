@@ -57,8 +57,9 @@ export function WorkoutDivisionDetailsScreen({ divisionId }: { divisionId: strin
 
   return (
     <Screen
+      nestedScroll
       title={division.name}
-      description={`Ordem ${division.order} · ${division.active ? 'ativa' : 'inativa'}`}
+      description={division.active ? 'Divisão ativa' : 'Divisão inativa'}
       action={<SecondaryButton label="Voltar" onPress={() => router.back()} />}
       onRefresh={() => Promise.all([divisions.refetch(), plans.refetch()])}
       refreshing={divisions.isRefetching || plans.isRefetching}

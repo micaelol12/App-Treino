@@ -2,13 +2,30 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { WorkoutDivisionService } from '../application/workout-division-service';
-import type { WorkoutDivisionDraft } from '../domain/workout-division';
+import {
+  sortWorkoutDivisions,
+  type WorkoutDivision,
+  type WorkoutDivisionInput,
+} from '../domain/workout-division';
 import { useAuth } from '@/features/auth/presentation/auth-context';
 
 import { useWorkoutDivisionRepository } from './workout-division-context';
 
 function queryKey(userId: string | undefined) {
   return ['workout-divisions', userId] as const;
+}
+
+function applyDivisionOrder(
+  divisions: readonly WorkoutDivision[],
+  orderedDivisionIds: readonly string[],
+): WorkoutDivision[] {
+  const positions = new Map(orderedDivisionIds.map((id, index) => [id, index + 1]));
+  return sortWorkoutDivisions(
+    divisions.map((division) => ({
+      ...division,
+      order: positions.get(division.id) ?? division.order,
+    })),
+  );
 }
 
 export function useWorkoutDivisions() {
@@ -43,7 +60,7 @@ export function useWorkoutDivisionActions() {
     ]);
 
   const create = useMutation({
-    mutationFn: (draft: WorkoutDivisionDraft) => service.create(requireUserId(), draft),
+    mutationFn: (draft: WorkoutDivisionInput) => service.create(requireUserId(), draft),
     onSuccess: invalidate,
   });
   const update = useMutation({
@@ -52,9 +69,28 @@ export function useWorkoutDivisionActions() {
       draft,
     }: {
       readonly divisionId: string;
-      readonly draft: WorkoutDivisionDraft;
+      readonly draft: WorkoutDivisionInput;
     }) => service.update(requireUserId(), divisionId, draft),
     onSuccess: invalidate,
   });
-  return { create, update };
+  const reorder = useMutation({
+    mutationFn: (orderedDivisionIds: readonly string[]) =>
+      service.reorder(requireUserId(), orderedDivisionIds),
+    onMutate: async (orderedDivisionIds) => {
+      const key = queryKey(userId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<WorkoutDivision[]>(key);
+      if (previous) {
+        queryClient.setQueryData(key, applyDivisionOrder(previous, orderedDivisionIds));
+      }
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey(userId), context.previous);
+      }
+    },
+    onSettled: invalidate,
+  });
+  return { create, reorder, update };
 }

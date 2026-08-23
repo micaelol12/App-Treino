@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { AppThemeProvider } from '@/shared/theme/theme-provider';
 
@@ -9,6 +9,8 @@ import {
 import { WorkoutDivisionsSection } from './workout-divisions-section';
 
 const mockPush = jest.fn();
+const mockCreate = jest.fn().mockResolvedValue('new-division');
+const mockReorder = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
@@ -33,17 +35,27 @@ describe('WorkoutDivisionsSection', () => {
           active: true,
           sourceSchemaVersion: 2,
         },
+        {
+          id: 'pull',
+          name: 'Pull',
+          order: 2,
+          active: false,
+          sourceSchemaVersion: 2,
+        },
       ],
       isError: false,
       isLoading: false,
     } as unknown as ReturnType<typeof useWorkoutDivisions>);
     mockUseActions.mockReturnValue({
-      create: { isPending: false } as ReturnType<
+      create: { isPending: false, mutateAsync: mockCreate } as unknown as ReturnType<
         typeof useWorkoutDivisionActions
       >['create'],
       update: { isPending: false } as ReturnType<
         typeof useWorkoutDivisionActions
       >['update'],
+      reorder: { isPending: false, mutateAsync: mockReorder } as unknown as ReturnType<
+        typeof useWorkoutDivisionActions
+      >['reorder'],
     });
   });
 
@@ -54,11 +66,34 @@ describe('WorkoutDivisionsSection', () => {
       </AppThemeProvider>,
     );
 
-    await fireEvent.press(screen.getByText('Editar'));
+    await fireEvent.press(screen.getAllByText('Editar')[0]!);
     expect(mockPush).toHaveBeenCalledWith({
       pathname: '/configuracoes/divisao/[divisionId]',
       params: { divisionId: 'push' },
     });
     expect(screen.getByText('Cadastrar divisão')).toBeOnTheScreen();
+    expect(screen.queryByTestId('division-order-input')).not.toBeOnTheScreen();
+  });
+
+  it('creates without order and reorders active and inactive divisions', async () => {
+    await render(
+      <AppThemeProvider>
+        <WorkoutDivisionsSection />
+      </AppThemeProvider>,
+    );
+
+    await fireEvent.changeText(screen.getByTestId('division-name-input'), 'Legs');
+    await fireEvent.press(screen.getByTestId('division-save-button'));
+    await waitFor(() =>
+      expect(mockCreate).toHaveBeenCalledWith({ name: 'Legs', active: true }),
+    );
+
+    const data = mockUseDivisions.mock.results.at(-1)?.value.data ?? [];
+    await fireEvent(screen.getByTestId('workout-divisions-draggable-list'), 'dragEnd', {
+      data: [...data].reverse(),
+      from: 0,
+      to: 1,
+    });
+    await waitFor(() => expect(mockReorder).toHaveBeenCalledWith(['pull', 'push']));
   });
 });

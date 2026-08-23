@@ -1,13 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
-import Svg, {
-  Circle,
-  G,
-  Line,
-  Path,
-  Rect,
-  Text as SvgText,
-} from 'react-native-svg';
+import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
@@ -65,29 +58,19 @@ export function MetricChart({
   const theme = useAppTheme();
   const [containerWidth, setContainerWidth] = useState(320);
 
-  const pointCount = Math.max(
-    0,
-    ...series.map((item) => item.points.length),
-  );
+  const pointCount = Math.max(0, ...series.map((item) => item.points.length));
 
   const isHorizontal = kind === 'horizontalBar';
 
   const chartWidth = isHorizontal
     ? containerWidth
-    : Math.max(
-        containerWidth,
-        LEFT + RIGHT + Math.max(pointCount, 1) * 46,
-      );
+    : Math.max(containerWidth, LEFT + RIGHT + Math.max(pointCount, 1) * 46);
 
   const chartHeight = isHorizontal
-    ? HORIZONTAL_TOP +
-      HORIZONTAL_BOTTOM +
-      Math.max(pointCount, 1) * HORIZONTAL_ROW_HEIGHT
+    ? HORIZONTAL_TOP + HORIZONTAL_BOTTOM + Math.max(pointCount, 1) * HORIZONTAL_ROW_HEIGHT
     : HEIGHT;
 
-  const allValues = series.flatMap((item) =>
-    item.points.map((point) => point.value),
-  );
+  const allValues = series.flatMap((item) => item.points.map((point) => point.value));
 
   const maximum = Math.max(1, ...allValues);
   const minimum = Math.min(0, ...allValues);
@@ -111,22 +94,18 @@ export function MetricChart({
       : LEFT + (index / (pointCount - 1)) * plotWidth;
   };
 
-  const y = (value: number) =>
-    TOP + ((maximum - value) / range) * plotHeight;
+  const y = (value: number) => TOP + ((maximum - value) / range) * plotHeight;
 
   /*
    * Horizontal bar
    */
-  const horizontalPlotWidth =
-    chartWidth - HORIZONTAL_LEFT - HORIZONTAL_RIGHT;
+  const horizontalPlotWidth = chartWidth - HORIZONTAL_LEFT - HORIZONTAL_RIGHT;
 
   const horizontalX = (value: number) =>
     HORIZONTAL_LEFT + (value / maximum) * horizontalPlotWidth;
 
   const horizontalY = (index: number) =>
-    HORIZONTAL_TOP +
-    index * HORIZONTAL_ROW_HEIGHT +
-    HORIZONTAL_ROW_HEIGHT / 2;
+    HORIZONTAL_TOP + index * HORIZONTAL_ROW_HEIGHT + HORIZONTAL_ROW_HEIGHT / 2;
 
   const labelStep = Math.max(1, Math.ceil(pointCount / 6));
 
@@ -135,8 +114,7 @@ export function MetricChart({
       series.map((item) =>
         item.points
           .map(
-            (point, index) =>
-              `${index === 0 ? 'M' : 'L'} ${x(index)} ${y(point.value)}`,
+            (point, index) => `${index === 0 ? 'M' : 'L'} ${x(index)} ${y(point.value)}`,
           )
           .join(' '),
       ),
@@ -145,18 +123,13 @@ export function MetricChart({
   );
 
   const onLayout = (event: LayoutChangeEvent) => {
-    setContainerWidth(
-      Math.max(240, event.nativeEvent.layout.width),
-    );
+    setContainerWidth(Math.max(240, event.nativeEvent.layout.width));
   };
 
   const renderHorizontalBar = () => {
     const seriesCount = Math.max(series.length, 1);
 
-    const totalBarHeight = Math.min(
-      24,
-      HORIZONTAL_ROW_HEIGHT * 0.65,
-    );
+    const totalBarHeight = Math.min(24, HORIZONTAL_ROW_HEIGHT * 0.65);
 
     const barHeight = totalBarHeight / seriesCount;
 
@@ -164,8 +137,7 @@ export function MetricChart({
       <Svg height={chartHeight} width={chartWidth}>
         {/* Linhas de referência */}
         {[0, 0.5, 1].map((ratio) => {
-          const gridX =
-            HORIZONTAL_LEFT + ratio * horizontalPlotWidth;
+          const gridX = HORIZONTAL_LEFT + ratio * horizontalPlotWidth;
 
           const value = maximum * ratio;
 
@@ -215,20 +187,12 @@ export function MetricChart({
 
             const groupHeight = barHeight * seriesCount;
 
-            const barY =
-              centerY -
-              groupHeight / 2 +
-              seriesIndex * barHeight;
+            const barY = centerY - groupHeight / 2 + seriesIndex * barHeight;
 
-            const barWidth = Math.max(
-              1,
-              horizontalX(point.value) - HORIZONTAL_LEFT,
-            );
+            const barWidth = Math.max(1, horizontalX(point.value) - HORIZONTAL_LEFT);
 
             return (
-              <G
-                key={`${item.name}-${point.label}-${index}`}
-              >
+              <G key={`${item.name}-${point.label}-${index}`}>
                 <Rect
                   fill={item.color}
                   height={Math.max(barHeight - 3, 4)}
@@ -296,21 +260,14 @@ export function MetricChart({
         {series.map((item, seriesIndex) =>
           kind === 'bar' ? (
             item.points.map((point, index) => {
-              const slotWidth =
-                plotWidth / Math.max(pointCount, 1);
+              const slotWidth = plotWidth / Math.max(pointCount, 1);
 
-              const barWidth = Math.min(
-                28,
-                slotWidth * 0.65,
-              );
+              const barWidth = Math.min(28, slotWidth * 0.65);
 
               return (
                 <Rect
                   fill={item.color}
-                  height={Math.max(
-                    1,
-                    TOP + plotHeight - y(point.value),
-                  )}
+                  height={Math.max(1, TOP + plotHeight - y(point.value))}
                   key={`${item.name}-${point.label}-${index}`}
                   rx={4}
                   width={barWidth}
@@ -345,53 +302,35 @@ export function MetricChart({
           ),
         )}
 
-        {(series[0]?.points ?? []).map(
-          (point, index) =>
-            index % labelStep === 0 ||
-            index === pointCount - 1 ? (
-              <SvgText
-                fill={theme.colors.textMuted}
-                fontSize={11}
-                key={`${point.label}-${index}`}
-                textAnchor="middle"
-                x={x(index)}
-                y={HEIGHT - 13}
-              >
-                {point.label}
-              </SvgText>
-            ) : null,
+        {(series[0]?.points ?? []).map((point, index) =>
+          index % labelStep === 0 || index === pointCount - 1 ? (
+            <SvgText
+              fill={theme.colors.textMuted}
+              fontSize={11}
+              key={`${point.label}-${index}`}
+              textAnchor="middle"
+              x={x(index)}
+              y={HEIGHT - 13}
+            >
+              {point.label}
+            </SvgText>
+          ) : null,
         )}
       </Svg>
     </ScrollView>
   );
 
   return (
-    <View
-      accessibilityLabel={accessibilitySummary}
-      accessible
-      onLayout={onLayout}
-    >
-      {isHorizontal
-        ? renderHorizontalBar()
-        : renderDefaultChart()}
+    <View accessibilityLabel={accessibilitySummary} accessible onLayout={onLayout}>
+      {isHorizontal ? renderHorizontalBar() : renderDefaultChart()}
 
       {showLengend && (
         <View style={styles.legend}>
           {series.map((item) => (
-            <View
-              key={item.name}
-              style={styles.legendItem}
-            >
-              <View
-                style={[
-                  styles.legendColor,
-                  { backgroundColor: item.color },
-                ]}
-              />
+            <View key={item.name} style={styles.legendItem}>
+              <View style={[styles.legendColor, { backgroundColor: item.color }]} />
 
-              <AppText variant="caption">
-                {item.name}
-              </AppText>
+              <AppText variant="caption">{item.name}</AppText>
             </View>
           ))}
         </View>

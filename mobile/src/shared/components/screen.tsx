@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NestableScrollContainer } from 'react-native-draggable-flatlist';
 
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
@@ -23,6 +24,7 @@ type ScreenProps = PropsWithChildren<{
   onRefresh?: () => void | Promise<unknown>;
   refreshing?: boolean;
   scrollToTopSignal?: string | number | null;
+  nestedScroll?: boolean;
 }>;
 
 export function Screen({
@@ -31,6 +33,7 @@ export function Screen({
   description,
   footer,
   onRefresh,
+  nestedScroll = false,
   refreshing = false,
   scrollToTopSignal,
   title,
@@ -38,6 +41,7 @@ export function Screen({
   const theme = useAppTheme();
   const titleRef = useRef<Text>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const ScrollComponent = nestedScroll ? NestableScrollContainer : ScrollView;
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -58,11 +62,11 @@ export function Screen({
       edges={['top', 'left', 'right']}
       style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
     >
-      <ScrollView
+      <ScrollComponent
         alwaysBounceVertical={Boolean(onRefresh)}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
-        ref={scrollRef}
+        ref={scrollRef as never}
         refreshControl={
           onRefresh ? (
             <RefreshControl
@@ -90,7 +94,7 @@ export function Screen({
           {action}
         </View>
         {children}
-      </ScrollView>
+      </ScrollComponent>
       {footer ? (
         <SafeAreaView
           edges={['bottom', 'left', 'right']}

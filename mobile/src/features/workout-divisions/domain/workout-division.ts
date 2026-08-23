@@ -8,13 +8,22 @@ export interface WorkoutDivision {
   readonly updatedAt?: Date;
 }
 
-export interface WorkoutDivisionDraft {
+export interface WorkoutDivisionInput {
   readonly name: string;
-  readonly order: number;
   readonly active: boolean;
 }
 
-export type WorkoutDivisionRuleCode = 'name-required' | 'name-too-long' | 'invalid-order';
+export interface WorkoutDivisionDraft extends WorkoutDivisionInput {
+  readonly order: number;
+}
+
+export interface DivisionOrderUpdate {
+  readonly id: string;
+  readonly order: number;
+}
+
+export type WorkoutDivisionRuleCode =
+  'name-required' | 'name-too-long' | 'invalid-order' | 'invalid-sequence';
 
 export class WorkoutDivisionRuleError extends Error {
   constructor(readonly code: WorkoutDivisionRuleCode) {
@@ -37,13 +46,20 @@ export function comparableDivisionName(value: string): string {
 export function validateWorkoutDivisionDraft(
   draft: WorkoutDivisionDraft,
 ): WorkoutDivisionDraft {
-  const name = normalizeDivisionName(draft.name);
-  if (!name) throw new WorkoutDivisionRuleError('name-required');
-  if (name.length > 80) throw new WorkoutDivisionRuleError('name-too-long');
+  const input = validateWorkoutDivisionInput(draft);
   if (!Number.isInteger(draft.order) || draft.order < 1 || draft.order > 999) {
     throw new WorkoutDivisionRuleError('invalid-order');
   }
-  return { ...draft, name };
+  return { ...input, order: draft.order };
+}
+
+export function validateWorkoutDivisionInput(
+  input: WorkoutDivisionInput,
+): WorkoutDivisionInput {
+  const name = normalizeDivisionName(input.name);
+  if (!name) throw new WorkoutDivisionRuleError('name-required');
+  if (name.length > 80) throw new WorkoutDivisionRuleError('name-too-long');
+  return { ...input, name };
 }
 
 export function sortWorkoutDivisions(
@@ -55,4 +71,25 @@ export function sortWorkoutDivisions(
       left.name.localeCompare(right.name, 'pt-BR', { sensitivity: 'base' }) ||
       left.id.localeCompare(right.id),
   );
+}
+
+export function reorderWorkoutDivisions(
+  divisions: readonly WorkoutDivision[],
+  orderedDivisionIds: readonly string[],
+): DivisionOrderUpdate[] {
+  const currentIds = new Set(divisions.map(({ id }) => id));
+  const orderedIds = new Set(orderedDivisionIds);
+  if (
+    orderedDivisionIds.length !== divisions.length ||
+    orderedIds.size !== orderedDivisionIds.length ||
+    currentIds.size !== orderedIds.size ||
+    [...currentIds].some((id) => !orderedIds.has(id))
+  ) {
+    throw new WorkoutDivisionRuleError('invalid-sequence');
+  }
+
+  const byId = new Map(divisions.map((division) => [division.id, division]));
+  return orderedDivisionIds
+    .map((id, index) => ({ id, order: index + 1 }))
+    .filter(({ id, order }) => byId.get(id)?.order !== order);
 }

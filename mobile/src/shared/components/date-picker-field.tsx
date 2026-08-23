@@ -92,7 +92,12 @@ export function DatePickerField({
         <Ionicons color={theme.colors.primary} name="calendar-outline" size={22} />
       </Pressable>
 
-      <InfoModal onClose={() => setOpen(false)} title="Selecionar data" visible={open} expanded>
+      <InfoModal
+        onClose={() => setOpen(false)}
+        title="Selecionar data"
+        visible={open}
+        expanded
+      >
         <View style={styles.monthHeader}>
           <Pressable
             accessibilityLabel="Mês anterior"

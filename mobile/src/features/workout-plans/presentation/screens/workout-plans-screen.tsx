@@ -11,6 +11,7 @@ export function WorkoutPlansScreen() {
 
   return (
     <Screen
+      nestedScroll
       title="Plano de treino"
       description="Cadastre e organize suas divisões de treino."
       action={<SecondaryButton label="Voltar" onPress={() => router.back()} />}

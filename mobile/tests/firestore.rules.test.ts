@@ -20,6 +20,8 @@ import {
 } from 'firebase/firestore';
 
 import { FirebaseProgressRepository } from '../src/features/progress/infrastructure/firestore/firebase-progress.repository';
+import { FirebaseWorkoutDivisionRepository } from '../src/features/workout-divisions/infrastructure/firestore/firebase-workout-division.repository';
+import { WorkoutPlanService } from '../src/features/workout-plans/application/workout-plan-service';
 import { FirebaseWorkoutPlanRepository } from '../src/features/workout-plans/infrastructure/firestore/firebase-workout-plan.repository';
 import { FirebaseWorkoutSessionRepository } from '../src/features/workout-session/infrastructure/firestore/firebase-workout-session.repository';
 import { FirebaseWeightRepository } from '../src/features/weight/infrastructure/firestore/firebase-weight.repository';
@@ -253,6 +255,83 @@ describe('division and plan v2 rules', () => {
     });
     await repository.delete(PRIMARY_USER_ID, created!);
     await expect(repository.list(PRIMARY_USER_ID)).resolves.toEqual([]);
+  });
+
+  it('persists division and exercise reorder batches', async () => {
+    await seedExercise();
+    const secondDocumentId = 'firestore-auto-id-2';
+    const secondExerciseId = 'Dumbbell_Fly';
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), `exercicios/${secondDocumentId}`), {
+        ...validExercise,
+        id: secondExerciseId,
+        name: 'Crucifixo com halteres',
+      });
+    });
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    await Promise.all([
+      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/divisoes/push`), validDivision()),
+      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/divisoes/pull`), {
+        ...validDivision(),
+        name: 'Pull',
+        order: 2,
+      }),
+    ]);
+
+    const divisionRepository = new FirebaseWorkoutDivisionRepository(
+      database as unknown as Firestore,
+    );
+    await divisionRepository.updateOrder(PRIMARY_USER_ID, [
+      { id: 'pull', order: 1 },
+      { id: 'push', order: 2 },
+    ]);
+    await expect(divisionRepository.list(PRIMARY_USER_ID)).resolves.toEqual([
+      expect.objectContaining({ id: 'pull', order: 1 }),
+      expect.objectContaining({ id: 'push', order: 2 }),
+    ]);
+
+    const planRepository = new FirebaseWorkoutPlanRepository(
+      database as unknown as Firestore,
+    );
+    await planRepository.create(PRIMARY_USER_ID, {
+      divisionId: 'push',
+      divisionNameSnapshot: 'Push',
+      exerciseId: EXERCISE_ID,
+      exerciseDocumentId: EXERCISE_DOCUMENT_ID,
+      exerciseNameSnapshot: validExercise.name,
+      defaultSets: 3,
+      order: 1,
+    });
+    await planRepository.create(PRIMARY_USER_ID, {
+      divisionId: 'push',
+      divisionNameSnapshot: 'Push',
+      exerciseId: secondExerciseId,
+      exerciseDocumentId: secondDocumentId,
+      exerciseNameSnapshot: 'Crucifixo com halteres',
+      defaultSets: 3,
+      order: 2,
+    });
+    await planRepository.updateOrder(PRIMARY_USER_ID, [
+      {
+        id: `push__${secondDocumentId}`,
+        divisionId: 'push',
+        documentId: secondDocumentId,
+        order: 1,
+      },
+      {
+        id: `push__${EXERCISE_DOCUMENT_ID}`,
+        divisionId: 'push',
+        documentId: EXERCISE_DOCUMENT_ID,
+        order: 2,
+      },
+    ]);
+    const reordered = (
+      await new WorkoutPlanService(planRepository).list(PRIMARY_USER_ID)
+    ).filter(({ divisionId }) => divisionId === 'push');
+    expect(reordered).toEqual([
+      expect.objectContaining({ documentId: secondDocumentId, order: 1 }),
+      expect.objectContaining({ documentId: EXERCISE_DOCUMENT_ID, order: 2 }),
+    ]);
   });
 
   it('falls back to legacy config when no v2 division exists', async () => {

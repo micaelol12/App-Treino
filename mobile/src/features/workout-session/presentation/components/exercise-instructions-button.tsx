@@ -63,7 +63,7 @@ export function ExerciseInstructionsButton({
         {exercise?.videoUrl && (
           <Image
             source={{ uri: exercise.videoUrl }}
-            style={{...styles.video,borderColor: theme.colors.border}}
+            style={{ ...styles.video, borderColor: theme.colors.border }}
             contentFit="cover"
           />
         )}
@@ -102,5 +102,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   numberText: { fontWeight: '700' },
-  video: { width: '80%', height: 200, marginBottom: spacing.sm, alignSelf: 'center', borderRadius: 8, borderWidth: 1, },
+  video: {
+    width: '80%',
+    height: 200,
+    marginBottom: spacing.sm,
+    alignSelf: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+  },
 });

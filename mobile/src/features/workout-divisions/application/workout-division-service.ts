@@ -1,9 +1,11 @@
 import {
   comparableDivisionName,
+  reorderWorkoutDivisions,
   sortWorkoutDivisions,
   validateWorkoutDivisionDraft,
+  validateWorkoutDivisionInput,
   type WorkoutDivision,
-  type WorkoutDivisionDraft,
+  type WorkoutDivisionInput,
 } from '../domain/workout-division';
 
 import { WorkoutDivisionFailure } from './workout-division-failure';
@@ -16,47 +18,57 @@ export class WorkoutDivisionService {
     return sortWorkoutDivisions(await this.repository.list(userId));
   }
 
-  async create(userId: string, draft: WorkoutDivisionDraft): Promise<string> {
-    const normalized = validateWorkoutDivisionDraft(draft);
+  async create(userId: string, input: WorkoutDivisionInput): Promise<string> {
+    const normalizedInput = validateWorkoutDivisionInput(input);
     const divisions = await this.repository.list(userId);
-    this.assertUnique(divisions, normalized);
-    return this.repository.create(userId, normalized);
+    this.assertUniqueName(divisions, normalizedInput);
+    const draft = validateWorkoutDivisionDraft({
+      ...normalizedInput,
+      order: Math.max(0, ...divisions.map(({ order }) => order)) + 1,
+    });
+    return this.repository.create(userId, draft);
   }
 
   async update(
     userId: string,
     divisionId: string,
-    draft: WorkoutDivisionDraft,
+    input: WorkoutDivisionInput,
   ): Promise<void> {
-    const normalized = validateWorkoutDivisionDraft(draft);
+    const normalizedInput = validateWorkoutDivisionInput(input);
     const divisions = await this.repository.list(userId);
-    if (!divisions.some(({ id }) => id === divisionId)) {
+    const division = divisions.find(({ id }) => id === divisionId);
+    if (!division) {
       throw new WorkoutDivisionFailure('not-found');
     }
-    this.assertUnique(divisions, normalized, divisionId);
-    await this.repository.update(userId, divisionId, normalized);
+    this.assertUniqueName(divisions, normalizedInput, divisionId);
+    await this.repository.update(
+      userId,
+      divisionId,
+      validateWorkoutDivisionDraft({ ...normalizedInput, order: division.order }),
+    );
   }
 
-  private assertUnique(
+  async reorder(userId: string, orderedDivisionIds: readonly string[]): Promise<void> {
+    const updates = reorderWorkoutDivisions(
+      await this.repository.list(userId),
+      orderedDivisionIds,
+    );
+    if (updates.length) await this.repository.updateOrder(userId, updates);
+  }
+
+  private assertUniqueName(
     divisions: readonly WorkoutDivision[],
-    draft: WorkoutDivisionDraft,
+    input: WorkoutDivisionInput,
     ignoredId?: string,
   ) {
     if (
       divisions.some(
         (division) =>
           division.id !== ignoredId &&
-          comparableDivisionName(division.name) === comparableDivisionName(draft.name),
+          comparableDivisionName(division.name) === comparableDivisionName(input.name),
       )
     ) {
       throw new WorkoutDivisionFailure('duplicate');
-    }
-    if (
-      divisions.some(
-        (division) => division.id !== ignoredId && division.order === draft.order,
-      )
-    ) {
-      throw new WorkoutDivisionFailure('duplicate-order');
     }
   }
 }

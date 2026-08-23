@@ -1,6 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
+import {
+  NestableDraggableFlatList,
+  type RenderItemParams,
+} from 'react-native-draggable-flatlist';
 
 import type { WorkoutDivision } from '../../domain/workout-division';
 import { WorkoutDivisionFailure } from '../../application/workout-division-failure';
@@ -9,6 +13,7 @@ import { WorkoutFormField } from '@/features/workout-plans/presentation/componen
 import { WorkoutPlanAction } from '@/features/workout-plans/presentation/components/workout-plan-action';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
+import { DragHandle } from '@/shared/components/drag-handle';
 import { PrimaryButton } from '@/shared/components/primary-button';
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
@@ -24,6 +29,8 @@ function errorMessage(error: unknown): string {
       'name-required': 'Informe o nome da divisão.',
       'name-too-long': 'O nome deve ter no máximo 80 caracteres.',
       'invalid-order': 'A ordem deve ser um inteiro entre 1 e 999.',
+      'invalid-sequence':
+        'A lista mudou enquanto você ordenava. Atualize e tente novamente.',
     }[error.code];
   }
   if (error instanceof WorkoutDivisionFailure) {
@@ -45,15 +52,14 @@ export function WorkoutDivisionsSection() {
   const router = useRouter();
   const theme = useAppTheme();
   const divisions = useWorkoutDivisions();
-  const { create, update } = useWorkoutDivisionActions();
+  const { create, reorder, update } = useWorkoutDivisionActions();
   const [name, setName] = useState('');
-  const [order, setOrder] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
-  const pending = create.isPending || update.isPending;
+  const pending = create.isPending || reorder.isPending || update.isPending;
+  const items = divisions.data ?? [];
 
   const reset = () => {
     setName('');
-    setOrder('');
   };
 
   const beginEdit = (division: WorkoutDivision) => {
@@ -65,11 +71,8 @@ export function WorkoutDivisionsSection() {
 
   const save = async () => {
     setFeedback(null);
-    const numericOrder = order.trim()
-      ? Number(order)
-      : Math.max(0, ...(divisions.data ?? []).map((division) => division.order)) + 1;
     try {
-      await create.mutateAsync({ name, order: numericOrder, active: true });
+      await create.mutateAsync({ name, active: true });
       reset();
       setFeedback('Divisão cadastrada.');
     } catch (error) {
@@ -86,7 +89,6 @@ export function WorkoutDivisionsSection() {
           divisionId: division.id,
           draft: {
             name: division.name,
-            order: division.order,
             active: nextActive,
           },
         })
@@ -109,6 +111,83 @@ export function WorkoutDivisionsSection() {
     }
   };
 
+  const persistOrder = async (orderedItems: readonly WorkoutDivision[]) => {
+    const orderedIds = orderedItems.map(({ id }) => id);
+    if (orderedIds.every((id, index) => id === items[index]?.id)) return;
+    setFeedback(null);
+    try {
+      await reorder.mutateAsync(orderedIds);
+      setFeedback('Ordem atualizada.');
+    } catch (error) {
+      setFeedback(errorMessage(error));
+    }
+  };
+
+  const moveByAccessibility = (index: number, direction: 'before' | 'after') => {
+    const target = direction === 'before' ? index - 1 : index + 1;
+    if (pending || target < 0 || target >= items.length) return;
+    const next = [...items];
+    const current = next[index];
+    const adjacent = next[target];
+    if (!current || !adjacent) return;
+    next[index] = adjacent;
+    next[target] = current;
+    void persistOrder(next);
+  };
+
+  const renderDivision = ({
+    drag,
+    getIndex,
+    isActive,
+    item: division,
+  }: RenderItemParams<WorkoutDivision>) => {
+    const index = getIndex() ?? items.findIndex(({ id }) => id === division.id);
+    return (
+      <View
+        style={[
+          styles.draggableCard,
+          isActive && {
+            borderColor: theme.colors.primary,
+            backgroundColor: theme.colors.surfaceMuted,
+            elevation: 8,
+            opacity: 0.9,
+            transform: [{ scale: 1.01 }],
+          },
+        ]}
+      >
+        <Card>
+          <View style={styles.row}>
+            <DragHandle
+              disabled={pending}
+              drag={drag}
+              itemName={`divisão ${division.name}`}
+              onMove={(direction) => moveByAccessibility(index, direction)}
+              position={index + 1}
+              total={items.length}
+            />
+            <View style={styles.copy}>
+              <AppText style={styles.name}>{division.name}</AppText>
+              <AppText style={{ color: theme.colors.textMuted }}>
+                {division.active ? 'Ativa' : 'Inativa'}
+              </AppText>
+            </View>
+            <WorkoutPlanAction
+              disabled={pending}
+              label="Editar"
+              onPress={() => beginEdit(division)}
+            />
+            <WorkoutPlanAction
+              disabled={pending}
+              label={division.active ? 'Desativar' : 'Reativar'}
+              onPress={() => toggleActive(division)}
+              tone={division.active ? 'danger' : 'default'}
+            />
+          </View>
+        </Card>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.section}>
       <View style={styles.heading}>
@@ -126,14 +205,6 @@ export function WorkoutDivisionsSection() {
           testID="division-name-input"
           value={name}
         />
-        <WorkoutFormField
-          keyboardType="number-pad"
-          label="Ordem"
-          onChangeText={setOrder}
-          placeholder={String((divisions.data?.length ?? 0) + 1)}
-          testID="division-order-input"
-          value={order}
-        />
         <PrimaryButton
           disabled={pending}
           label="Cadastrar divisão"
@@ -149,29 +220,17 @@ export function WorkoutDivisionsSection() {
           {errorMessage(divisions.error)}
         </AppText>
       ) : null}
-      {divisions.data?.map((division) => (
-        <Card key={division.id}>
-          <View style={styles.row}>
-            <View style={styles.copy}>
-              <AppText style={styles.name}>{division.name}</AppText>
-              <AppText style={{ color: theme.colors.textMuted }}>
-                Ordem {division.order} · {division.active ? 'ativa' : 'inativa'}
-              </AppText>
-            </View>
-            <WorkoutPlanAction
-              disabled={pending}
-              label="Editar"
-              onPress={() => beginEdit(division)}
-            />
-            <WorkoutPlanAction
-              disabled={pending}
-              label={division.active ? 'Desativar' : 'Reativar'}
-              onPress={() => toggleActive(division)}
-              tone={division.active ? 'danger' : 'default'}
-            />
-          </View>
-        </Card>
-      ))}
+      {items.length ? (
+        <NestableDraggableFlatList
+          activationDistance={8}
+          contentContainerStyle={styles.list}
+          data={items}
+          keyExtractor={({ id }) => id}
+          onDragEnd={({ data }) => void persistOrder(data)}
+          renderItem={renderDivision}
+          testID="workout-divisions-draggable-list"
+        />
+      ) : null}
     </View>
   );
 }
@@ -182,4 +241,10 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.xs },
   copy: { flex: 1, minWidth: 140, gap: spacing.xxs },
   name: { fontWeight: '700' },
+  list: { gap: spacing.sm },
+  draggableCard: {
+    borderWidth: 2,
+    borderColor: 'transparent',
+    borderRadius: 16,
+  },
 });

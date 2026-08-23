@@ -37,13 +37,20 @@ function upload(
 ) {
   const claims = user === 'admin' ? { admin: true } : undefined;
   const storage = testEnvironment.authenticatedContext(user, claims).storage();
-  return storage.ref(objectPath).put(new Uint8Array(size), { contentType });
+  return Promise.resolve(
+    storage.ref(objectPath).put(new Uint8Array(size), { contentType }),
+  );
 }
 
 describe('exercise media storage rules', () => {
   it('accepts supported images up to and including 1 MB for administrators', async () => {
     await assertSucceeds(
-      upload('admin', 'exercise-media/exercise-1/images/photo.jpg', ONE_MEGABYTE, 'image/jpeg'),
+      upload(
+        'admin',
+        'exercise-media/exercise-1/images/photo.jpg',
+        ONE_MEGABYTE,
+        'image/jpeg',
+      ),
     );
   });
 
@@ -63,10 +70,20 @@ describe('exercise media storage rules', () => {
 
   it('accepts only GIF animations up to and including 1 MB', async () => {
     await assertSucceeds(
-      upload('admin', 'exercise-media/exercise-1/videos/demo.gif', ONE_MEGABYTE, 'image/gif'),
+      upload(
+        'admin',
+        'exercise-media/exercise-1/videos/demo.gif',
+        ONE_MEGABYTE,
+        'image/gif',
+      ),
     );
     await assertFails(
-      upload('admin', 'exercise-media/exercise-1/videos/demo.gif', ONE_MEGABYTE + 1, 'image/gif'),
+      upload(
+        'admin',
+        'exercise-media/exercise-1/videos/demo.gif',
+        ONE_MEGABYTE + 1,
+        'image/gif',
+      ),
     );
     await assertFails(
       upload('admin', 'exercise-media/exercise-1/videos/demo.mp4', 1, 'video/mp4'),

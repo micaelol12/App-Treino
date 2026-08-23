@@ -6,6 +6,7 @@ import {
   getDocs,
   serverTimestamp,
   updateDoc,
+  writeBatch,
   type Firestore,
 } from 'firebase/firestore';
 
@@ -13,6 +14,7 @@ import { WorkoutDivisionFailure } from '../../application/workout-division-failu
 import type { WorkoutDivisionRepository } from '../../application/workout-division-repository';
 import {
   sortWorkoutDivisions,
+  type DivisionOrderUpdate,
   type WorkoutDivisionDraft,
 } from '../../domain/workout-division';
 import { getFirebaseFirestore } from '@/shared/infrastructure/firebase/firebase-firestore';
@@ -97,6 +99,27 @@ export class FirebaseWorkoutDivisionRepository implements WorkoutDivisionReposit
         ...toDocument(draft),
         updatedAt: serverTimestamp(),
       });
+    } catch (error) {
+      throw mapFailure(error);
+    }
+  }
+
+  async updateOrder(
+    userId: string,
+    updates: readonly DivisionOrderUpdate[],
+  ): Promise<void> {
+    if (!updates.length) return;
+    try {
+      const batch = writeBatch(this.database);
+      const timestamp = serverTimestamp();
+      for (const update of updates) {
+        batch.update(doc(this.database, collectionPath(userId), update.id), {
+          order: update.order,
+          schemaVersion: 2,
+          updatedAt: timestamp,
+        });
+      }
+      await batch.commit();
     } catch (error) {
       throw mapFailure(error);
     }

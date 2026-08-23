@@ -2,13 +2,32 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { WorkoutPlanService } from '../application/workout-plan-service';
-import type { WorkoutExerciseDraft } from '../domain/workout-plan-rules';
+import type { WorkoutPlanExercise } from '../domain/workout-plan-exercise';
+import {
+  sortWorkoutExercises,
+  type WorkoutExerciseInput,
+} from '../domain/workout-plan-rules';
 import { useAuth } from '../../auth/presentation/auth-context';
 
 import { useWorkoutPlanRepository } from './workout-plan-context';
 
 function queryKey(userId: string | undefined) {
   return ['workout-plan', userId] as const;
+}
+
+function applyExerciseOrder(
+  exercises: readonly WorkoutPlanExercise[],
+  divisionId: string,
+  orderedExerciseIds: readonly string[],
+): WorkoutPlanExercise[] {
+  const positions = new Map(orderedExerciseIds.map((id, index) => [id, index + 1]));
+  return sortWorkoutExercises(
+    exercises.map((exercise) =>
+      exercise.divisionId === divisionId && positions.has(exercise.id)
+        ? { ...exercise, order: positions.get(exercise.id) ?? exercise.order }
+        : exercise,
+    ),
+  );
 }
 
 export function useWorkoutPlanExercises() {
@@ -40,7 +59,7 @@ export function useWorkoutPlanActions() {
   };
 
   const create = useMutation({
-    mutationFn: (draft: WorkoutExerciseDraft) => service.create(requireUserId(), draft),
+    mutationFn: (draft: WorkoutExerciseInput) => service.create(requireUserId(), draft),
     onSuccess: invalidate,
   });
   const update = useMutation({
@@ -48,7 +67,7 @@ export function useWorkoutPlanActions() {
       draft,
       exerciseId,
     }: {
-      readonly draft: WorkoutExerciseDraft;
+      readonly draft: WorkoutExerciseInput;
       readonly exerciseId: string;
     }) => service.update(requireUserId(), exerciseId, draft),
     onSuccess: invalidate,
@@ -57,16 +76,33 @@ export function useWorkoutPlanActions() {
     mutationFn: (exerciseId: string) => service.delete(requireUserId(), exerciseId),
     onSuccess: invalidate,
   });
-  const move = useMutation({
+  const reorder = useMutation({
     mutationFn: ({
-      direction,
-      exerciseId,
+      divisionId,
+      orderedExerciseIds,
     }: {
-      readonly direction: 'up' | 'down';
-      readonly exerciseId: string;
-    }) => service.move(requireUserId(), exerciseId, direction),
-    onSuccess: invalidate,
+      readonly divisionId: string;
+      readonly orderedExerciseIds: readonly string[];
+    }) => service.reorder(requireUserId(), divisionId, orderedExerciseIds),
+    onMutate: async ({ divisionId, orderedExerciseIds }) => {
+      const key = queryKey(userId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<WorkoutPlanExercise[]>(key);
+      if (previous) {
+        queryClient.setQueryData(
+          key,
+          applyExerciseOrder(previous, divisionId, orderedExerciseIds),
+        );
+      }
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey(userId), context.previous);
+      }
+    },
+    onSettled: invalidate,
   });
 
-  return { create, move, remove, update };
+  return { create, remove, reorder, update };
 }

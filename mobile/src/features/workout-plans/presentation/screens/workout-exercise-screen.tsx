@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { useExerciseCatalog } from '@/features/exercise-catalog/presentation/exercise-catalog-hooks';
 import { ExerciseCatalogSelect } from '@/features/exercise-catalog/presentation/components/exercise-catalog-select';
@@ -29,7 +29,6 @@ const defaultValues: WorkoutExerciseFormValues = {
   divisionId: '',
   exerciseDocumentId: '',
   defaultSets: '3',
-  order: '1',
 };
 
 export function WorkoutExerciseScreen({
@@ -47,8 +46,6 @@ export function WorkoutExerciseScreen({
   const catalog = useExerciseCatalog();
   const { create, update } = useWorkoutPlanActions();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const setsRef = useRef<TextInput>(null);
-  const orderRef = useRef<TextInput>(null);
   const exercise = plans.data?.find(({ id }) => id === exerciseId);
   const {
     control,
@@ -66,7 +63,6 @@ export function WorkoutExerciseScreen({
         divisionId: exercise.divisionId,
         exerciseDocumentId: exercise.exerciseDocumentId,
         defaultSets: String(exercise.defaultSets),
-        order: String(exercise.order),
       });
     }
   }, [exercise, reset]);
@@ -80,7 +76,7 @@ export function WorkoutExerciseScreen({
   const divisionOptions = activeDivisions.map((division) => ({
     value: division.id,
     label: division.name,
-    description: `Ordem ${division.order}`,
+    description: division.active ? 'Ativa' : 'Inativa',
   }));
 
   const submit = handleSubmit(async (values) => {
@@ -100,7 +96,6 @@ export function WorkoutExerciseScreen({
       exerciseDocumentId: catalogExercise.documentId,
       exerciseNameSnapshot: catalogExercise.name,
       defaultSets: Number(values.defaultSets),
-      order: Number(values.order),
     };
 
     try {
@@ -251,28 +246,9 @@ export function WorkoutExerciseScreen({
                 label="Séries padrão"
                 onBlur={field.onBlur}
                 onChangeText={field.onChange}
-                onSubmitEditing={() => orderRef.current?.focus()}
-                ref={setsRef}
-                returnKeyType="next"
-                testID="workout-sets-input"
-                value={field.value}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="order"
-            render={({ field, fieldState }) => (
-              <WorkoutFormField
-                error={fieldState.error?.message}
-                keyboardType="number-pad"
-                label="Ordem"
-                onBlur={field.onBlur}
-                onChangeText={field.onChange}
                 onSubmitEditing={() => void submit()}
-                ref={orderRef}
                 returnKeyType="done"
-                testID="workout-order-input"
+                testID="workout-sets-input"
                 value={field.value}
               />
             )}

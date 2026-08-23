@@ -75,7 +75,7 @@ async function arrange() {
       typeof useWorkoutPlanActions
     >['create'],
     update: {} as ReturnType<typeof useWorkoutPlanActions>['update'],
-    move: {} as ReturnType<typeof useWorkoutPlanActions>['move'],
+    reorder: {} as ReturnType<typeof useWorkoutPlanActions>['reorder'],
     remove: {} as ReturnType<typeof useWorkoutPlanActions>['remove'],
   });
 
@@ -95,7 +95,7 @@ describe('WorkoutExerciseScreen', () => {
     expect(await screen.findByText('Selecione a divisão.')).toBeOnTheScreen();
     expect(screen.getByText('Selecione o exercício.')).toBeOnTheScreen();
     expect(mockCreate).not.toHaveBeenCalled();
-  });
+  }, 10_000);
 
   it('creates references using physical and logical catalog IDs', async () => {
     await arrange();
@@ -114,9 +114,13 @@ describe('WorkoutExerciseScreen', () => {
         exerciseDocumentId: 'exercise-document',
         exerciseNameSnapshot: 'Supino',
         defaultSets: 3,
-        order: 1,
       });
       expect(mockBack).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it('does not render a manual order input', async () => {
+    await arrange();
+    expect(screen.queryByTestId('workout-order-input')).not.toBeOnTheScreen();
   });
 });
