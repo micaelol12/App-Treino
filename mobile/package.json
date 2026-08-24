@@ -22,6 +22,8 @@
     "firebase:cli": "node scripts/run-firebase-cli.cjs",
     "emulator:start": "npm run firebase:cli -- emulators:start --config ../firebase.json --project demo-app-treino --only auth,firestore",
     "emulator:seed": "node scripts/seed-firestore-emulator.cjs",
+    "catalog:import": "node scripts/import-exercise-catalog.cjs",
+    "test:catalog-import": "node --test scripts/import-exercise-catalog.test.cjs",
     "migrate:plans:v2": "node scripts/migrate-workout-plans-v2.cjs",
     "test:rules": "npm run firebase:cli -- emulators:exec --config ../firebase.test.json --project demo-app-treino --only firestore,storage \"npm run test:rules:inside\"",
     "test:rules:inside": "jest --config jest.rules.config.cjs --runInBand",

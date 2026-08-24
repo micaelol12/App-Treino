@@ -8,6 +8,7 @@ ui-debug.log
 .firebase-runtime/
 .firecrawl/
 firebase/migrations/report*.json
+firebase/import/.exercise-translations*.json
 mobile/.expo/
 mobile/dist/
 mobile/expo-env.d.ts
