@@ -73,6 +73,10 @@ export function useWorkoutDivisionActions() {
     }) => service.update(requireUserId(), divisionId, draft),
     onSuccess: invalidate,
   });
+  const remove = useMutation({
+    mutationFn: (divisionId: string) => service.remove(requireUserId(), divisionId),
+    onSuccess: invalidate,
+  });
   const reorder = useMutation({
     mutationFn: (orderedDivisionIds: readonly string[]) =>
       service.reorder(requireUserId(), orderedDivisionIds),
@@ -92,5 +96,5 @@ export function useWorkoutDivisionActions() {
     },
     onSettled: invalidate,
   });
-  return { create, reorder, update };
+  return { create, remove, reorder, update };
 }

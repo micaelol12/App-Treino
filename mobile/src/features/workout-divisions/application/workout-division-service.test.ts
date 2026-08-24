@@ -10,6 +10,7 @@ import { WorkoutDivisionService } from './workout-division-service';
 class FakeRepository implements WorkoutDivisionRepository {
   divisions: WorkoutDivision[] = [];
   readonly create = jest.fn(async () => 'division-id');
+  readonly delete = jest.fn(async () => undefined);
   readonly update = jest.fn(async () => undefined);
   readonly updateOrder = jest.fn(
     async (_userId: string, _updates: readonly DivisionOrderUpdate[]) => undefined,
@@ -74,6 +75,19 @@ describe('WorkoutDivisionService', () => {
       name: 'Push A',
       active: false,
       order: 5,
+    });
+  });
+
+  it('removes an existing division and rejects a missing one', async () => {
+    const repository = new FakeRepository();
+    repository.divisions = [division('push', 'Push', 1)];
+    const service = new WorkoutDivisionService(repository);
+
+    await service.remove('user', 'push');
+    expect(repository.delete).toHaveBeenCalledWith('user', 'push');
+
+    await expect(service.remove('user', 'missing')).rejects.toMatchObject({
+      code: 'not-found',
     });
   });
 

@@ -15,6 +15,7 @@ import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
 import { DragHandle } from '@/shared/components/drag-handle';
 import { PrimaryButton } from '@/shared/components/primary-button';
+import { useScreenScrollHandler } from '@/shared/components/screen';
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
 
@@ -45,17 +46,19 @@ function errorMessage(error: unknown): string {
       unknown: 'Não foi possível salvar a divisão.',
     }[error.code];
   }
-  return 'Não foi possível salvar a divisão.';
+  return 'Não foi possível alterar a divisão.';
 }
 
 export function WorkoutDivisionsSection() {
   const router = useRouter();
   const theme = useAppTheme();
+  const screenScrollHandler = useScreenScrollHandler();
   const divisions = useWorkoutDivisions();
-  const { create, reorder, update } = useWorkoutDivisionActions();
+  const { create, remove, reorder, update } = useWorkoutDivisionActions();
   const [name, setName] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
-  const pending = create.isPending || reorder.isPending || update.isPending;
+  const pending =
+    create.isPending || remove.isPending || reorder.isPending || update.isPending;
   const items = divisions.data ?? [];
 
   const reset = () => {
@@ -109,6 +112,27 @@ export function WorkoutDivisionsSection() {
         ],
       );
     }
+  };
+
+  const confirmDelete = (division: WorkoutDivision) => {
+    Alert.alert(
+      'Excluir divisão?',
+      `${division.name} e todos os exercícios dela serão excluídos. O histórico de treinos será preservado.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: () => {
+            setFeedback(null);
+            void remove
+              .mutateAsync(division.id)
+              .then(() => setFeedback('Divisão excluída.'))
+              .catch((error: unknown) => setFeedback(errorMessage(error)));
+          },
+        },
+      ],
+    );
   };
 
   const persistOrder = async (orderedItems: readonly WorkoutDivision[]) => {
@@ -171,17 +195,28 @@ export function WorkoutDivisionsSection() {
                 {division.active ? 'Ativa' : 'Inativa'}
               </AppText>
             </View>
-            <WorkoutPlanAction
-              disabled={pending}
-              label="Editar"
-              onPress={() => beginEdit(division)}
-            />
+            {division.active && (
+              <WorkoutPlanAction
+                disabled={pending}
+                label="Editar"
+                onPress={() => beginEdit(division)}
+              />
+            )}
             <WorkoutPlanAction
               disabled={pending}
               label={division.active ? 'Desativar' : 'Reativar'}
               onPress={() => toggleActive(division)}
               tone={division.active ? 'danger' : 'default'}
             />
+            {!division.active && (
+              <WorkoutPlanAction
+                disabled={pending}
+                label="Excluir"
+                onPress={() => confirmDelete(division)}
+                testID={`workout-division-delete-${division.id}`}
+                tone="danger"
+              />
+            )}
           </View>
         </Card>
       </View>
@@ -212,7 +247,6 @@ export function WorkoutDivisionsSection() {
           testID="division-save-button"
         />
       </Card>
-
       {feedback ? <AppText accessibilityLiveRegion="polite">{feedback}</AppText> : null}
       {divisions.isLoading ? <AppText>Carregando divisões…</AppText> : null}
       {divisions.isError ? (
@@ -222,12 +256,14 @@ export function WorkoutDivisionsSection() {
       ) : null}
       {items.length ? (
         <NestableDraggableFlatList
-          activationDistance={8}
+          activationDistance={24}
           contentContainerStyle={styles.list}
           data={items}
           keyExtractor={({ id }) => id}
+          nestedScrollEnabled
           onDragEnd={({ data }) => void persistOrder(data)}
           renderItem={renderDivision}
+          simultaneousHandlers={screenScrollHandler ?? undefined}
           testID="workout-divisions-draggable-list"
         />
       ) : null}
@@ -239,6 +275,7 @@ const styles = StyleSheet.create({
   section: { gap: spacing.sm },
   heading: { gap: spacing.xxs },
   row: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.xs },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   copy: { flex: 1, gap: spacing.xxs },
   name: { fontWeight: '700' },
   list: { gap: spacing.sm },

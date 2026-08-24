@@ -48,6 +48,14 @@ export class WorkoutDivisionService {
     );
   }
 
+  async remove(userId: string, divisionId: string): Promise<void> {
+    const divisions = await this.repository.list(userId);
+    if (!divisions.some(({ id }) => id === divisionId)) {
+      throw new WorkoutDivisionFailure('not-found');
+    }
+    await this.repository.delete(userId, divisionId);
+  }
+
   async reorder(userId: string, orderedDivisionIds: readonly string[]): Promise<void> {
     const updates = reorderWorkoutDivisions(
       await this.repository.list(userId),

@@ -15,7 +15,10 @@ describe('Screen', () => {
       </AppThemeProvider>,
     );
 
-    expect(screen.getByTestId('screen-scroll-view').props.refreshControl).toBeUndefined();
+    const scrollView = screen.getByTestId('screen-scroll-view');
+    expect(scrollView.props.refreshControl).toBeUndefined();
+    expect(scrollView).toHaveProp('keyboardShouldPersistTaps', 'handled');
+    expect(scrollView).toHaveProp('keyboardDismissMode', expect.any(String));
   });
 
   it('runs the refresh action and reflects its loading state', async () => {

@@ -1,9 +1,11 @@
-import { useRef } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRef, useState } from 'react';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import type { WorkoutSetDraft } from '../../domain/workout-session-draft';
 import { AppText } from '@/shared/components/app-text';
 import { Card } from '@/shared/components/card';
+import { InfoModal } from '@/shared/components/info-modal';
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { radius, spacing } from '@/shared/theme/tokens';
 
@@ -25,6 +27,7 @@ export function WorkoutSetEditor({
   workoutSet,
 }: WorkoutSetEditorProps) {
   const theme = useAppTheme();
+  const [rpeHelpVisible, setRpeHelpVisible] = useState(false);
   const repetitionsRef = useRef<TextInput>(null);
   const rpeRef = useRef<TextInput>(null);
   const noteRef = useRef<TextInput>(null);
@@ -73,7 +76,24 @@ export function WorkoutSetEditor({
           />
         </View>
         <View style={styles.field}>
-          <AppText variant="caption">RPE</AppText>
+          <View style={styles.labelRow}>
+            <AppText variant="caption">RPE</AppText>
+            <Pressable
+              accessibilityHint="Abre uma explicação da escala de esforço"
+              accessibilityLabel="Ajuda sobre RPE"
+              accessibilityRole="button"
+              hitSlop={10}
+              onPress={() => setRpeHelpVisible(true)}
+              style={styles.helpButton}
+              testID={`${testIDPrefix}-${workoutSet.setNumber}-rpe-help`}
+            >
+              <Ionicons
+                color={theme.colors.primary}
+                name="help-circle-outline"
+                size={20}
+              />
+            </Pressable>
+          </View>
           <TextInput
             accessibilityLabel={`${prefix}, RPE de 1 a 10`}
             keyboardType="number-pad"
@@ -103,6 +123,17 @@ export function WorkoutSetEditor({
           value={workoutSet.note}
         />
       </View>
+      <InfoModal
+        onClose={() => setRpeHelpVisible(false)}
+        title="O que é RPE?"
+        visible={rpeHelpVisible}
+      >
+        <AppText>RPE é a percepção de esforço da série, em uma escala de 1 a 10.</AppText>
+        <AppText>
+          RPE 10 significa que nenhuma repetição sobraria; RPE 9, cerca de uma; RPE 8,
+          cerca de duas. Valores menores indicam uma série mais leve.
+        </AppText>
+      </InfoModal>
     </Card>
   );
 }
@@ -111,6 +142,8 @@ const styles = StyleSheet.create({
   setTitle: { fontWeight: '700' },
   numericFields: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   field: { flex: 1, minWidth: 96, gap: spacing.xxs },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
+  helpButton: { alignItems: 'center', justifyContent: 'center' },
   noteField: { gap: spacing.xxs },
   input: {
     minHeight: 48,

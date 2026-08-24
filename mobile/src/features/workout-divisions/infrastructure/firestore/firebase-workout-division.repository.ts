@@ -36,6 +36,10 @@ function collectionPath(userId: string): string {
   return `usuarios/${userId}/divisoes`;
 }
 
+function exercisesPath(userId: string, divisionId: string): string {
+  return `${collectionPath(userId)}/${divisionId}/exercicios`;
+}
+
 function mapFailure(error: unknown): WorkoutDivisionFailure {
   if (error instanceof WorkoutDivisionFailure) return error;
   if (error instanceof InvalidFirestoreDocumentError) {
@@ -84,6 +88,33 @@ export class FirebaseWorkoutDivisionRepository implements WorkoutDivisionReposit
         updatedAt: timestamp,
       });
       return reference.id;
+    } catch (error) {
+      throw mapFailure(error);
+    }
+  }
+
+  async delete(userId: string, divisionId: string): Promise<void> {
+    try {
+      const snapshot = await getDocs(
+        collection(this.database, exercisesPath(userId, divisionId)),
+      );
+      let remainingReferences = snapshot.docs.map((item) => item.ref);
+
+      // O documento pai é excluído apenas no último lote. Se um lote anterior falhar,
+      // a divisão continua visível e a operação pode ser repetida sem deixar filhos órfãos.
+      while (remainingReferences.length > 499) {
+        const batch = writeBatch(this.database);
+        for (const reference of remainingReferences.slice(0, 500)) {
+          batch.delete(reference);
+        }
+        await batch.commit();
+        remainingReferences = remainingReferences.slice(500);
+      }
+
+      const finalBatch = writeBatch(this.database);
+      for (const reference of remainingReferences) finalBatch.delete(reference);
+      finalBatch.delete(doc(this.database, collectionPath(userId), divisionId));
+      await finalBatch.commit();
     } catch (error) {
       throw mapFailure(error);
     }

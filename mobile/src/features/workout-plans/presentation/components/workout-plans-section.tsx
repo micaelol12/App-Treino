@@ -14,6 +14,7 @@ import { Card } from '@/shared/components/card';
 import { DragHandle } from '@/shared/components/drag-handle';
 import { EmptyState } from '@/shared/components/empty-state';
 import { PrimaryButton } from '@/shared/components/primary-button';
+import { useScreenScrollHandler } from '@/shared/components/screen';
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
 
@@ -70,6 +71,7 @@ export function WorkoutPlansSection({
 }: WorkoutPlansSectionProps) {
   const router = useRouter();
   const theme = useAppTheme();
+  const screenScrollHandler = useScreenScrollHandler();
   const { remove, reorder } = useWorkoutPlanActions();
   const catalog = useExerciseCatalog();
   const [actionError, setActionError] = useState<string | null>(null);
@@ -193,7 +195,6 @@ export function WorkoutPlansSection({
                 <ExerciseMetadataChips exercise={catalogExercise} />
               ) : null}
             </View>
-      
           </View>
           <View style={styles.actions}>
             <WorkoutPlanAction
@@ -293,12 +294,14 @@ export function WorkoutPlansSection({
 
       {plans.isSuccess && exercises.length ? (
         <NestableDraggableFlatList
-          activationDistance={8}
+          activationDistance={24}
           contentContainerStyle={styles.list}
           data={exercises}
           keyExtractor={({ id }) => id}
+          nestedScrollEnabled
           onDragEnd={({ data }) => void persistOrder(data)}
           renderItem={renderExercise}
+          simultaneousHandlers={screenScrollHandler ?? undefined}
           testID="workout-exercises-draggable-list"
         />
       ) : null}
@@ -309,12 +312,12 @@ export function WorkoutPlansSection({
           <MetricChart
             kind="horizontalBar"
             showLengend={false}
-            accessibilitySummary={`Divisão Muscular`}
+            accessibilitySummary="Divisão Muscular"
             series={[
               {
                 name: '',
                 color: theme.colors.primary,
-                points: points,
+                points,
               },
             ]}
           />

@@ -334,6 +334,28 @@ describe('division and plan v2 rules', () => {
     ]);
   });
 
+  it('deletes a division with its exercises and preserves workout history', async () => {
+    await seedExercise();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const divisionPath = `usuarios/${PRIMARY_USER_ID}/divisoes/push`;
+    const itemPath = `${divisionPath}/exercicios/${EXERCISE_DOCUMENT_ID}`;
+    const historyPath = `usuarios/${PRIMARY_USER_ID}/historico_treinos/history`;
+    await setDoc(doc(database, divisionPath), validDivision());
+    await setDoc(doc(database, itemPath), validPlanItem());
+    await setDoc(doc(database, historyPath), validHistory);
+
+    const repository = new FirebaseWorkoutDivisionRepository(
+      database as unknown as Firestore,
+    );
+    await repository.delete(PRIMARY_USER_ID, 'push');
+
+    expect((await getDoc(doc(database, divisionPath))).exists()).toBe(false);
+    expect(
+      (await getDocs(collection(database, `${divisionPath}/exercicios`))).empty,
+    ).toBe(true);
+    expect((await getDoc(doc(database, historyPath))).exists()).toBe(true);
+  });
+
   it('falls back to legacy config when no v2 division exists', async () => {
     const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
     await setDoc(

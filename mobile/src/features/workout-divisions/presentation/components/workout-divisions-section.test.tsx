@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 
 import { AppThemeProvider } from '@/shared/theme/theme-provider';
 
@@ -10,6 +11,7 @@ import { WorkoutDivisionsSection } from './workout-divisions-section';
 
 const mockPush = jest.fn();
 const mockCreate = jest.fn().mockResolvedValue('new-division');
+const mockRemove = jest.fn().mockResolvedValue(undefined);
 const mockReorder = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('expo-router', () => ({
@@ -53,6 +55,10 @@ describe('WorkoutDivisionsSection', () => {
       update: { isPending: false } as ReturnType<
         typeof useWorkoutDivisionActions
       >['update'],
+      remove: {
+        isPending: false,
+        mutateAsync: mockRemove,
+      } as unknown as ReturnType<typeof useWorkoutDivisionActions>['remove'],
       reorder: { isPending: false, mutateAsync: mockReorder } as unknown as ReturnType<
         typeof useWorkoutDivisionActions
       >['reorder'],
@@ -95,5 +101,26 @@ describe('WorkoutDivisionsSection', () => {
       to: 1,
     });
     await waitFor(() => expect(mockReorder).toHaveBeenCalledWith(['pull', 'push']));
+  });
+
+  it('confirms and removes a division while explaining that history is preserved', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
+    await render(
+      <AppThemeProvider>
+        <WorkoutDivisionsSection />
+      </AppThemeProvider>,
+    );
+
+    await fireEvent.press(screen.getByTestId('workout-division-delete-pull'));
+    expect(alert).toHaveBeenCalledWith(
+      'Excluir divisão?',
+      expect.stringContaining('histórico de treinos será preservado'),
+      expect.any(Array),
+    );
+
+    const actions = alert.mock.calls[0]?.[2];
+    actions?.find(({ text }) => text === 'Excluir')?.onPress?.();
+    await waitFor(() => expect(mockRemove).toHaveBeenCalledWith('pull'));
+    expect(await screen.findByText('Divisão excluída.')).toBeOnTheScreen();
   });
 });
