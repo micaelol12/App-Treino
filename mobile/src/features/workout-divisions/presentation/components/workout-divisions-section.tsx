@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   section: { gap: spacing.sm },
   heading: { gap: spacing.xxs },
   row: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.xs },
-  copy: { flex: 1, minWidth: 140, gap: spacing.xxs },
+  copy: { flex: 1, gap: spacing.xxs },
   name: { fontWeight: '700' },
   list: { gap: spacing.sm },
   draggableCard: {

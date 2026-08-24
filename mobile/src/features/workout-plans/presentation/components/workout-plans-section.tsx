@@ -193,14 +193,15 @@ export function WorkoutPlansSection({
                 <ExerciseMetadataChips exercise={catalogExercise} />
               ) : null}
             </View>
+      
+          </View>
+          <View style={styles.actions}>
             <WorkoutPlanAction
               disabled={isMutating}
               label="Editar"
               onPress={() => openExercise(exercise.id)}
               testID={`workout-plan-edit-${exercise.id}`}
             />
-          </View>
-          <View style={styles.actions}>
             <WorkoutPlanAction
               disabled={isMutating || exercise.sourceSchemaVersion < 2}
               label="Excluir"
