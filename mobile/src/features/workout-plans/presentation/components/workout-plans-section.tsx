@@ -46,7 +46,7 @@ export function calculateWorkoutProgressForExercise(
       });
 
       exercise.secondaryMuscles.forEach((muscle) => {
-        acc[muscle] = (acc[muscle] ?? 0) + 0.25;
+        acc[muscle] = (acc[muscle] ?? 0) + 0.15;
       });
 
       return acc;

@@ -17,6 +17,7 @@ import {
   useImportWorkoutDivisionTemplate,
   useWorkoutDivisionTemplate,
 } from '../workout-division-template-hooks';
+import { ExerciseInstructionsButton } from '@/features/workout-session/presentation/components/exercise-instructions-button';
 
 export function WorkoutDivisionTemplateDetailsScreen({
   templateId,
@@ -96,6 +97,11 @@ export function WorkoutDivisionTemplateDetailsScreen({
                   {exercise.defaultSets} séries
                 </AppText>
               </View>
+              <ExerciseInstructionsButton
+                exerciseDocumentId={exercise.exerciseDocumentId}
+                exerciseId={exercise.exerciseId}
+                exerciseName={exercise.exerciseNameSnapshot}
+              />
             </View>
           </Card>
         ))}

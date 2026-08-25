@@ -13,6 +13,7 @@ import {
 import { z } from 'zod';
 
 import { database } from '../lib/firebase';
+import { getExercise } from './catalog';
 
 export const divisionTemplateStatusSchema = z.enum([
   'draft',
@@ -112,11 +113,26 @@ export async function getDivisionTemplate(
     ),
   ]);
   if (!templateSnapshot.exists()) throw new Error('Divisão pronta não encontrada.');
+  const storedExercises = exerciseSnapshot.docs.map((item) =>
+    divisionTemplateExerciseSchema.parse(item.data()),
+  );
+  const exercises = await Promise.all(
+    storedExercises.map(async (exercise) => {
+      try {
+        const catalogExercise = await getExercise(exercise.exerciseDocumentId);
+        return {
+          ...exercise,
+          exerciseId: catalogExercise.id,
+          exerciseNameSnapshot: catalogExercise.name,
+        };
+      } catch {
+        return exercise;
+      }
+    }),
+  );
   return {
     ...mapTemplate(templateSnapshot.id, templateSnapshot.data()),
-    exercises: exerciseSnapshot.docs.map((item) =>
-      divisionTemplateExerciseSchema.parse(item.data()),
-    ),
+    exercises,
   };
 }
 
