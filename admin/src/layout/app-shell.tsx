@@ -5,6 +5,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Rows3,
   Users,
   X,
 } from 'lucide-react';
@@ -18,6 +19,7 @@ const navigation = [
   { to: '/usuarios', label: 'Usuários', icon: Users },
   { to: '/exercicios', label: 'Exercícios', icon: Dumbbell },
   { to: '/equipamentos', label: 'Equipamentos', icon: Package },
+  { to: '/divisoes-prontas', label: 'Divisões prontas', icon: Rows3 },
 ];
 
 export function AppShell() {

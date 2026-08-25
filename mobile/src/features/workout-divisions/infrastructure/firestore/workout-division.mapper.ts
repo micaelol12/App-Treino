@@ -21,5 +21,10 @@ export function mapWorkoutDivisionDocument(
     sourceSchemaVersion: 2,
     ...(document.createdAt ? { createdAt: document.createdAt.toDate() } : {}),
     ...(document.updatedAt ? { updatedAt: document.updatedAt.toDate() } : {}),
+    ...(document.sourceTemplateId ? { sourceTemplateId: document.sourceTemplateId } : {}),
+    ...(document.sourceTemplateVersion
+      ? { sourceTemplateVersion: document.sourceTemplateVersion }
+      : {}),
+    ...(document.importedAt ? { importedAt: document.importedAt.toDate() } : {}),
   };
 }

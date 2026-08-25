@@ -33,4 +33,23 @@ describe('mapWorkoutDivisionDocument', () => {
       }),
     ).toThrow(InvalidFirestoreDocumentError);
   });
+
+  it('maps complete import provenance metadata', () => {
+    const importedAt = new Date('2026-08-24T12:00:00.000Z');
+    expect(
+      mapWorkoutDivisionDocument('push', {
+        name: 'Push',
+        order: 1,
+        active: true,
+        schemaVersion: 2,
+        sourceTemplateId: 'template-push',
+        sourceTemplateVersion: 3,
+        importedAt: { toDate: () => importedAt },
+      }),
+    ).toMatchObject({
+      sourceTemplateId: 'template-push',
+      sourceTemplateVersion: 3,
+      importedAt,
+    });
+  });
 });

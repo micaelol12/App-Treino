@@ -173,8 +173,10 @@ service cloud.firestore {
         'updatedAt'
       ];
 
+      let sourceFields = ['sourceTemplateId', 'sourceTemplateVersion', 'importedAt'];
+
       return data.keys().hasAll(required)
-        && data.keys().hasOnly(required)
+        && data.keys().hasOnly(required.concat(sourceFields))
         && data['name'] is string
         && data['name'].size() >= 1
         && data['name'].size() <= 80
@@ -184,7 +186,83 @@ service cloud.firestore {
         && data['active'] is bool
         && data['schemaVersion'] == 2
         && data['createdAt'] is timestamp
-        && data['updatedAt'] is timestamp;
+        && data['updatedAt'] is timestamp
+        && (!data.keys().hasAny(sourceFields)
+          || (data.keys().hasAll(sourceFields)
+            && data['sourceTemplateId'] is string
+            && data['sourceTemplateId'].size() >= 1
+            && data['sourceTemplateId'].size() <= 128
+            && data['sourceTemplateVersion'] is int
+            && data['sourceTemplateVersion'] >= 1
+            && data['importedAt'] is timestamp
+            && get(/databases/$(database)/documents/modelos_divisao/$(data['sourceTemplateId'])).data['status'] == 'published'
+            && get(/databases/$(database)/documents/modelos_divisao/$(data['sourceTemplateId'])).data['version'] == data['sourceTemplateVersion']));
+    }
+
+    function isValidDivisionTemplate(data) {
+      let required = [
+        'name', 'description', 'level', 'goal', 'status', 'displayOrder',
+        'exerciseCount', 'version', 'schemaVersion', 'createdAt', 'updatedAt',
+        'publishedAt'
+      ];
+
+      return data.keys().hasAll(required)
+        && data.keys().hasOnly(required)
+        && data['name'] is string
+        && data['name'].size() >= 1
+        && data['name'].size() <= 80
+        && data['description'] is string
+        && data['description'].size() <= 500
+        && data['level'] is string
+        && data['level'].size() <= 80
+        && data['goal'] is string
+        && data['goal'].size() <= 80
+        && data['status'] in ['draft', 'published', 'archived']
+        && data['displayOrder'] is int
+        && data['displayOrder'] >= 0
+        && data['displayOrder'] <= 9999
+        && data['exerciseCount'] is int
+        && data['exerciseCount'] >= 0
+        && data['exerciseCount'] <= 15
+        && (data['status'] != 'published' || data['exerciseCount'] >= 1)
+        && data['version'] is int
+        && data['version'] >= 1
+        && data['version'] <= 9999
+        && data['schemaVersion'] == 1
+        && data['createdAt'] is timestamp
+        && data['updatedAt'] is timestamp
+        && (data['publishedAt'] == null || data['publishedAt'] is timestamp)
+        && (data['status'] != 'published' || data['publishedAt'] is timestamp);
+    }
+
+    function isValidDivisionTemplateExercise(data) {
+      let required = [
+        'exerciseId', 'exerciseDocumentId', 'exerciseNameSnapshot',
+        'defaultSets', 'order', 'schemaVersion', 'createdAt', 'updatedAt'
+      ];
+      let exercisePath = /databases/$(database)/documents/exercicios/$(data['exerciseDocumentId']);
+
+      return data.keys().hasAll(required)
+        && data.keys().hasOnly(required)
+        && data['exerciseId'] is string
+        && data['exerciseId'].size() >= 1
+        && data['exerciseId'].size() <= 160
+        && data['exerciseDocumentId'] is string
+        && data['exerciseDocumentId'].size() >= 1
+        && data['exerciseDocumentId'].size() <= 128
+        && data['exerciseNameSnapshot'] is string
+        && data['exerciseNameSnapshot'].size() >= 1
+        && data['exerciseNameSnapshot'].size() <= 160
+        && data['defaultSets'] is int
+        && data['defaultSets'] >= 1
+        && data['defaultSets'] <= 10
+        && data['order'] is int
+        && data['order'] >= 1
+        && data['order'] <= 15
+        && data['schemaVersion'] == 1
+        && data['createdAt'] is timestamp
+        && data['updatedAt'] is timestamp
+        && get(exercisePath).data['id'] == data['exerciseId'];
     }
 
     function isValidPlanItem(data) {
@@ -222,7 +300,6 @@ service cloud.firestore {
         && data['schemaVersion'] == 2
         && data['createdAt'] is timestamp
         && data['updatedAt'] is timestamp
-        && exists(exercisePath)
         && get(exercisePath).data['id'] == data['exerciseId'];
     }
 
@@ -258,7 +335,7 @@ service cloud.firestore {
           allow read, delete: if isOwner(userId);
           allow create, update: if isOwner(userId)
             && isValidPlanItem(request.resource.data)
-            && get(/databases/$(database)/documents/usuarios/$(userId)/divisoes/$(divisionId)).data['active'] == true;
+            && getAfter(/databases/$(database)/documents/usuarios/$(userId)/divisoes/$(divisionId)).data['active'] == true;
         }
       }
 
@@ -285,6 +362,24 @@ service cloud.firestore {
       allow create, update: if isAdmin()
         && isValidExercise(request.resource.data);
       allow delete: if false;
+    }
+
+    match /modelos_divisao/{templateId} {
+      allow read: if isAdmin()
+        || (request.auth != null && resource.data['status'] == 'published');
+      allow create, update: if isAdmin()
+        && isValidDivisionTemplate(request.resource.data);
+      allow delete: if false;
+
+      match /exercicios/{documentId} {
+        allow read: if isAdmin()
+          || (request.auth != null
+            && get(/databases/$(database)/documents/modelos_divisao/$(templateId)).data['status'] == 'published');
+        allow create, update: if isAdmin()
+          && documentId == request.resource.data['exerciseDocumentId']
+          && isValidDivisionTemplateExercise(request.resource.data);
+        allow delete: if isAdmin();
+      }
     }
 
     match /{collectionName}/{documentId} {

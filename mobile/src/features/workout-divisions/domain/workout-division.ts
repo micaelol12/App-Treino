@@ -6,6 +6,9 @@ export interface WorkoutDivision {
   readonly sourceSchemaVersion: 2;
   readonly createdAt?: Date;
   readonly updatedAt?: Date;
+  readonly sourceTemplateId?: string;
+  readonly sourceTemplateVersion?: number;
+  readonly importedAt?: Date;
 }
 
 export interface WorkoutDivisionInput {
