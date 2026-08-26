@@ -5,10 +5,26 @@ import { Link } from 'react-router-dom';
 
 import { EmptyState, ErrorState, LoadingState } from '../components/feedback';
 import { PageHeader } from '../components/page-header';
+import {
+  SearchableFilter,
+  type SearchableFilterOption,
+} from '../components/searchable-filter';
 import { listExercises, setExerciseActive } from '../features/catalog';
+
+function toFilterOptions(values: readonly (string | null)[]): SearchableFilterOption[] {
+  return [...new Set(values.filter((value): value is string => Boolean(value)))]
+    .sort((left, right) =>
+      left.localeCompare(right, 'pt-BR', { sensitivity: 'base' }),
+    )
+    .map((value) => ({ label: value, value }));
+}
 
 export function ExercisesPage() {
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('all');
+  const [equipment, setEquipment] = useState('all');
+  const [primaryMuscle, setPrimaryMuscle] = useState('all');
+  const [secondaryMuscle, setSecondaryMuscle] = useState('all');
   const [status, setStatus] = useState('all');
   const queryClient = useQueryClient();
   const exercises = useQuery({ queryKey: ['exercises'], queryFn: listExercises });
@@ -17,14 +33,29 @@ export function ExercisesPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['exercises'] }),
   });
 
+  const filterOptions = useMemo(() => {
+    const items = exercises.data ?? [];
+    return {
+      categories: toFilterOptions(items.map((item) => item.category)),
+      equipment: toFilterOptions(items.map((item) => item.equipment)),
+      hasExercisesWithoutEquipment: items.some((item) => !item.equipment),
+      primaryMuscles: toFilterOptions(items.flatMap((item) => item.primaryMuscles)),
+      secondaryMuscles: toFilterOptions(items.flatMap((item) => item.secondaryMuscles)),
+    };
+  }, [exercises.data]);
+
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase('pt-BR');
     return (exercises.data ?? []).filter((item) => {
       const active = item.active !== false;
       return (!term || `${item.name} ${item.id} ${item.equipment ?? ''}`.toLocaleLowerCase('pt-BR').includes(term)) &&
+        (category === 'all' || item.category === category) &&
+        (equipment === 'all' || (equipment === 'without-equipment' ? !item.equipment : item.equipment === equipment)) &&
+        (primaryMuscle === 'all' || item.primaryMuscles.includes(primaryMuscle)) &&
+        (secondaryMuscle === 'all' || item.secondaryMuscles.includes(secondaryMuscle)) &&
         (status === 'all' || (status === 'active' ? active : !active));
     });
-  }, [exercises.data, search, status]);
+  }, [category, equipment, exercises.data, primaryMuscle, search, secondaryMuscle, status]);
 
 
   return (
@@ -33,7 +64,47 @@ export function ExercisesPage() {
       <section className="panel table-panel">
         <div className="toolbar">
           <label className="search-box"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, ID ou equipamento" /></label>
-          <select aria-label="Filtrar por status" value={status} onChange={(event) => setStatus(event.target.value)}><option value="all">Todos os status</option><option value="active">Ativos</option><option value="inactive">Inativos</option></select>
+          <SearchableFilter
+            allLabel="Todas as categorias"
+            ariaLabel="Filtrar por categoria"
+            onChange={setCategory}
+            options={filterOptions.categories}
+            value={category}
+          />
+          <SearchableFilter
+            allLabel="Todos os equipamentos"
+            ariaLabel="Filtrar por equipamento"
+            onChange={setEquipment}
+            options={filterOptions.hasExercisesWithoutEquipment ? [
+              { label: 'Sem equipamento', value: 'without-equipment' },
+              ...filterOptions.equipment,
+            ] : filterOptions.equipment}
+            value={equipment}
+          />
+          <SearchableFilter
+            allLabel="Todos os músculos principais"
+            ariaLabel="Filtrar por músculo principal"
+            onChange={setPrimaryMuscle}
+            options={filterOptions.primaryMuscles}
+            value={primaryMuscle}
+          />
+          <SearchableFilter
+            allLabel="Todos os músculos secundários"
+            ariaLabel="Filtrar por músculo secundário"
+            onChange={setSecondaryMuscle}
+            options={filterOptions.secondaryMuscles}
+            value={secondaryMuscle}
+          />
+          <SearchableFilter
+            allLabel="Todos os status"
+            ariaLabel="Filtrar por status"
+            onChange={setStatus}
+            options={[
+              { label: 'Ativos', value: 'active' },
+              { label: 'Inativos', value: 'inactive' },
+            ]}
+            value={status}
+          />
           <span className="result-count">{filtered.length} resultado(s)</span>
         </div>
         {exercises.isLoading ? <LoadingState /> : exercises.isError ? <ErrorState message="Não foi possível ler a coleção de exercícios." /> : filtered.length === 0 ? <EmptyState title="Nenhum exercício encontrado" description="Ajuste os filtros ou cadastre um novo exercício." /> : (

@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowLeft, ArrowUp, Plus, Save, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, ImageOff, Plus, Save, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ZodError } from 'zod';
@@ -78,6 +78,11 @@ export function DivisionTemplateFormPage() {
         (!term || exercise.name.toLocaleLowerCase('pt-BR').includes(term)),
     );
   }, [catalog.data, exerciseSearch, form.exercises]);
+
+  const catalogByDocumentId = useMemo(
+    () => new Map((catalog.data ?? []).map((exercise) => [exercise.documentId, exercise])),
+    [catalog.data],
+  );
 
   function addExercise() {
     const exercise = catalog.data?.find(({ documentId }) => documentId === selectedExercise);
@@ -217,7 +222,17 @@ export function DivisionTemplateFormPage() {
               {form.exercises.length === 0 ? <p className="muted-copy">Nenhum exercício adicionado.</p> : form.exercises.map((exercise, index) => (
                 <article className="template-exercise-row" key={exercise.exerciseDocumentId}>
                   <span className="template-order">{index + 1}</span>
-                  <div><strong>{exercise.exerciseNameSnapshot}</strong><small>{exercise.defaultSets} séries</small></div>
+                  <div className="exercise-thumb template-exercise-thumb">
+                    {catalogByDocumentId.get(exercise.exerciseDocumentId)?.images[0] ? (
+                      <img
+                        src={catalogByDocumentId.get(exercise.exerciseDocumentId)?.images[0]}
+                        alt={`Demonstração de ${exercise.exerciseNameSnapshot}`}
+                      />
+                    ) : (
+                      <ImageOff size={20} aria-label="Exercício sem imagem" />
+                    )}
+                  </div>
+                  <div className="template-exercise-copy"><strong>{exercise.exerciseNameSnapshot}</strong><small>{exercise.defaultSets} séries</small></div>
                   <button type="button" className="icon-button" disabled={index === 0} aria-label={`Subir ${exercise.exerciseNameSnapshot}`} onClick={() => moveExercise(index, -1)}><ArrowUp size={16} /></button>
                   <button type="button" className="icon-button" disabled={index === form.exercises.length - 1} aria-label={`Descer ${exercise.exerciseNameSnapshot}`} onClick={() => moveExercise(index, 1)}><ArrowDown size={16} /></button>
                   <button type="button" className="icon-button danger" aria-label={`Remover ${exercise.exerciseNameSnapshot}`} onClick={() => setForm((current) => ({ ...current, exercises: current.exercises.filter((_, itemIndex) => itemIndex !== index).map((item, order) => ({ ...item, order: order + 1 })) }))}><Trash2 size={16} /></button>
