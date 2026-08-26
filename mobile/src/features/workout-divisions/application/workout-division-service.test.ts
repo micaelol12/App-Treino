@@ -113,4 +113,22 @@ describe('WorkoutDivisionService', () => {
       new WorkoutDivisionService(repository).reorder('user', ['push']),
     ).rejects.toMatchObject({ code: 'invalid-sequence' });
   });
+
+  it('persists a complete cached order without reading the repository', async () => {
+    const repository = new FakeRepository();
+    const cachedDivisions = [division('push', 'Push', 1), division('pull', 'Pull', 2)];
+    const list = jest.spyOn(repository, 'list');
+
+    await new WorkoutDivisionService(repository).reorder(
+      'user',
+      ['push', 'pull'],
+      cachedDivisions,
+    );
+
+    expect(list).not.toHaveBeenCalled();
+    expect(repository.updateOrder).toHaveBeenCalledWith('user', [
+      { id: 'push', order: 1 },
+      { id: 'pull', order: 2 },
+    ]);
+  });
 });

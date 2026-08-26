@@ -131,6 +131,7 @@ export function reorderWorkoutExercises(
   exercises: readonly WorkoutPlanExercise[],
   divisionId: string,
   orderedExerciseIds: readonly string[],
+  includeUnchanged = false,
 ): ExerciseOrderUpdate[] {
   const divisionExercises = sortWorkoutExercises(exercises).filter(
     (exercise) => exercise.divisionId === divisionId,
@@ -155,5 +156,5 @@ export function reorderWorkoutExercises(
       documentId: byId.get(id)?.documentId ?? '',
       order: index + 1,
     }))
-    .filter(({ id, order }) => byId.get(id)?.order !== order);
+    .filter(({ id, order }) => includeUnchanged || byId.get(id)?.order !== order);
 }

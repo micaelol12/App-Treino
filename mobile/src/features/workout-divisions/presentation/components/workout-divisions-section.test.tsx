@@ -15,6 +15,7 @@ const mockRemove = jest.fn().mockResolvedValue(undefined);
 const mockReorder = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('expo-router', () => ({
+  useFocusEffect: jest.fn(),
   useRouter: () => ({ push: mockPush }),
 }));
 jest.mock('../workout-division-hooks', () => ({

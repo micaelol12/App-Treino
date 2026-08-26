@@ -56,10 +56,15 @@ export class WorkoutDivisionService {
     await this.repository.delete(userId, divisionId);
   }
 
-  async reorder(userId: string, orderedDivisionIds: readonly string[]): Promise<void> {
+  async reorder(
+    userId: string,
+    orderedDivisionIds: readonly string[],
+    cachedDivisions?: readonly WorkoutDivision[],
+  ): Promise<void> {
     const updates = reorderWorkoutDivisions(
-      await this.repository.list(userId),
+      cachedDivisions ?? (await this.repository.list(userId)),
       orderedDivisionIds,
+      cachedDivisions !== undefined,
     );
     if (updates.length) await this.repository.updateOrder(userId, updates);
   }

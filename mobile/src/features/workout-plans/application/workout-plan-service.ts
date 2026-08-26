@@ -89,9 +89,15 @@ export class WorkoutPlanService {
     userId: string,
     divisionId: string,
     orderedExerciseIds: readonly string[],
+    cachedExercises?: readonly WorkoutPlanExercise[],
   ): Promise<void> {
-    const exercises = await this.repository.list(userId);
-    const updates = reorderWorkoutExercises(exercises, divisionId, orderedExerciseIds);
+    const exercises = cachedExercises ?? (await this.repository.list(userId));
+    const updates = reorderWorkoutExercises(
+      exercises,
+      divisionId,
+      orderedExerciseIds,
+      cachedExercises !== undefined,
+    );
     if (updates.length) await this.repository.updateOrder(userId, updates);
   }
 }

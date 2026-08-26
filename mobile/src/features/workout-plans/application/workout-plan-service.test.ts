@@ -134,4 +134,26 @@ describe('WorkoutPlanService v2', () => {
     await service.reorder('user', 'push', ['first', 'second']);
     expect(repository.updateOrder).not.toHaveBeenCalled();
   });
+
+  it('persists a complete cached order without reading the repository', async () => {
+    const repository = new FakeWorkoutPlanRepository();
+    const cachedExercises = [
+      planExercise('first', 'bench', 1),
+      planExercise('second', 'triceps', 2),
+    ];
+    const list = jest.spyOn(repository, 'list');
+
+    await new WorkoutPlanService(repository).reorder(
+      'user',
+      'push',
+      ['first', 'second'],
+      cachedExercises,
+    );
+
+    expect(list).not.toHaveBeenCalled();
+    expect(repository.updateOrder).toHaveBeenCalledWith('user', [
+      { id: 'first', divisionId: 'push', documentId: 'doc-bench', order: 1 },
+      { id: 'second', divisionId: 'push', documentId: 'doc-triceps', order: 2 },
+    ]);
+  });
 });

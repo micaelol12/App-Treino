@@ -10,6 +10,7 @@ const mockPush = jest.fn();
 const mockReorder = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('expo-router', () => ({
+  useFocusEffect: jest.fn(),
   useRouter: () => ({ push: mockPush }),
 }));
 

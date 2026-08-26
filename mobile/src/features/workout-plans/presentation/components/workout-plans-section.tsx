@@ -15,6 +15,7 @@ import { DragHandle } from '@/shared/components/drag-handle';
 import { EmptyState } from '@/shared/components/empty-state';
 import { PrimaryButton } from '@/shared/components/primary-button';
 import { useScreenScrollHandler } from '@/shared/components/screen';
+import { useFlushOnScreenExit } from '@/shared/hooks/use-flush-on-screen-exit';
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
 
@@ -73,10 +74,12 @@ export function WorkoutPlansSection({
   const theme = useAppTheme();
   const screenScrollHandler = useScreenScrollHandler();
   const { remove, reorder } = useWorkoutPlanActions();
+  useFlushOnScreenExit(reorder.flush);
   const catalog = useExerciseCatalog();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-  const isMutating = reorder.isPending || remove.isPending;
+  const orderBlocked = remove.isPending;
+  const actionPending = reorder.isPending || remove.isPending;
   const exercises = (plans.data ?? []).filter(
     (exercise) => !divisionId || exercise.divisionId === divisionId,
   );
@@ -98,7 +101,7 @@ export function WorkoutPlansSection({
   const canReorder = Boolean(divisionId) && !hasLegacyItem;
 
   const persistOrder = async (orderedExercises: readonly WorkoutPlanExercise[]) => {
-    if (!divisionId || !canReorder || isMutating) return;
+    if (!divisionId || !canReorder || orderBlocked) return;
     const orderedIds = orderedExercises.map(({ id }) => id);
     if (orderedIds.every((id, index) => id === exercises[index]?.id)) return;
     setActionError(null);
@@ -113,7 +116,7 @@ export function WorkoutPlansSection({
 
   const moveByAccessibility = (index: number, direction: 'before' | 'after') => {
     const target = direction === 'before' ? index - 1 : index + 1;
-    if (!canReorder || isMutating || target < 0 || target >= exercises.length) return;
+    if (!canReorder || orderBlocked || target < 0 || target >= exercises.length) return;
     const next = [...exercises];
     const current = next[index];
     const adjacent = next[target];
@@ -178,7 +181,7 @@ export function WorkoutPlansSection({
         <Card>
           <View style={styles.exerciseHeader}>
             <DragHandle
-              disabled={!canReorder || isMutating}
+              disabled={!canReorder || orderBlocked}
               drag={drag}
               itemName={exercise.name}
               onMove={(direction) => moveByAccessibility(index, direction)}
@@ -198,13 +201,13 @@ export function WorkoutPlansSection({
           </View>
           <View style={styles.actions}>
             <WorkoutPlanAction
-              disabled={isMutating}
+              disabled={actionPending}
               label="Editar"
               onPress={() => openExercise(exercise.id)}
               testID={`workout-plan-edit-${exercise.id}`}
             />
             <WorkoutPlanAction
-              disabled={isMutating || exercise.sourceSchemaVersion < 2}
+              disabled={actionPending || exercise.sourceSchemaVersion < 2}
               label="Excluir"
               onPress={() => confirmDelete(exercise)}
               testID={`workout-plan-delete-${exercise.id}`}
@@ -227,7 +230,7 @@ export function WorkoutPlansSection({
             </AppText>
           </View>
           <WorkoutPlanAction
-            disabled={isMutating}
+            disabled={actionPending}
             label="Adicionar"
             onPress={() => openExercise('novo')}
             testID="workout-plan-add"
@@ -235,7 +238,7 @@ export function WorkoutPlansSection({
         </View>
       ) : (
         <WorkoutPlanAction
-          disabled={isMutating}
+          disabled={actionPending}
           label="Adicionar exercício"
           onPress={() => openExercise('novo')}
           testID="workout-plan-add"
@@ -326,7 +329,7 @@ export function WorkoutPlansSection({
 
       {plans.isSuccess && exercises.length > 0 ? (
         <WorkoutPlanAction
-          disabled={plans.isFetching || isMutating}
+          disabled={plans.isFetching || actionPending}
           label={plans.isFetching ? 'Atualizando…' : 'Atualizar plano'}
           onPress={() => void plans.refetch()}
         />

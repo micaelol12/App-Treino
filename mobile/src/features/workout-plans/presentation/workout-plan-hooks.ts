@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 
 import { WorkoutPlanService } from '../application/workout-plan-service';
 import type { WorkoutPlanExercise } from '../domain/workout-plan-exercise';
@@ -8,12 +8,18 @@ import {
   type WorkoutExerciseInput,
 } from '../domain/workout-plan-rules';
 import { useAuth } from '../../auth/presentation/auth-context';
+import { DebouncedWriteQueue } from '@/shared/utils/debounced-write-queue';
 
 import { useWorkoutPlanRepository } from './workout-plan-context';
 
 function queryKey(userId: string | undefined) {
   return ['workout-plan', userId] as const;
 }
+
+type WorkoutPlanReorderRequest = {
+  readonly divisionId: string;
+  readonly orderedExerciseIds: readonly string[];
+};
 
 function applyExerciseOrder(
   exercises: readonly WorkoutPlanExercise[],
@@ -52,6 +58,10 @@ export function useWorkoutPlanActions() {
   const service = useMemo(() => new WorkoutPlanService(repository), [repository]);
   const queryClient = useQueryClient();
   const userId = session?.uid;
+  const reorderSnapshots = useRef(new WeakMap<object, readonly WorkoutPlanExercise[]>());
+  const reorderQueue = useRef(new DebouncedWriteQueue<WorkoutPlanReorderRequest>(700));
+  const confirmedOrder = useRef<readonly WorkoutPlanExercise[] | undefined>(undefined);
+  const pendingReorders = useRef<WorkoutPlanReorderRequest[]>([]);
   const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKey(userId) });
   const requireUserId = () => {
     if (!userId) throw new Error('Authenticated user required');
@@ -76,33 +86,67 @@ export function useWorkoutPlanActions() {
     mutationFn: (exerciseId: string) => service.delete(requireUserId(), exerciseId),
     onSuccess: invalidate,
   });
-  const reorder = useMutation({
-    mutationFn: ({
-      divisionId,
-      orderedExerciseIds,
-    }: {
-      readonly divisionId: string;
-      readonly orderedExerciseIds: readonly string[];
-    }) => service.reorder(requireUserId(), divisionId, orderedExerciseIds),
-    onMutate: async ({ divisionId, orderedExerciseIds }) => {
+  const reorderMutation = useMutation({
+    mutationFn: (request: WorkoutPlanReorderRequest) =>
+      reorderQueue.current.enqueue(request, (latestRequest) =>
+        service.reorder(
+          requireUserId(),
+          latestRequest.divisionId,
+          latestRequest.orderedExerciseIds,
+          reorderSnapshots.current.get(latestRequest),
+        ),
+      ),
+    onMutate: async (request) => {
       const key = queryKey(userId);
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<WorkoutPlanExercise[]>(key);
       if (previous) {
+        if (!pendingReorders.current.length) confirmedOrder.current = previous;
+        pendingReorders.current = [...pendingReorders.current, request];
+        reorderSnapshots.current.set(request, previous);
         queryClient.setQueryData(
           key,
-          applyExerciseOrder(previous, divisionId, orderedExerciseIds),
+          applyExerciseOrder(previous, request.divisionId, request.orderedExerciseIds),
         );
       }
-      return { previous };
     },
-    onError: (_error, _variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(queryKey(userId), context.previous);
+    onSuccess: (_data, request) => {
+      if (confirmedOrder.current) {
+        confirmedOrder.current = applyExerciseOrder(
+          confirmedOrder.current,
+          request.divisionId,
+          request.orderedExerciseIds,
+        );
+      }
+      pendingReorders.current = pendingReorders.current.filter(
+        (pending) => pending !== request,
+      );
+      if (!pendingReorders.current.length) {
+        if (confirmedOrder.current) {
+          queryClient.setQueryData(queryKey(userId), confirmedOrder.current);
+        }
+        confirmedOrder.current = undefined;
       }
     },
-    onSettled: invalidate,
+    onError: (_error, request) => {
+      pendingReorders.current = pendingReorders.current.filter(
+        (pending) => pending !== request,
+      );
+      let restored = confirmedOrder.current;
+      for (const pending of pendingReorders.current) {
+        if (!restored) break;
+        restored = applyExerciseOrder(
+          restored,
+          pending.divisionId,
+          pending.orderedExerciseIds,
+        );
+      }
+      if (restored) queryClient.setQueryData(queryKey(userId), restored);
+      if (!pendingReorders.current.length) confirmedOrder.current = undefined;
+    },
   });
+  const flushReorder = useCallback(() => reorderQueue.current.flush(), []);
+  const reorder = { ...reorderMutation, flush: flushReorder };
 
   return { create, remove, reorder, update };
 }

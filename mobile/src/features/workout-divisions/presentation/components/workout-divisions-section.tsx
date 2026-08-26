@@ -16,6 +16,7 @@ import { Card } from '@/shared/components/card';
 import { DragHandle } from '@/shared/components/drag-handle';
 import { PrimaryButton } from '@/shared/components/primary-button';
 import { useScreenScrollHandler } from '@/shared/components/screen';
+import { useFlushOnScreenExit } from '@/shared/hooks/use-flush-on-screen-exit';
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
 
@@ -55,10 +56,11 @@ export function WorkoutDivisionsSection() {
   const screenScrollHandler = useScreenScrollHandler();
   const divisions = useWorkoutDivisions();
   const { create, remove, reorder, update } = useWorkoutDivisionActions();
+  useFlushOnScreenExit(reorder.flush);
   const [name, setName] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
-  const pending =
-    create.isPending || remove.isPending || reorder.isPending || update.isPending;
+  const orderBlocked = create.isPending || remove.isPending || update.isPending;
+  const actionPending = orderBlocked || reorder.isPending;
   const items = divisions.data ?? [];
 
   const reset = () => {
@@ -136,6 +138,7 @@ export function WorkoutDivisionsSection() {
   };
 
   const persistOrder = async (orderedItems: readonly WorkoutDivision[]) => {
+    if (orderBlocked) return;
     const orderedIds = orderedItems.map(({ id }) => id);
     if (orderedIds.every((id, index) => id === items[index]?.id)) return;
     setFeedback(null);
@@ -149,7 +152,7 @@ export function WorkoutDivisionsSection() {
 
   const moveByAccessibility = (index: number, direction: 'before' | 'after') => {
     const target = direction === 'before' ? index - 1 : index + 1;
-    if (pending || target < 0 || target >= items.length) return;
+    if (orderBlocked || target < 0 || target >= items.length) return;
     const next = [...items];
     const current = next[index];
     const adjacent = next[target];
@@ -182,7 +185,7 @@ export function WorkoutDivisionsSection() {
         <Card>
           <View style={styles.row}>
             <DragHandle
-              disabled={pending}
+              disabled={orderBlocked}
               drag={drag}
               itemName={`divisão ${division.name}`}
               onMove={(direction) => moveByAccessibility(index, direction)}
@@ -197,20 +200,20 @@ export function WorkoutDivisionsSection() {
             </View>
             {division.active && (
               <WorkoutPlanAction
-                disabled={pending}
+                disabled={actionPending}
                 label="Editar"
                 onPress={() => beginEdit(division)}
               />
             )}
             <WorkoutPlanAction
-              disabled={pending}
+              disabled={actionPending}
               label={division.active ? 'Desativar' : 'Reativar'}
               onPress={() => toggleActive(division)}
               tone={division.active ? 'danger' : 'default'}
             />
             {!division.active && (
               <WorkoutPlanAction
-                disabled={pending}
+                disabled={actionPending}
                 label="Excluir"
                 onPress={() => confirmDelete(division)}
                 testID={`workout-division-delete-${division.id}`}
@@ -241,7 +244,7 @@ export function WorkoutDivisionsSection() {
           value={name}
         />
         <PrimaryButton
-          disabled={pending}
+          disabled={actionPending}
           label="Cadastrar divisão"
           onPress={() => void save()}
           testID="division-save-button"

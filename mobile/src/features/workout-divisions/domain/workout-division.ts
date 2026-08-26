@@ -79,6 +79,7 @@ export function sortWorkoutDivisions(
 export function reorderWorkoutDivisions(
   divisions: readonly WorkoutDivision[],
   orderedDivisionIds: readonly string[],
+  includeUnchanged = false,
 ): DivisionOrderUpdate[] {
   const currentIds = new Set(divisions.map(({ id }) => id));
   const orderedIds = new Set(orderedDivisionIds);
@@ -94,5 +95,5 @@ export function reorderWorkoutDivisions(
   const byId = new Map(divisions.map((division) => [division.id, division]));
   return orderedDivisionIds
     .map((id, index) => ({ id, order: index + 1 }))
-    .filter(({ id, order }) => byId.get(id)?.order !== order);
+    .filter(({ id, order }) => includeUnchanged || byId.get(id)?.order !== order);
 }
