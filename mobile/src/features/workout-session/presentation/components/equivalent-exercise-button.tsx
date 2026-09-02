@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMemo, useState } from 'react';
 import { AccessibilityInfo, Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
 
 import {
   findCatalogExercise,
@@ -165,6 +166,7 @@ export function EquivalentExerciseButton({
 
           return (
             <Card key={equivalent.exercise.documentId}>
+
               <View
                 accessibilityLabel={`${equivalent.exercise.name}. ${accessibilityDetails}`}
                 style={styles.copy}
@@ -181,6 +183,13 @@ export function EquivalentExerciseButton({
                 <AppText style={{ color: theme.colors.textMuted }} variant="caption">
                   Equipamento: {equipment}
                 </AppText>
+                {equivalent.exercise?.videoUrl && (
+                  <Image
+                    source={{ uri: equivalent.exercise.videoUrl }}
+                    style={{ ...styles.video, borderColor: theme.colors.border }}
+                    contentFit="cover"
+                  />
+                )}
               </View>
               <SecondaryButton
                 accessibilityLabel={`Substituir por ${equivalent.exercise.name}`}
@@ -206,4 +215,12 @@ const styles = StyleSheet.create({
   button: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   copy: { gap: spacing.xxs },
   name: { fontWeight: '700' },
+  video: {
+    width: '80%',
+    height: 200,
+    marginBottom: spacing.sm,
+    alignSelf: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+  },
 });
