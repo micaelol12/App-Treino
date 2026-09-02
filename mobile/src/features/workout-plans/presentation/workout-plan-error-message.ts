@@ -8,6 +8,8 @@ export function getWorkoutPlanErrorMessage(error: unknown): string {
       'exercise-required': 'Selecione um exercício do catálogo.',
       'invalid-default-sets': 'As séries devem ser um número inteiro entre 1 e 10.',
       'invalid-order': 'A ordem deve ser um número inteiro entre 1 e 999.',
+      'invalid-sequence':
+        'A lista mudou enquanto você ordenava. Atualize o plano e tente novamente.',
     };
     return messages[error.code];
   }

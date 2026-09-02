@@ -5,13 +5,16 @@ export const WORKOUT_PLAN_LIMITS = {
   order: { min: 1, max: 999 },
 } as const;
 
-export interface WorkoutExerciseDraft {
+export interface WorkoutExerciseInput {
   readonly divisionId: string;
   readonly divisionNameSnapshot: string;
   readonly exerciseId: string;
   readonly exerciseDocumentId: string;
   readonly exerciseNameSnapshot: string;
   readonly defaultSets: number;
+}
+
+export interface WorkoutExerciseDraft extends WorkoutExerciseInput {
   readonly order: number;
 }
 
@@ -23,7 +26,11 @@ export interface ExerciseOrderUpdate {
 }
 
 export type WorkoutPlanRuleFailureCode =
-  'division-required' | 'exercise-required' | 'invalid-default-sets' | 'invalid-order';
+  | 'division-required'
+  | 'exercise-required'
+  | 'invalid-default-sets'
+  | 'invalid-order'
+  | 'invalid-sequence';
 
 export class WorkoutPlanRuleError extends Error {
   constructor(readonly code: WorkoutPlanRuleFailureCode) {
@@ -35,25 +42,8 @@ export class WorkoutPlanRuleError extends Error {
 export function validateWorkoutExerciseDraft(
   draft: WorkoutExerciseDraft,
 ): WorkoutExerciseDraft {
-  const divisionId = draft.divisionId.trim();
-  const divisionNameSnapshot = draft.divisionNameSnapshot.trim();
-  const exerciseId = draft.exerciseId.trim();
-  const exerciseDocumentId = draft.exerciseDocumentId.trim();
-  const exerciseNameSnapshot = draft.exerciseNameSnapshot.trim();
+  const input = validateWorkoutExerciseInput(draft);
 
-  if (!divisionId || !divisionNameSnapshot) {
-    throw new WorkoutPlanRuleError('division-required');
-  }
-  if (!exerciseId || !exerciseDocumentId || !exerciseNameSnapshot) {
-    throw new WorkoutPlanRuleError('exercise-required');
-  }
-  if (
-    !Number.isInteger(draft.defaultSets) ||
-    draft.defaultSets < WORKOUT_PLAN_LIMITS.defaultSets.min ||
-    draft.defaultSets > WORKOUT_PLAN_LIMITS.defaultSets.max
-  ) {
-    throw new WorkoutPlanRuleError('invalid-default-sets');
-  }
   if (
     !Number.isInteger(draft.order) ||
     draft.order < WORKOUT_PLAN_LIMITS.order.min ||
@@ -62,8 +52,34 @@ export function validateWorkoutExerciseDraft(
     throw new WorkoutPlanRuleError('invalid-order');
   }
 
+  return { ...input, order: draft.order };
+}
+
+export function validateWorkoutExerciseInput(
+  input: WorkoutExerciseInput,
+): WorkoutExerciseInput {
+  const divisionId = input.divisionId.trim();
+  const divisionNameSnapshot = input.divisionNameSnapshot.trim();
+  const exerciseId = input.exerciseId.trim();
+  const exerciseDocumentId = input.exerciseDocumentId.trim();
+  const exerciseNameSnapshot = input.exerciseNameSnapshot.trim();
+
+  if (!divisionId || !divisionNameSnapshot) {
+    throw new WorkoutPlanRuleError('division-required');
+  }
+  if (!exerciseId || !exerciseDocumentId || !exerciseNameSnapshot) {
+    throw new WorkoutPlanRuleError('exercise-required');
+  }
+  if (
+    !Number.isInteger(input.defaultSets) ||
+    input.defaultSets < WORKOUT_PLAN_LIMITS.defaultSets.min ||
+    input.defaultSets > WORKOUT_PLAN_LIMITS.defaultSets.max
+  ) {
+    throw new WorkoutPlanRuleError('invalid-default-sets');
+  }
+
   return {
-    ...draft,
+    ...input,
     divisionId,
     divisionNameSnapshot,
     exerciseId,
@@ -111,36 +127,34 @@ export function sortWorkoutExercises(
   );
 }
 
-export function moveWorkoutExercise(
+export function reorderWorkoutExercises(
   exercises: readonly WorkoutPlanExercise[],
-  exerciseId: string,
-  direction: 'up' | 'down',
+  divisionId: string,
+  orderedExerciseIds: readonly string[],
+  includeUnchanged = false,
 ): ExerciseOrderUpdate[] {
-  const exercise = exercises.find(({ id }) => id === exerciseId);
-  if (!exercise) return [];
-
   const divisionExercises = sortWorkoutExercises(exercises).filter(
-    ({ divisionId }) => divisionId === exercise.divisionId,
+    (exercise) => exercise.divisionId === divisionId,
   );
-  const currentIndex = divisionExercises.findIndex(({ id }) => id === exerciseId);
-  const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-
-  if (currentIndex < 0 || targetIndex < 0 || targetIndex >= divisionExercises.length) {
-    return [];
+  const currentIds = new Set(divisionExercises.map(({ id }) => id));
+  const orderedIds = new Set(orderedExerciseIds);
+  if (
+    divisionExercises.some(({ sourceSchemaVersion }) => sourceSchemaVersion < 2) ||
+    orderedExerciseIds.length !== divisionExercises.length ||
+    orderedIds.size !== orderedExerciseIds.length ||
+    currentIds.size !== orderedIds.size ||
+    [...currentIds].some((id) => !orderedIds.has(id))
+  ) {
+    throw new WorkoutPlanRuleError('invalid-sequence');
   }
 
-  const reordered = [...divisionExercises];
-  const target = reordered[targetIndex];
-  if (!target) return [];
-  reordered[targetIndex] = exercise;
-  reordered[currentIndex] = target;
-
-  return reordered
-    .map(({ id, divisionId, documentId }, index) => ({
+  const byId = new Map(divisionExercises.map((exercise) => [exercise.id, exercise]));
+  return orderedExerciseIds
+    .map((id, index) => ({
       id,
       divisionId,
-      documentId,
+      documentId: byId.get(id)?.documentId ?? '',
       order: index + 1,
     }))
-    .filter(({ id, order }) => exercises.find((item) => item.id === id)?.order !== order);
+    .filter(({ id, order }) => includeUnchanged || byId.get(id)?.order !== order);
 }

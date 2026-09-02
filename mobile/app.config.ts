@@ -42,7 +42,10 @@ const config: ExpoConfig = {
     supportsTablet: false,
     bundleIdentifier: `com.micael.apptreino${variant.bundleSuffix}`,
   },
-  android: { package: `com.micael.apptreino${variant.bundleSuffix}` },
+  android: {
+    package: `com.micael.apptreino${variant.bundleSuffix}`,
+    softwareKeyboardLayoutMode: 'pan',
+  },
   plugins: ['expo-router', 'expo-dev-client', 'expo-splash-screen'],
   experiments: { typedRoutes: true, reactCompiler: true },
   extra: {

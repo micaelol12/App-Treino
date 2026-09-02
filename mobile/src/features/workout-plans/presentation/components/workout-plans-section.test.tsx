@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { AppThemeProvider } from '@/shared/theme/theme-provider';
 import { useExerciseCatalog } from '@/features/exercise-catalog/presentation/exercise-catalog-hooks';
@@ -7,8 +7,10 @@ import { useWorkoutPlanActions, useWorkoutPlanExercises } from '../workout-plan-
 import { WorkoutPlansSection } from './workout-plans-section';
 
 const mockPush = jest.fn();
+const mockReorder = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('expo-router', () => ({
+  useFocusEffect: jest.fn(),
   useRouter: () => ({ push: mockPush }),
 }));
 
@@ -48,10 +50,10 @@ function arrange(overrides: Record<string, unknown> = {}) {
   mockUseActions.mockReturnValue({
     create: {} as ReturnType<typeof useWorkoutPlanActions>['create'],
     update: {} as ReturnType<typeof useWorkoutPlanActions>['update'],
-    move: {
+    reorder: {
       isPending: false,
-      mutateAsync: jest.fn().mockResolvedValue(undefined),
-    } as unknown as ReturnType<typeof useWorkoutPlanActions>['move'],
+      mutateAsync: mockReorder,
+    } as unknown as ReturnType<typeof useWorkoutPlanActions>['reorder'],
     remove: {
       isPending: false,
       mutateAsync: jest.fn().mockResolvedValue(undefined),
@@ -116,7 +118,7 @@ describe('WorkoutPlansSection', () => {
     });
 
     expect(screen.getByText('Supino Reto')).toBeOnTheScreen();
-    expect(screen.getByText('3 séries · ordem 1 · legado')).toBeOnTheScreen();
+    expect(screen.getByText('3 séries · legado')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByTestId('workout-plan-add'));
     await fireEvent.press(screen.getByTestId('workout-plan-edit-exercise-id'));
@@ -165,7 +167,9 @@ describe('WorkoutPlansSection', () => {
     mockUseActions.mockReturnValue({
       create: {} as ReturnType<typeof useWorkoutPlanActions>['create'],
       update: {} as ReturnType<typeof useWorkoutPlanActions>['update'],
-      move: { isPending: false } as ReturnType<typeof useWorkoutPlanActions>['move'],
+      reorder: { isPending: false } as ReturnType<
+        typeof useWorkoutPlanActions
+      >['reorder'],
       remove: { isPending: false } as ReturnType<typeof useWorkoutPlanActions>['remove'],
     });
     mockUseCatalog.mockReturnValue({ data: [] } as unknown as ReturnType<
@@ -189,5 +193,108 @@ describe('WorkoutPlansSection', () => {
       pathname: '/configuracoes/divisao/[divisionId]/exercicio/[id]',
       params: { divisionId: 'push', id: 'exercise-id' },
     });
+  });
+
+  it('removes move buttons and persists the final dragged sequence', async () => {
+    const exercises = [
+      {
+        id: 'bench',
+        documentId: 'doc-bench',
+        divisionId: 'push',
+        division: 'Push',
+        divisionOrder: 1,
+        exerciseId: 'bench',
+        name: 'Supino',
+        defaultSets: 3,
+        order: 1,
+        sourceSchemaVersion: 2 as const,
+      },
+      {
+        id: 'fly',
+        documentId: 'doc-fly',
+        divisionId: 'push',
+        division: 'Push',
+        divisionOrder: 1,
+        exerciseId: 'fly',
+        name: 'Crucifixo',
+        defaultSets: 3,
+        order: 2,
+        sourceSchemaVersion: 2 as const,
+      },
+    ];
+    const plans = queryState({ data: exercises });
+    mockUseActions.mockReturnValue({
+      create: {} as ReturnType<typeof useWorkoutPlanActions>['create'],
+      update: {} as ReturnType<typeof useWorkoutPlanActions>['update'],
+      reorder: {
+        isPending: false,
+        mutateAsync: mockReorder,
+      } as unknown as ReturnType<typeof useWorkoutPlanActions>['reorder'],
+      remove: { isPending: false } as ReturnType<typeof useWorkoutPlanActions>['remove'],
+    });
+    mockUseCatalog.mockReturnValue({ data: [] } as unknown as ReturnType<
+      typeof useExerciseCatalog
+    >);
+    await render(
+      <AppThemeProvider>
+        <WorkoutPlansSection divisionId="push" plans={plans} />
+      </AppThemeProvider>,
+    );
+
+    expect(screen.queryByText('Subir')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Descer')).not.toBeOnTheScreen();
+    await fireEvent(screen.getByTestId('workout-exercises-draggable-list'), 'dragEnd', {
+      data: [...exercises].reverse(),
+      from: 0,
+      to: 1,
+    });
+    await waitFor(() =>
+      expect(mockReorder).toHaveBeenCalledWith({
+        divisionId: 'push',
+        orderedExerciseIds: ['fly', 'bench'],
+      }),
+    );
+  });
+
+  it('shows migration guidance for legacy items in an opened division', async () => {
+    const plans = queryState({
+      data: [
+        {
+          id: 'legacy',
+          documentId: 'legacy',
+          divisionId: 'push',
+          division: 'Push',
+          divisionOrder: 1,
+          exerciseId: 'legacy',
+          name: 'Exercício legado',
+          defaultSets: 3,
+          order: 1,
+          sourceSchemaVersion: 1,
+        },
+      ],
+    });
+    mockUseActions.mockReturnValue({
+      create: {} as ReturnType<typeof useWorkoutPlanActions>['create'],
+      update: {} as ReturnType<typeof useWorkoutPlanActions>['update'],
+      reorder: { isPending: false } as ReturnType<
+        typeof useWorkoutPlanActions
+      >['reorder'],
+      remove: { isPending: false } as ReturnType<typeof useWorkoutPlanActions>['remove'],
+    });
+    mockUseCatalog.mockReturnValue({ data: [] } as unknown as ReturnType<
+      typeof useExerciseCatalog
+    >);
+    await render(
+      <AppThemeProvider>
+        <WorkoutPlansSection divisionId="push" plans={plans} />
+      </AppThemeProvider>,
+    );
+
+    expect(
+      screen.getByText('Migre os itens legados desta divisão antes de reordenar.'),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByRole('button', { name: /Arrastar Exercício legado/ }),
+    ).toBeDisabled();
   });
 });

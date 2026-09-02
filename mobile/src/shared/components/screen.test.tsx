@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react-native';
 
 import { AppThemeProvider } from '@/shared/theme/theme-provider';
+import { spacing } from '@/shared/theme/tokens';
 
 import { AppText } from './app-text';
 import { Screen } from './screen';
@@ -15,7 +16,12 @@ describe('Screen', () => {
       </AppThemeProvider>,
     );
 
-    expect(screen.getByTestId('screen-scroll-view').props.refreshControl).toBeUndefined();
+    const scrollView = screen.getByTestId('screen-scroll-view');
+    expect(scrollView.props.refreshControl).toBeUndefined();
+    expect(scrollView).toHaveProp('bottomOffset', -spacing.md);
+    expect(scrollView).toHaveProp('extraKeyboardSpace', spacing.sm);
+    expect(scrollView).toHaveProp('keyboardShouldPersistTaps', 'handled');
+    expect(scrollView).toHaveProp('keyboardDismissMode', expect.any(String));
   });
 
   it('runs the refresh action and reflects its loading state', async () => {

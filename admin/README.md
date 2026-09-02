@@ -22,6 +22,8 @@ configurado e nunca deve ser habilitado em builds de produção.
 - cadastro e edição de exercícios;
 - upload de imagens JPEG/PNG/WebP e animação GIF de até 1 MB para o Firebase Storage;
 - listagem e cadastro de equipamentos.
+- montagem, publicação e arquivamento de divisões prontas;
+- seleção de exercícios do catálogo, séries padrão e ordem de execução por divisão.
 
 O módulo de usuários depende de uma API com Firebase Admin SDK e está sinalizado na
 interface como próxima entrega; listar todos os usuários do Firebase Auth não é uma

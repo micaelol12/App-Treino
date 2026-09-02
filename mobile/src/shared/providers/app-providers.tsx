@@ -11,6 +11,8 @@ import { ExerciseCatalogProvider } from '@/features/exercise-catalog/presentatio
 import { useExerciseCatalogSnapshot } from '@/features/exercise-catalog/presentation/exercise-catalog-hooks';
 import { createFirebaseWorkoutPlanRepository } from '@/features/workout-plans/infrastructure/firestore/firebase-workout-plan.repository';
 import { WorkoutPlanProvider } from '@/features/workout-plans/presentation/workout-plan-context';
+import { createFirebaseWorkoutDivisionTemplateRepository } from '@/features/workout-division-templates/infrastructure/firestore/firebase-workout-division-template.repository';
+import { WorkoutDivisionTemplateProvider } from '@/features/workout-division-templates/presentation/workout-division-template-context';
 import { createFirebaseWorkoutDivisionRepository } from '@/features/workout-divisions/infrastructure/firestore/firebase-workout-division.repository';
 import { WorkoutDivisionProvider } from '@/features/workout-divisions/presentation/workout-division-context';
 import { createFirebaseWorkoutSessionRepository } from '@/features/workout-session/infrastructure/firestore/firebase-workout-session.repository';
@@ -70,17 +72,21 @@ export function AppProviders({ children }: PropsWithChildren) {
                 <WorkoutDivisionProvider
                   repositoryFactory={createFirebaseWorkoutDivisionRepository}
                 >
-                  <WorkoutPlanProvider
-                    repositoryFactory={createFirebaseWorkoutPlanRepository}
+                  <WorkoutDivisionTemplateProvider
+                    repositoryFactory={createFirebaseWorkoutDivisionTemplateRepository}
                   >
-                    <WeightProvider repositoryFactory={createFirebaseWeightRepository}>
-                      <ProgressProvider
-                        repositoryFactory={createFirebaseProgressRepository}
-                      >
-                        {children}
-                      </ProgressProvider>
-                    </WeightProvider>
-                  </WorkoutPlanProvider>
+                    <WorkoutPlanProvider
+                      repositoryFactory={createFirebaseWorkoutPlanRepository}
+                    >
+                      <WeightProvider repositoryFactory={createFirebaseWeightRepository}>
+                        <ProgressProvider
+                          repositoryFactory={createFirebaseProgressRepository}
+                        >
+                          {children}
+                        </ProgressProvider>
+                      </WeightProvider>
+                    </WorkoutPlanProvider>
+                  </WorkoutDivisionTemplateProvider>
                 </WorkoutDivisionProvider>
               </ExerciseCatalogProvider>
             </WorkoutSessionProvider>

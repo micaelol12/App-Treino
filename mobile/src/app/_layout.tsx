@@ -1,5 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { useAuth } from '@/features/auth/presentation/auth-context';
 import { AuthLoadingScreen } from '@/features/auth/presentation/components/auth-loading-screen';
@@ -38,10 +40,14 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <AppErrorBoundary>
-      <AppProviders>
-        <RootNavigator />
-      </AppProviders>
-    </AppErrorBoundary>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <KeyboardProvider>
+        <AppErrorBoundary>
+          <AppProviders>
+            <RootNavigator />
+          </AppProviders>
+        </AppErrorBoundary>
+      </KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }

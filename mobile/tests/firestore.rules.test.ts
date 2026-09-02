@@ -13,13 +13,19 @@ import {
   doc,
   getDoc,
   getDocs,
+  orderBy,
+  query,
   setDoc,
   setLogLevel,
   Timestamp,
   type Firestore,
+  where,
 } from 'firebase/firestore';
 
 import { FirebaseProgressRepository } from '../src/features/progress/infrastructure/firestore/firebase-progress.repository';
+import { FirebaseWorkoutDivisionRepository } from '../src/features/workout-divisions/infrastructure/firestore/firebase-workout-division.repository';
+import { FirebaseWorkoutDivisionTemplateRepository } from '../src/features/workout-division-templates/infrastructure/firestore/firebase-workout-division-template.repository';
+import { WorkoutPlanService } from '../src/features/workout-plans/application/workout-plan-service';
 import { FirebaseWorkoutPlanRepository } from '../src/features/workout-plans/infrastructure/firestore/firebase-workout-plan.repository';
 import { FirebaseWorkoutSessionRepository } from '../src/features/workout-session/infrastructure/firestore/firebase-workout-session.repository';
 import { FirebaseWeightRepository } from '../src/features/weight/infrastructure/firestore/firebase-weight.repository';
@@ -119,6 +125,56 @@ async function seedExercise() {
   });
 }
 
+function validDivisionTemplate(status: 'draft' | 'published' = 'published') {
+  const timestamp = Timestamp.now();
+  return {
+    name: 'Push pronto',
+    description: 'Peito, ombros e tríceps.',
+    level: 'Intermediário',
+    goal: 'Hipertrofia',
+    status,
+    displayOrder: 1,
+    exerciseCount: 1,
+    version: 1,
+    schemaVersion: 1,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    publishedAt: status === 'published' ? timestamp : null,
+  };
+}
+
+function validDivisionTemplateExercise() {
+  const timestamp = Timestamp.now();
+  return {
+    exerciseId: EXERCISE_ID,
+    exerciseDocumentId: EXERCISE_DOCUMENT_ID,
+    exerciseNameSnapshot: validExercise.name,
+    defaultSets: 3,
+    order: 1,
+    schemaVersion: 1,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  };
+}
+
+async function seedDivisionTemplate(
+  templateId: string,
+  status: 'draft' | 'published' = 'published',
+) {
+  await seedExercise();
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    const database = context.firestore();
+    await setDoc(
+      doc(database, `modelos_divisao/${templateId}`),
+      validDivisionTemplate(status),
+    );
+    await setDoc(
+      doc(database, `modelos_divisao/${templateId}/exercicios/${EXERCISE_DOCUMENT_ID}`),
+      validDivisionTemplateExercise(),
+    );
+  });
+}
+
 describe('global exercise catalog rules', () => {
   it('allows authenticated reads and denies anonymous reads and client writes', async () => {
     await seedExercise();
@@ -191,6 +247,151 @@ describe('global exercise catalog rules', () => {
   });
 });
 
+describe('published division template rules', () => {
+  it('exposes only published templates to authenticated users', async () => {
+    await seedDivisionTemplate('published');
+    await seedDivisionTemplate('draft', 'draft');
+    const owner = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const anonymous = testEnvironment.unauthenticatedContext().firestore();
+
+    await assertSucceeds(getDoc(doc(owner, 'modelos_divisao/published')));
+    await assertSucceeds(
+      getDoc(doc(owner, `modelos_divisao/published/exercicios/${EXERCISE_DOCUMENT_ID}`)),
+    );
+    await assertFails(getDoc(doc(owner, 'modelos_divisao/draft')));
+    await assertFails(getDoc(doc(anonymous, 'modelos_divisao/published')));
+    await assertSucceeds(
+      getDocs(
+        query(
+          collection(owner, 'modelos_divisao'),
+          where('status', '==', 'published'),
+          orderBy('displayOrder', 'asc'),
+        ),
+      ),
+    );
+    await assertFails(getDocs(collection(owner, 'modelos_divisao')));
+  });
+
+  it('allows only administrators to maintain valid templates', async () => {
+    await seedExercise();
+    const admin = testEnvironment
+      .authenticatedContext('template_admin', { admin: true })
+      .firestore();
+    const owner = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const templatePath = 'modelos_divisao/admin-template';
+
+    await assertSucceeds(
+      setDoc(doc(admin, templatePath), validDivisionTemplate('draft')),
+    );
+    await assertSucceeds(
+      setDoc(
+        doc(admin, `${templatePath}/exercicios/${EXERCISE_DOCUMENT_ID}`),
+        validDivisionTemplateExercise(),
+      ),
+    );
+    await assertFails(
+      setDoc(doc(owner, 'modelos_divisao/user-template'), validDivisionTemplate()),
+    );
+    await assertFails(
+      setDoc(doc(admin, 'modelos_divisao/invalid'), {
+        ...validDivisionTemplate(),
+        exerciseCount: 0,
+      }),
+    );
+  });
+
+  it('imports a published template atomically into the owner plan', async () => {
+    await seedDivisionTemplate('push-template');
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const repository = new FirebaseWorkoutDivisionTemplateRepository(
+      database as unknown as Firestore,
+    );
+    const template = await repository.getPublished('push-template');
+
+    const divisionId = await repository.importToUser(
+      PRIMARY_USER_ID,
+      template,
+      'Push personalizado',
+      1,
+    );
+    const division = await getDoc(
+      doc(database, `usuarios/${PRIMARY_USER_ID}/divisoes/${divisionId}`),
+    );
+    const item = await getDoc(
+      doc(
+        database,
+        `usuarios/${PRIMARY_USER_ID}/divisoes/${divisionId}/exercicios/${EXERCISE_DOCUMENT_ID}`,
+      ),
+    );
+
+    expect(division.data()).toMatchObject({
+      name: 'Push personalizado',
+      sourceTemplateId: 'push-template',
+      sourceTemplateVersion: 1,
+    });
+    expect(item.data()).toMatchObject({
+      exerciseId: EXERCISE_ID,
+      exerciseDocumentId: EXERCISE_DOCUMENT_ID,
+      defaultSets: 3,
+    });
+  });
+
+  it('keeps a 15-exercise import within atomic rule access limits', async () => {
+    const timestamp = Timestamp.now();
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      const database = context.firestore();
+      await setDoc(doc(database, 'modelos_divisao/full-template'), {
+        ...validDivisionTemplate(),
+        exerciseCount: 15,
+      });
+      await Promise.all(
+        Array.from({ length: 15 }, async (_, index) => {
+          const documentId = `exercise-document-${index + 1}`;
+          const exerciseId = `exercise-${index + 1}`;
+          const name = `Exercício ${index + 1}`;
+          await setDoc(doc(database, `exercicios/${documentId}`), {
+            ...validExercise,
+            id: exerciseId,
+            name,
+          });
+          await setDoc(
+            doc(database, `modelos_divisao/full-template/exercicios/${documentId}`),
+            {
+              exerciseId,
+              exerciseDocumentId: documentId,
+              exerciseNameSnapshot: name,
+              defaultSets: 3,
+              order: index + 1,
+              schemaVersion: 1,
+              createdAt: timestamp,
+              updatedAt: timestamp,
+            },
+          );
+        }),
+      );
+    });
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const repository = new FirebaseWorkoutDivisionTemplateRepository(
+      database as unknown as Firestore,
+    );
+    const template = await repository.getPublished('full-template');
+    const divisionId = await repository.importToUser(
+      PRIMARY_USER_ID,
+      template,
+      'Divisão completa',
+      1,
+    );
+
+    const imported = await getDocs(
+      collection(
+        database,
+        `usuarios/${PRIMARY_USER_ID}/divisoes/${divisionId}/exercicios`,
+      ),
+    );
+    expect(imported.size).toBe(15);
+  });
+});
+
 describe('division and plan v2 rules', () => {
   it('validates ownership and the physical exercise reference', async () => {
     await seedExercise();
@@ -253,6 +454,105 @@ describe('division and plan v2 rules', () => {
     });
     await repository.delete(PRIMARY_USER_ID, created!);
     await expect(repository.list(PRIMARY_USER_ID)).resolves.toEqual([]);
+  });
+
+  it('persists division and exercise reorder batches', async () => {
+    await seedExercise();
+    const secondDocumentId = 'firestore-auto-id-2';
+    const secondExerciseId = 'Dumbbell_Fly';
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), `exercicios/${secondDocumentId}`), {
+        ...validExercise,
+        id: secondExerciseId,
+        name: 'Crucifixo com halteres',
+      });
+    });
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    await Promise.all([
+      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/divisoes/push`), validDivision()),
+      setDoc(doc(database, `usuarios/${PRIMARY_USER_ID}/divisoes/pull`), {
+        ...validDivision(),
+        name: 'Pull',
+        order: 2,
+      }),
+    ]);
+
+    const divisionRepository = new FirebaseWorkoutDivisionRepository(
+      database as unknown as Firestore,
+    );
+    await divisionRepository.updateOrder(PRIMARY_USER_ID, [
+      { id: 'pull', order: 1 },
+      { id: 'push', order: 2 },
+    ]);
+    await expect(divisionRepository.list(PRIMARY_USER_ID)).resolves.toEqual([
+      expect.objectContaining({ id: 'pull', order: 1 }),
+      expect.objectContaining({ id: 'push', order: 2 }),
+    ]);
+
+    const planRepository = new FirebaseWorkoutPlanRepository(
+      database as unknown as Firestore,
+    );
+    await planRepository.create(PRIMARY_USER_ID, {
+      divisionId: 'push',
+      divisionNameSnapshot: 'Push',
+      exerciseId: EXERCISE_ID,
+      exerciseDocumentId: EXERCISE_DOCUMENT_ID,
+      exerciseNameSnapshot: validExercise.name,
+      defaultSets: 3,
+      order: 1,
+    });
+    await planRepository.create(PRIMARY_USER_ID, {
+      divisionId: 'push',
+      divisionNameSnapshot: 'Push',
+      exerciseId: secondExerciseId,
+      exerciseDocumentId: secondDocumentId,
+      exerciseNameSnapshot: 'Crucifixo com halteres',
+      defaultSets: 3,
+      order: 2,
+    });
+    await planRepository.updateOrder(PRIMARY_USER_ID, [
+      {
+        id: `push__${secondDocumentId}`,
+        divisionId: 'push',
+        documentId: secondDocumentId,
+        order: 1,
+      },
+      {
+        id: `push__${EXERCISE_DOCUMENT_ID}`,
+        divisionId: 'push',
+        documentId: EXERCISE_DOCUMENT_ID,
+        order: 2,
+      },
+    ]);
+    const reordered = (
+      await new WorkoutPlanService(planRepository).list(PRIMARY_USER_ID)
+    ).filter(({ divisionId }) => divisionId === 'push');
+    expect(reordered).toEqual([
+      expect.objectContaining({ documentId: secondDocumentId, order: 1 }),
+      expect.objectContaining({ documentId: EXERCISE_DOCUMENT_ID, order: 2 }),
+    ]);
+  });
+
+  it('deletes a division with its exercises and preserves workout history', async () => {
+    await seedExercise();
+    const database = testEnvironment.authenticatedContext(PRIMARY_USER_ID).firestore();
+    const divisionPath = `usuarios/${PRIMARY_USER_ID}/divisoes/push`;
+    const itemPath = `${divisionPath}/exercicios/${EXERCISE_DOCUMENT_ID}`;
+    const historyPath = `usuarios/${PRIMARY_USER_ID}/historico_treinos/history`;
+    await setDoc(doc(database, divisionPath), validDivision());
+    await setDoc(doc(database, itemPath), validPlanItem());
+    await setDoc(doc(database, historyPath), validHistory);
+
+    const repository = new FirebaseWorkoutDivisionRepository(
+      database as unknown as Firestore,
+    );
+    await repository.delete(PRIMARY_USER_ID, 'push');
+
+    expect((await getDoc(doc(database, divisionPath))).exists()).toBe(false);
+    expect(
+      (await getDocs(collection(database, `${divisionPath}/exercicios`))).empty,
+    ).toBe(true);
+    expect((await getDoc(doc(database, historyPath))).exists()).toBe(true);
   });
 
   it('falls back to legacy config when no v2 division exists', async () => {

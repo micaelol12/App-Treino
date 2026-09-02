@@ -38,7 +38,11 @@ export function InfoModal({
           ]}
         >
           <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
-            <AppText accessibilityRole="header" variant="heading">
+            <AppText
+              accessibilityRole="header"
+              variant="heading"
+              style={styles.headerText}
+            >
               {title}
             </AppText>
             <Pressable
@@ -77,9 +81,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.md,
-    paddingHorizontal: spacing.md,
+    padding: spacing.md,
     borderBottomWidth: 1,
   },
+  headerText: { maxWidth: '85%' },
   close: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   content: { gap: spacing.md, padding: spacing.md },
   staticContent: { flex: 1 },

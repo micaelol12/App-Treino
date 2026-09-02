@@ -134,7 +134,11 @@ export function ExerciseFormPage() {
         active: form.active,
       });
       await saveExercise({ ...parsed, documentId, imageFiles, videoFile });
-      await queryClient.invalidateQueries({ queryKey: ['exercises'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['exercises'] }),
+        queryClient.invalidateQueries({ queryKey: ['division-templates'] }),
+        queryClient.invalidateQueries({ queryKey: ['division-template'] }),
+      ]);
       navigate('/exercicios');
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Não foi possível salvar o exercício.');

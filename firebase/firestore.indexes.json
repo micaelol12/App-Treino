@@ -31,6 +31,14 @@
         { "fieldPath": "Treino", "order": "ASCENDING" },
         { "fieldPath": "Data", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "modelos_divisao",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "displayOrder", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

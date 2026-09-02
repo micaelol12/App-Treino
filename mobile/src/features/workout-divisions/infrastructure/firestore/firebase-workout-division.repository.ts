@@ -6,6 +6,7 @@ import {
   getDocs,
   serverTimestamp,
   updateDoc,
+  writeBatch,
   type Firestore,
 } from 'firebase/firestore';
 
@@ -13,6 +14,7 @@ import { WorkoutDivisionFailure } from '../../application/workout-division-failu
 import type { WorkoutDivisionRepository } from '../../application/workout-division-repository';
 import {
   sortWorkoutDivisions,
+  type DivisionOrderUpdate,
   type WorkoutDivisionDraft,
 } from '../../domain/workout-division';
 import { getFirebaseFirestore } from '@/shared/infrastructure/firebase/firebase-firestore';
@@ -32,6 +34,10 @@ function initializeFirestore(): Firestore {
 
 function collectionPath(userId: string): string {
   return `usuarios/${userId}/divisoes`;
+}
+
+function exercisesPath(userId: string, divisionId: string): string {
+  return `${collectionPath(userId)}/${divisionId}/exercicios`;
 }
 
 function mapFailure(error: unknown): WorkoutDivisionFailure {
@@ -87,6 +93,33 @@ export class FirebaseWorkoutDivisionRepository implements WorkoutDivisionReposit
     }
   }
 
+  async delete(userId: string, divisionId: string): Promise<void> {
+    try {
+      const snapshot = await getDocs(
+        collection(this.database, exercisesPath(userId, divisionId)),
+      );
+      let remainingReferences = snapshot.docs.map((item) => item.ref);
+
+      // O documento pai é excluído apenas no último lote. Se um lote anterior falhar,
+      // a divisão continua visível e a operação pode ser repetida sem deixar filhos órfãos.
+      while (remainingReferences.length > 499) {
+        const batch = writeBatch(this.database);
+        for (const reference of remainingReferences.slice(0, 500)) {
+          batch.delete(reference);
+        }
+        await batch.commit();
+        remainingReferences = remainingReferences.slice(500);
+      }
+
+      const finalBatch = writeBatch(this.database);
+      for (const reference of remainingReferences) finalBatch.delete(reference);
+      finalBatch.delete(doc(this.database, collectionPath(userId), divisionId));
+      await finalBatch.commit();
+    } catch (error) {
+      throw mapFailure(error);
+    }
+  }
+
   async update(
     userId: string,
     divisionId: string,
@@ -97,6 +130,27 @@ export class FirebaseWorkoutDivisionRepository implements WorkoutDivisionReposit
         ...toDocument(draft),
         updatedAt: serverTimestamp(),
       });
+    } catch (error) {
+      throw mapFailure(error);
+    }
+  }
+
+  async updateOrder(
+    userId: string,
+    updates: readonly DivisionOrderUpdate[],
+  ): Promise<void> {
+    if (!updates.length) return;
+    try {
+      const batch = writeBatch(this.database);
+      const timestamp = serverTimestamp();
+      for (const update of updates) {
+        batch.update(doc(this.database, collectionPath(userId), update.id), {
+          order: update.order,
+          schemaVersion: 2,
+          updatedAt: timestamp,
+        });
+      }
+      await batch.commit();
     } catch (error) {
       throw mapFailure(error);
     }

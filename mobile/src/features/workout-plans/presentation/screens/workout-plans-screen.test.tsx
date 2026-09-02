@@ -7,10 +7,11 @@ import { useWorkoutDivisions } from '@/features/workout-divisions/presentation/w
 import { WorkoutPlansScreen } from './workout-plans-screen';
 
 const mockBack = jest.fn();
+const mockPush = jest.fn();
 const mockSection = jest.fn(() => <Text>Lista de divisões</Text>);
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: mockBack }),
+  useRouter: () => ({ back: mockBack, push: mockPush }),
 }));
 
 jest.mock(
@@ -43,6 +44,8 @@ describe('WorkoutPlansScreen', () => {
     );
 
     expect(screen.getByText('Lista de divisões')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('workout-plan-browse-templates'));
+    expect(mockPush).toHaveBeenCalledWith('/configuracoes/divisoes-prontas');
     await fireEvent.press(screen.getByText('Voltar'));
     expect(mockBack).toHaveBeenCalledTimes(1);
   });

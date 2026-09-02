@@ -7,23 +7,24 @@ describe('workoutExerciseFormSchema', () => {
         divisionId: 'push',
         exerciseDocumentId: 'exercise-document',
         defaultSets: '3',
-        order: '1',
       }),
     ).toEqual({
       divisionId: 'push',
       exerciseDocumentId: 'exercise-document',
       defaultSets: '3',
-      order: '1',
     });
   });
 
   it.each([
-    { divisionId: '', exerciseDocumentId: 'doc', defaultSets: '3', order: '1' },
-    { divisionId: 'push', exerciseDocumentId: '', defaultSets: '3', order: '1' },
-    { divisionId: 'push', exerciseDocumentId: 'doc', defaultSets: '0', order: '1' },
-    { divisionId: 'push', exerciseDocumentId: 'doc', defaultSets: '3.5', order: '1' },
-    { divisionId: 'push', exerciseDocumentId: 'doc', defaultSets: '3', order: '1000' },
+    { divisionId: '', exerciseDocumentId: 'doc', defaultSets: '3' },
+    { divisionId: 'push', exerciseDocumentId: '', defaultSets: '3' },
+    { divisionId: 'push', exerciseDocumentId: 'doc', defaultSets: '0' },
+    { divisionId: 'push', exerciseDocumentId: 'doc', defaultSets: '3.5' },
   ])('rejects an invalid form', (values) => {
     expect(workoutExerciseFormSchema.safeParse(values).success).toBe(false);
+  });
+
+  it('does not include a manual order field', () => {
+    expect(workoutExerciseFormSchema.keyof().options).not.toContain('order');
   });
 });

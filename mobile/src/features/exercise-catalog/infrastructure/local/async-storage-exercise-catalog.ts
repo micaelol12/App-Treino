@@ -19,7 +19,10 @@ const taxonomyItemSchema = z
     active: z.boolean(),
     order: z.number().int().nonnegative(),
   })
-  .strict();
+  // Firestore taxonomy documents also carry catalog-maintenance metadata such
+  // as schemaVersion and exerciseCount. It is not part of the mobile domain,
+  // so strip it while loading instead of invalidating the whole offline cache.
+  .strip();
 
 const taxonomiesSchema = z.object(
   Object.fromEntries(
@@ -49,6 +52,30 @@ type Manifest = z.infer<typeof manifestSchema>;
 
 function chunkKey(generation: string, index: number): string {
   return `${STORAGE_PREFIX}:${generation}:exercises:${index}`;
+}
+
+function chunkKeys(generation: string, count: number): string[] {
+  return Array.from({ length: count }, (_, index) => chunkKey(generation, index));
+}
+
+function isCatalogChunkKey(key: string): boolean {
+  return (
+    key.startsWith(`${STORAGE_PREFIX}:`) &&
+    key.includes(':exercises:') &&
+    key !== MANIFEST_KEY
+  );
+}
+
+function isStorageFullError(error: unknown): boolean {
+  const values = Array.isArray(error) ? error : [error];
+  return values.some((value) => {
+    const message = String(value).toLowerCase();
+    if (message.includes('sqlite_full') || message.includes('database or disk is full')) {
+      return true;
+    }
+    if (typeof value !== 'object' || value === null || !('code' in value)) return false;
+    return value.code === 13 || String(value.code).toLowerCase() === 'sqlite_full';
+  });
 }
 
 function splitIntoChunks<T>(items: readonly T[]): T[][] {
@@ -103,11 +130,38 @@ export class AsyncStorageExerciseCatalogDataSource implements ExerciseCatalogLoc
         previous = null;
       }
     }
+
+    const previousManifest = previous?.success ? previous.data : null;
+    const allKeys = await AsyncStorage.getAllKeys();
+    const staleChunkKeys = allKeys.filter(
+      (key) =>
+        isCatalogChunkKey(key) &&
+        (!previousManifest ||
+          !key.startsWith(`${STORAGE_PREFIX}:${previousManifest.generation}:exercises:`)),
+    );
+    if (staleChunkKeys.length) {
+      await AsyncStorage.multiRemove(staleChunkKeys);
+    }
+
     const generation = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const chunks = splitIntoChunks(snapshot.exercises);
-    await AsyncStorage.multiSet(
-      chunks.map((chunk, index) => [chunkKey(generation, index), JSON.stringify(chunk)]),
+    const serializedChunks = chunks.map(
+      (chunk, index) => [chunkKey(generation, index), JSON.stringify(chunk)] as const,
     );
+    let previousChunksRemoved = false;
+
+    try {
+      await AsyncStorage.multiSet(serializedChunks);
+    } catch (error) {
+      if (!previousManifest || !isStorageFullError(error)) throw error;
+
+      await AsyncStorage.multiRemove(serializedChunks.map(([key]) => key));
+      await AsyncStorage.multiRemove(
+        chunkKeys(previousManifest.generation, previousManifest.chunkCount),
+      );
+      previousChunksRemoved = true;
+      await AsyncStorage.multiSet(serializedChunks);
+    }
 
     const manifest: Manifest = {
       schemaVersion: 1,
@@ -118,18 +172,34 @@ export class AsyncStorageExerciseCatalogDataSource implements ExerciseCatalogLoc
       taxonomies: Object.fromEntries(
         exerciseTaxonomyNames.map((name) => [
           name,
-          snapshot.taxonomies[name].map((item) => ({ ...item })),
+          snapshot.taxonomies[name].map(({ id, name: itemName, active, order }) => ({
+            id,
+            name: itemName,
+            active,
+            order,
+          })),
         ]),
       ) as Manifest['taxonomies'],
     };
-    await AsyncStorage.setItem(MANIFEST_KEY, JSON.stringify(manifest));
+    const serializedManifest = JSON.stringify(manifest);
+    try {
+      await AsyncStorage.setItem(MANIFEST_KEY, serializedManifest);
+    } catch (error) {
+      if (!previousManifest || previousChunksRemoved || !isStorageFullError(error)) {
+        throw error;
+      }
 
-    if (previous?.success) {
+      await AsyncStorage.multiRemove(
+        chunkKeys(previousManifest.generation, previousManifest.chunkCount),
+      );
+      previousChunksRemoved = true;
+      await AsyncStorage.setItem(MANIFEST_KEY, serializedManifest);
+    }
+
+    if (previousManifest && !previousChunksRemoved) {
       try {
         await AsyncStorage.multiRemove(
-          Array.from({ length: previous.data.chunkCount }, (_, index) =>
-            chunkKey(previous.data.generation, index),
-          ),
+          chunkKeys(previousManifest.generation, previousManifest.chunkCount),
         );
       } catch {
         // The new manifest is already committed; stale chunks can be cleaned later.

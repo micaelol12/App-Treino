@@ -4,11 +4,13 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
   orderBy,
   query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
   type DocumentData,
 } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
@@ -92,6 +94,51 @@ export type SaveExerciseInput = z.infer<typeof exerciseFormSchema> & {
   videoFile?: File;
 };
 
+async function synchronizeDivisionTemplateReferences(
+  exerciseDocumentId: string,
+  exerciseId: string,
+  exerciseName: string,
+) {
+  const templates = await getDocs(collection(database, 'modelos_divisao'));
+  const references = await Promise.all(
+    templates.docs.map(async (template) => {
+      const exerciseReference = doc(
+        database,
+        'modelos_divisao',
+        template.id,
+        'exercicios',
+        exerciseDocumentId,
+      );
+      return (await getDoc(exerciseReference)).exists()
+        ? { exerciseReference, templateReference: template.ref }
+        : null;
+    }),
+  );
+  const affected = references.filter(
+    (reference): reference is NonNullable<typeof reference> => reference !== null,
+  );
+
+  for (let offset = 0; offset < affected.length; offset += 200) {
+    const timestamp = serverTimestamp();
+    const batch = writeBatch(database);
+    for (const { exerciseReference, templateReference } of affected.slice(
+      offset,
+      offset + 200,
+    )) {
+      batch.update(exerciseReference, {
+        exerciseId,
+        exerciseNameSnapshot: exerciseName,
+        updatedAt: timestamp,
+      });
+      batch.update(templateReference, {
+        version: increment(1),
+        updatedAt: timestamp,
+      });
+    }
+    await batch.commit();
+  }
+}
+
 export async function saveExercise(input: SaveExerciseInput): Promise<string> {
   const target = input.documentId
     ? doc(database, 'exercicios', input.documentId)
@@ -127,6 +174,7 @@ export async function saveExercise(input: SaveExerciseInput): Promise<string> {
     },
     { merge: true },
   );
+  await synchronizeDivisionTemplateReferences(target.id, parsed.id, parsed.name);
   return target.id;
 }
 
