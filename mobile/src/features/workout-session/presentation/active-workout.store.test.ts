@@ -100,6 +100,44 @@ describe('active workout store', () => {
     );
   });
 
+  it('replaces an exercise without changing navigation or timer state', async () => {
+    useActiveWorkoutStore.getState().start(draft);
+    useActiveWorkoutStore.getState().nextExercise();
+    useActiveWorkoutStore.getState().startTimer(1_000);
+    useActiveWorkoutStore.getState().updateSet(1, 0, {
+      loadKg: '20',
+      repetitions: '12',
+    });
+
+    useActiveWorkoutStore.getState().replaceExercise(1, {
+      exerciseId: 'machine-fly-id',
+      exerciseDocumentId: 'machine-fly-document',
+      name: 'Crucifixo máquina',
+    });
+
+    expect(useActiveWorkoutStore.getState()).toEqual(
+      expect.objectContaining({
+        currentExerciseIndex: 1,
+        timer: expect.objectContaining({ status: 'running', startedAtMs: 1_000 }),
+      }),
+    );
+    expect(useActiveWorkoutStore.getState().draft?.exercises).toEqual([
+      draft.exercises[0],
+      {
+        planExerciseId: 'fly',
+        exerciseId: 'machine-fly-id',
+        exerciseDocumentId: 'machine-fly-document',
+        name: 'Crucifixo máquina',
+        sets: [{ setNumber: 1, loadKg: '0', repetitions: '0', rpe: '8', note: '' }],
+      },
+    ]);
+
+    await waitFor(async () => {
+      const serialized = await AsyncStorage.getItem('app-treino-active-workout');
+      expect(serialized).toContain('machine-fly-document');
+    });
+  });
+
   it('clears the draft and clamps navigation without a session', () => {
     useActiveWorkoutStore.getState().previousExercise();
     useActiveWorkoutStore.getState().nextExercise();

@@ -3,7 +3,9 @@ import type { WorkoutPlanExercise } from '../../workout-plans/domain/workout-pla
 import type { WorkoutSessionDraft } from './workout-session-draft';
 import {
   createWorkoutSessionDraft,
+  hasEditedWorkoutSets,
   prepareWorkoutSessionCompletion,
+  replaceWorkoutExercise,
   WorkoutSessionValidationError,
 } from './workout-session-rules';
 
@@ -67,6 +69,68 @@ describe('workout session rules', () => {
         },
       ],
     });
+  });
+
+  it('replaces an exercise while preserving its slot and resetting its sets', () => {
+    const draft = createDraft();
+    const editedDraft: WorkoutSessionDraft = {
+      ...draft,
+      exercises: [
+        {
+          ...draft.exercises[0]!,
+          sets: draft.exercises[0]!.sets.map((set) => ({
+            ...set,
+            loadKg: '80',
+            repetitions: '10',
+            note: 'feito',
+          })),
+        },
+      ],
+    };
+
+    const replaced = replaceWorkoutExercise(editedDraft, 0, {
+      exerciseId: 'machine-bench-id',
+      exerciseDocumentId: 'machine-bench-document',
+      name: 'Supino máquina',
+    });
+
+    expect(replaced.exercises[0]).toEqual({
+      planExerciseId: 'bench',
+      exerciseId: 'machine-bench-id',
+      exerciseDocumentId: 'machine-bench-document',
+      name: 'Supino máquina',
+      sets: [
+        { setNumber: 1, loadKg: '0', repetitions: '0', rpe: '8', note: '' },
+        { setNumber: 2, loadKg: '0', repetitions: '0', rpe: '8', note: '' },
+      ],
+    });
+    const completed = prepareWorkoutSessionCompletion({
+      ...replaced,
+      exercises: [
+        {
+          ...replaced.exercises[0]!,
+          sets: [
+            { ...replaced.exercises[0]!.sets[0]!, repetitions: '10' },
+            replaced.exercises[0]!.sets[1]!,
+          ],
+        },
+      ],
+    });
+    expect(completed.sets[0]).toEqual(
+      expect.objectContaining({
+        planExerciseId: 'bench',
+        exerciseId: 'machine-bench-id',
+        exerciseDocumentId: 'machine-bench-document',
+        exerciseName: 'Supino máquina',
+      }),
+    );
+    expect(replaceWorkoutExercise(draft, 99, { exerciseId: 'x', name: 'X' })).toBe(draft);
+  });
+
+  it('detects any set value changed from the session defaults', () => {
+    const sets = createDraft().exercises[0]!.sets;
+    expect(hasEditedWorkoutSets(sets)).toBe(false);
+    expect(hasEditedWorkoutSets([{ ...sets[0]!, rpe: '9' }])).toBe(true);
   });
 
   it.each([

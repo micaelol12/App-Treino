@@ -13,6 +13,7 @@ import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
 
 import { useActiveWorkoutStore } from '../active-workout.store';
+import { EquivalentExerciseButton } from '../components/equivalent-exercise-button';
 import { ExerciseHistoryButton } from '../components/exercise-history-button';
 import { ExerciseInstructionsButton } from '../components/exercise-instructions-button';
 import { WorkoutSetEditor } from '../components/workout-set-editor';
@@ -30,6 +31,7 @@ export function ActiveWorkoutScreen() {
     (state) => state.currentExerciseIndex,
   );
   const updateSet = useActiveWorkoutStore((state) => state.updateSet);
+  const replaceExercise = useActiveWorkoutStore((state) => state.replaceExercise);
   const previousExercise = useActiveWorkoutStore((state) => state.previousExercise);
   const nextExercise = useActiveWorkoutStore((state) => state.nextExercise);
   const clear = useActiveWorkoutStore((state) => state.clear);
@@ -163,6 +165,11 @@ export function ActiveWorkoutScreen() {
               exerciseDocumentId={exercise.exerciseDocumentId}
               exerciseId={exercise.exerciseId}
               exerciseName={exercise.name}
+            />
+            <EquivalentExerciseButton
+              exercise={exercise}
+              onReplace={(replacement) => replaceExercise(exerciseIndex, replacement)}
+              sessionExercises={draft.exercises}
             />
             <ExerciseHistoryButton
               exerciseId={exercise.exerciseId}

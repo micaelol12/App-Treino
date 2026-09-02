@@ -3,9 +3,11 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type {
+  WorkoutExerciseReplacement,
   WorkoutSessionDraft,
   WorkoutSetDraft,
 } from '../domain/workout-session-draft';
+import { replaceWorkoutExercise } from '../domain/workout-session-rules';
 
 import {
   createInitialWorkoutTimer,
@@ -25,6 +27,7 @@ type ActiveWorkoutState = {
   readonly hasHydrated: boolean;
   start(draft: WorkoutSessionDraft): void;
   updateSet(exerciseIndex: number, setIndex: number, patch: WorkoutSetPatch): void;
+  replaceExercise(exerciseIndex: number, replacement: WorkoutExerciseReplacement): void;
   previousExercise(): void;
   nextExercise(): void;
   selectTimerMode(mode: WorkoutTimerMode): void;
@@ -71,6 +74,12 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
             },
           };
         }),
+      replaceExercise: (exerciseIndex, replacement) =>
+        set((state) =>
+          state.draft
+            ? { draft: replaceWorkoutExercise(state.draft, exerciseIndex, replacement) }
+            : state,
+        ),
       previousExercise: () =>
         set((state) => ({
           currentExerciseIndex: Math.max(0, state.currentExerciseIndex - 1),

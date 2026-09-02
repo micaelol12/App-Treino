@@ -2,6 +2,7 @@ import type { WorkoutPlanExercise } from '../../workout-plans/domain/workout-pla
 
 import type {
   CompletedWorkoutSession,
+  WorkoutExerciseReplacement,
   WorkoutSessionDraft,
   WorkoutSetDraft,
 } from './workout-session-draft';
@@ -50,8 +51,40 @@ function isCivilDate(value: string): boolean {
   );
 }
 
-function createDefaultSet(setNumber: number): WorkoutSetDraft {
+export function createDefaultSet(setNumber: number): WorkoutSetDraft {
   return { setNumber, loadKg: '0', repetitions: '0', rpe: '8', note: '' };
+}
+
+export function hasEditedWorkoutSets(sets: readonly WorkoutSetDraft[]): boolean {
+  return sets.some(
+    (set) =>
+      set.loadKg !== '0' || set.repetitions !== '0' || set.rpe !== '8' || set.note !== '',
+  );
+}
+
+export function replaceWorkoutExercise(
+  draft: WorkoutSessionDraft,
+  exerciseIndex: number,
+  replacement: WorkoutExerciseReplacement,
+): WorkoutSessionDraft {
+  if (!draft.exercises[exerciseIndex]) return draft;
+
+  return {
+    ...draft,
+    exercises: draft.exercises.map((exercise, index) =>
+      index !== exerciseIndex
+        ? exercise
+        : {
+            planExerciseId: exercise.planExerciseId,
+            exerciseId: replacement.exerciseId,
+            ...(replacement.exerciseDocumentId
+              ? { exerciseDocumentId: replacement.exerciseDocumentId }
+              : {}),
+            name: replacement.name,
+            sets: exercise.sets.map((set) => createDefaultSet(set.setNumber)),
+          },
+    ),
+  };
 }
 
 export function createWorkoutSessionDraft({

@@ -14,6 +14,12 @@ export interface WorkoutExerciseDraft {
   readonly sets: readonly WorkoutSetDraft[];
 }
 
+export interface WorkoutExerciseReplacement {
+  readonly exerciseId: string;
+  readonly exerciseDocumentId?: string;
+  readonly name: string;
+}
+
 export interface WorkoutSessionDraft {
   readonly sessionId: string;
   readonly userId: string;
