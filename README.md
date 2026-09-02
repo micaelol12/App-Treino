@@ -3,6 +3,11 @@
 Aplicativo móvel de acompanhamento de treinos construído com Expo SDK 57,
 React Native 0.86, TypeScript e Expo Router.
 
+## Apoie o projeto
+
+Se este projeto for útil para você, considere apoiar seu desenvolvimento pelo
+[Buy Me a Coffee](https://buymeacoffee.com/micael_conti).
+
 ## Estado atual
 
 O projeto já pode ser executado por meio de um Development Build. A autenticação, a
@@ -234,11 +239,6 @@ docs/                      ADRs e histórico da migração
 
 As regras de importação impedem que o domínio dependa de React, Expo ou Firebase e
 que os casos de uso dependam de UI ou infraestrutura concreta.
-
-## Apoie o projeto
-
-Se este projeto for útil para você, considere apoiar seu desenvolvimento pelo
-[Buy Me a Coffee](https://buymeacoffee.com/micael_conti).
 
 ## Solução de problemas
 
