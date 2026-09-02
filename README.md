@@ -174,7 +174,7 @@ Todos os comandos abaixo devem ser executados dentro de `mobile`.
 | `npm test`                   | Executa os testes unitários e de componentes.                          |
 | `npm run test:unit`          | Equivalente explícito da suíte unitária.                               |
 | `npm run test:unit:coverage` | Executa testes unitários com relatório de cobertura.                   |
-| `npm run test:e2e`           | Executa as seis jornadas críticas no dispositivo aberto via Maestro.  |
+| `npm run test:e2e`           | Executa as seis jornadas críticas no dispositivo aberto via Maestro.   |
 | `npm run test:rules`         | Inicia o Firestore Emulator na porta 8082, testa as regras e encerra.  |
 | `npm run verify`             | Executa TypeScript, ESLint, Prettier e testes unitários com cobertura. |
 | `npm run test:all`           | Executa todo o pipeline, incluindo as regras Firestore.                |
@@ -234,6 +234,11 @@ docs/                      ADRs e histórico da migração
 
 As regras de importação impedem que o domínio dependa de React, Expo ou Firebase e
 que os casos de uso dependam de UI ou infraestrutura concreta.
+
+## Apoie o projeto
+
+Se este projeto for útil para você, considere apoiar seu desenvolvimento pelo
+[Buy Me a Coffee](https://buymeacoffee.com/micael_conti).
 
 ## Solução de problemas
 

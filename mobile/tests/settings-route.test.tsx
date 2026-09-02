@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { Linking } from 'react-native';
 
 import SettingsRoute from '@/app/(app)/(tabs)/configuracoes';
 import { useAuth } from '@/features/auth/presentation/auth-context';
@@ -66,6 +67,17 @@ describe('SettingsRoute', () => {
     );
     expect(screen.getByTestId('theme-color-green').props.accessibilityState).toEqual(
       expect.objectContaining({ checked: true }),
+    );
+  });
+
+  it('opens the GitHub repository', async () => {
+    jest.spyOn(Linking, 'openURL').mockResolvedValueOnce(undefined);
+    await arrange();
+
+    fireEvent.press(screen.getByRole('link', { name: 'Abrir repositório no GitHub' }));
+
+    expect(Linking.openURL).toHaveBeenCalledWith(
+      'https://github.com/micaelol12/App-Treino',
     );
   });
 });

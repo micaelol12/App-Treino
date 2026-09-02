@@ -96,6 +96,16 @@ export default function SettingsRoute() {
         />
       </Card>
       <Card>
+        <AppText variant="heading">Sobre</AppText>
+        <AppText>
+          Acesse o código-fonte, acompanhe o desenvolvimento ou contribua com o projeto.
+        </AppText>
+        <ExternalLink
+          label="Abrir repositório no GitHub"
+          url="https://github.com/micaelol12/App-Treino"
+        />
+      </Card>
+      <Card>
         <AppText variant="heading">Aparência</AppText>
         <AppText style={styles.label}>Modo</AppText>
         <View style={styles.options}>
