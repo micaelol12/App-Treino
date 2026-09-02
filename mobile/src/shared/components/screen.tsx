@@ -6,11 +6,11 @@ import {
   useContext,
   useEffect,
   useRef,
+  useState,
 } from 'react';
 import {
   AccessibilityInfo,
   findNodeHandle,
-  KeyboardAvoidingView,
   Platform,
   RefreshControl,
   ScrollView,
@@ -20,6 +20,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NestableScrollContainer } from 'react-native-draggable-flatlist';
+import {
+  KeyboardAwareScrollView,
+  type KeyboardAwareScrollViewRef,
+} from 'react-native-keyboard-controller';
 
 import { useAppTheme } from '@/shared/theme/theme-provider';
 import { spacing } from '@/shared/theme/tokens';
@@ -58,8 +62,8 @@ export function Screen({
 }: ScreenProps) {
   const theme = useAppTheme();
   const titleRef = useRef<Text>(null);
-  const scrollRef = useRef<ScrollView>(null);
-  const ScrollComponent = nestedScroll ? NestableScrollContainer : ScrollView;
+  const scrollRef = useRef<KeyboardAwareScrollViewRef>(null);
+  const [footerHeight, setFooterHeight] = useState(0);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -80,72 +84,72 @@ export function Screen({
       edges={['top', 'left', 'right']}
       style={[styles.safeArea, { backgroundColor: theme.colors.background }]}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboardAvoidingView}
+      <KeyboardAwareScrollView
+        {...(nestedScroll
+          ? { ScrollViewComponent: NestableScrollContainer as never }
+          : {})}
+        alwaysBounceVertical={Boolean(onRefresh)}
+        bottomOffset={footerHeight - spacing.md}
+        contentContainerStyle={styles.content}
+        extraKeyboardSpace={spacing.sm}
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardShouldPersistTaps="handled"
+        mode="insets"
+        nestedScrollEnabled={nestedScroll}
+        ref={scrollRef}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              accessibilityLabel="Atualizar conteúdo"
+              colors={[theme.colors.primary]}
+              onRefresh={() => void onRefresh()}
+              progressBackgroundColor={theme.colors.surface}
+              refreshing={refreshing}
+              tintColor={theme.colors.primary}
+            />
+          ) : undefined
+        }
+        style={styles.scroll}
+        testID="screen-scroll-view"
       >
-        <ScrollComponent
-          alwaysBounceVertical={Boolean(onRefresh)}
-          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-          contentContainerStyle={styles.content}
-          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-          keyboardShouldPersistTaps="handled"
-          nestedScrollEnabled={nestedScroll}
-          ref={scrollRef as never}
-          refreshControl={
-            onRefresh ? (
-              <RefreshControl
-                accessibilityLabel="Atualizar conteúdo"
-                colors={[theme.colors.primary]}
-                onRefresh={() => void onRefresh()}
-                progressBackgroundColor={theme.colors.surface}
-                refreshing={refreshing}
-                tintColor={theme.colors.primary}
-              />
-            ) : undefined
-          }
-          style={styles.scroll}
-          testID="screen-scroll-view"
+        <ScreenScrollHandlerContext.Provider
+          value={nestedScroll ? (scrollRef as RefObject<ScrollView | null>) : null}
         >
-          <ScreenScrollHandlerContext.Provider value={nestedScroll ? scrollRef : null}>
-            <View style={styles.header}>
-              <View style={styles.headerCopy}>
-                <AppText accessibilityRole="header" ref={titleRef} variant="title">
-                  {title}
-                </AppText>
-                {description ? (
-                  <AppText style={{ color: theme.colors.textMuted }}>
-                    {description}
-                  </AppText>
-                ) : null}
-              </View>
-              {action}
+          <View style={styles.header}>
+            <View style={styles.headerCopy}>
+              <AppText accessibilityRole="header" ref={titleRef} variant="title">
+                {title}
+              </AppText>
+              {description ? (
+                <AppText style={{ color: theme.colors.textMuted }}>{description}</AppText>
+              ) : null}
             </View>
-            {children}
-          </ScreenScrollHandlerContext.Provider>
-        </ScrollComponent>
-        {footer ? (
-          <SafeAreaView
-            edges={['bottom', 'left', 'right']}
-            style={[
-              styles.footer,
-              {
-                backgroundColor: theme.colors.surface,
-                borderTopColor: theme.colors.border,
-              },
-            ]}
-          >
-            {footer}
-          </SafeAreaView>
-        ) : null}
-      </KeyboardAvoidingView>
+            {action}
+          </View>
+          {children}
+        </ScreenScrollHandlerContext.Provider>
+      </KeyboardAwareScrollView>
+      {footer ? (
+        <SafeAreaView
+          edges={['bottom', 'left', 'right']}
+          onLayout={(event) => setFooterHeight(event.nativeEvent.layout.height)}
+          style={[
+            styles.footer,
+            {
+              backgroundColor: theme.colors.surface,
+              borderTopColor: theme.colors.border,
+            },
+          ]}
+        >
+          {footer}
+        </SafeAreaView>
+      ) : null}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  keyboardAvoidingView: { flex: 1 },
   scroll: { flex: 1 },
   content: { flexGrow: 1, gap: spacing.lg, padding: spacing.md },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },

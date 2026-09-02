@@ -44,7 +44,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: `com.micael.apptreino${variant.bundleSuffix}`,
-    softwareKeyboardLayoutMode: 'resize',
+    softwareKeyboardLayoutMode: 'pan',
   },
   plugins: ['expo-router', 'expo-dev-client', 'expo-splash-screen'],
   experiments: { typedRoutes: true, reactCompiler: true },
